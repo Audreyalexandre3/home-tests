@@ -311,9 +311,9 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   min-width: 0;
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
   color: var(--ref-color-grey-100);
 }
 
@@ -359,9 +359,9 @@
 
 .contexts-card__brief {
   margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -396,6 +396,14 @@
   font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
   font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.contexts-card__stat-n > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
 }
 
 .contexts-card__stat-label {
@@ -410,32 +418,35 @@
 
 .contexts-card__foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  align-content: flex-start;
   justify-content: space-between;
   gap: var(--ref-spacing-xs);
+  min-width: 0;
   min-height: 48px;
   padding: var(--ref-spacing-xs) var(--ref-spacing-md);
   box-sizing: border-box;
 }
 
 .contexts-card__activity {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
-/* The state corner: Current, then whose it is, then voices to finish. Never
-   a coloured border or a tint on the card — a card's state goes in its
-   content. Mine-and-private renders nothing at all. */
-.contexts-card__meta {
+/* Where I stand with it — Current, then whose it is — rides the cover's top
+   left, opposite the hover toolbar: chrome, never a section, and never a tint
+   on the card. Mine-and-private renders nothing at all. */
+.contexts-card__tags {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  min-width: 0;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md) 0;
 }
 
 .contexts-card__current {
@@ -453,6 +464,7 @@
 
 /* Voices to finish on a card: the count, then the networks it's about. */
 .contexts-card__voices {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);

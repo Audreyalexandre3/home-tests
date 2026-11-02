@@ -11,18 +11,18 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2575";
-import { isFlagOn } from "../../feature-flags.js?v=2575";
-import { escapeAttr, escapeText } from "../../utils.js?v=2575";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2575";
-import { getSessions } from "../../sessions-store.js?v=2575";
-import { renderEmptyState } from "../../components/empty-state.js?v=2575";
-import { getSources, getIdeas } from "../../library.js?v=2575";
-import { getPosts } from "../../posts-store.js?v=2575";
-import { getContextById } from "../../contexts-store.js?v=2575";
-import { voicesToFinish } from "../../voice-parts.js?v=2575";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2575";
-import { pageState } from "../home.js?v=2575";
+} from "../../playbook-access.js?v=2579";
+import { isFlagOn } from "../../feature-flags.js?v=2579";
+import { escapeAttr, escapeText } from "../../utils.js?v=2579";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2579";
+import { getSessions } from "../../sessions-store.js?v=2579";
+import { renderEmptyState } from "../../components/empty-state.js?v=2579";
+import { getSources, getIdeas } from "../../library.js?v=2579";
+import { getPosts } from "../../posts-store.js?v=2579";
+import { getContextById } from "../../contexts-store.js?v=2579";
+import { voicesToFinish } from "../../voice-parts.js?v=2579";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2579";
+import { pageState } from "../home.js?v=2579";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -470,13 +470,13 @@ export function renderContextCard(ctx) {
   // What I know about the brand's world: three fixed columns, every card the
   // same, so the figures line up across the grid. Each figure names what it
   // counts in text: an icon beside a number never did.
-  const stat = (n, one, many) =>
-    `<div class="contexts-card__stat"><span class="contexts-card__stat-n">${n}</span><span class="contexts-card__stat-label">${n === 1 ? one : many}</span></div>`;
+  const stat = (icon, n, one, many) =>
+    `<div class="contexts-card__stat"><span class="contexts-card__stat-n"><i class="${icon}" aria-hidden="true"></i>${n}</span><span class="contexts-card__stat-label">${n === 1 ? one : many}</span></div>`;
   const statsHtml = `
     <div class="contexts-card__stats">
-      ${stat(audienceCount, "audience", "audiences")}
-      ${stat(competitorCount, "competitor", "competitors")}
-      ${stat(influencerCount, "influencer", "influencers")}
+      ${stat("ap-icon-target", audienceCount, "audience", "audiences")}
+      ${stat("ap-icon-buildings", competitorCount, "competitor", "competitors")}
+      ${stat("ap-icon-star", influencerCount, "influencer", "influencers")}
     </div>
   `;
   const activity = [`${usedIn} ${usedIn === 1 ? "chat" : "chats"}`, ctx.updatedAt ? `Updated ${ctx.updatedAt}` : ""]
@@ -511,7 +511,9 @@ export function renderContextCard(ctx) {
   return `
     <article class="contexts-card"${openAttrs}>
 
-      <div class="contexts-card__cover"${coverStyle}></div>
+      <div class="contexts-card__cover"${coverStyle}>
+        ${currentTag || ownerTag ? `<div class="contexts-card__tags">${currentTag}${ownerTag}</div>` : ""}
+      </div>
       <div class="contexts-card__actions" data-contexts-card-actions>${actions}</div>
 
       <div class="contexts-card__body">
@@ -530,12 +532,8 @@ export function renderContextCard(ctx) {
       ${statsHtml}
 
       <footer class="contexts-card__foot">
-        <span class="contexts-card__activity">${escapeText(activity)}</span>
-        <div class="contexts-card__meta">
-          ${currentTag}
-          ${ownerTag}
-          ${voicesHtml}
-        </div>
+        <span class="contexts-card__activity" title="${escapeAttr(activity)}">${escapeText(activity)}</span>
+        ${voicesHtml}
       </footer>
     </article>
   `;
