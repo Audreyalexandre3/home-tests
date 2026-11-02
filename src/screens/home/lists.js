@@ -11,18 +11,18 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2582";
-import { isFlagOn } from "../../feature-flags.js?v=2582";
-import { escapeAttr, escapeText } from "../../utils.js?v=2582";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2582";
-import { getSessions } from "../../sessions-store.js?v=2582";
-import { renderEmptyState } from "../../components/empty-state.js?v=2582";
-import { getSources, getIdeas } from "../../library.js?v=2582";
-import { getPosts } from "../../posts-store.js?v=2582";
-import { getContextById } from "../../contexts-store.js?v=2582";
-import { voicesToFinish } from "../../voice-parts.js?v=2582";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2582";
-import { pageState } from "../home.js?v=2582";
+} from "../../playbook-access.js?v=2584";
+import { isFlagOn } from "../../feature-flags.js?v=2584";
+import { escapeAttr, escapeText } from "../../utils.js?v=2584";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2584";
+import { getSessions } from "../../sessions-store.js?v=2584";
+import { renderEmptyState } from "../../components/empty-state.js?v=2584";
+import { getSources, getIdeas } from "../../library.js?v=2584";
+import { getPosts } from "../../posts-store.js?v=2584";
+import { getContextById } from "../../contexts-store.js?v=2584";
+import { voicesToFinish } from "../../voice-parts.js?v=2584";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2584";
+import { pageState } from "../home.js?v=2584";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -479,9 +479,14 @@ export function renderContextCard(ctx) {
       ${stat("ap-icon-star", influencerCount, "influencer", "influencers")}
     </div>
   `;
-  const activity = [`${usedIn} ${usedIn === 1 ? "chat" : "chats"}`, ctx.updatedAt ? `Updated ${ctx.updatedAt}` : ""]
-    .filter(Boolean)
-    .join(" · ");
+  // The foot: how much it's used (the count leads, in ink), then when it last
+  // moved, quieter. No middle dot: two pieces, two weights.
+  const chatsLabel = usedIn ? `${usedIn} ${usedIn === 1 ? "chat" : "chats"}` : "No chats yet";
+  const activityHtml = `
+    <div class="contexts-card__activity">
+      <span class="contexts-card__chats${usedIn ? "" : " is-empty"}"><i class="ap-icon-single-chat-bubble" aria-hidden="true"></i>${chatsLabel}</span>
+      ${ctx.updatedAt ? `<span class="contexts-card__updated">Updated ${escapeText(ctx.updatedAt)}</span>` : ""}
+    </div>`;
   // Voices to finish (2026-10-29, asked: « une indication quand une voice n'est
   // pas complète ou manquante sur la card d'un playbook »): how many, and on
   // which networks.
@@ -532,7 +537,7 @@ export function renderContextCard(ctx) {
       ${statsHtml}
 
       <footer class="contexts-card__foot">
-        <span class="contexts-card__activity" title="${escapeAttr(activity)}">${escapeText(activity)}</span>
+        ${activityHtml}
         ${voicesHtml}
       </footer>
     </article>

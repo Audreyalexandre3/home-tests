@@ -381,7 +381,6 @@
   margin: 0 var(--ref-spacing-md);
   padding: var(--ref-spacing-sm) 0;
   border-top: 1px solid var(--ref-color-grey-20);
-  border-bottom: 1px solid var(--ref-color-grey-20);
 }
 
 .contexts-card__stat {
@@ -425,14 +424,48 @@
   min-height: 48px;
   padding: var(--ref-spacing-xs) var(--ref-spacing-md);
   box-sizing: border-box;
+  /* The card's foot: a grey-05 band under a grey-20 rule, so the activity reads
+     as the card's base rather than one more line of content. */
+  background: var(--ref-color-grey-05);
+  border-top: 1px solid var(--ref-color-grey-20);
 }
 
 .contexts-card__activity {
   flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.contexts-card__chats {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.contexts-card__chats > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
+}
+
+/* Unused yet: same place, regular weight, so it doesn't shout a zero. */
+.contexts-card__chats.is-empty {
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.contexts-card__updated {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
@@ -473,4 +506,10 @@
 .contexts-card__voice-nets {
   display: inline-flex;
   gap: var(--ref-spacing-xxs);
+}
+
+/* A card with voices to finish gives the date's slot to the warning: side by
+   side the date shrank to « Updated… », which says nothing. */
+.contexts-card__foot:has(.contexts-card__voices) .contexts-card__updated {
+  display: none;
 }
