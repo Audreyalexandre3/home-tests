@@ -456,7 +456,20 @@
 }
 
 .nch-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-md);
+  border: 1px dashed var(--ref-color-grey-20);
+  border-radius: var(--nch-radius);
+  text-align: left;
+}
+
+.nch-empty p {
   margin: 0;
+  max-width: 48ch;
   color: var(--ref-color-grey-80);
 }
 
@@ -685,17 +698,10 @@
   background: #000;
 }
 
-.nch-item__go {
-  margin-top: auto;
-  color: var(--ref-color-electric-blue-100);
-  font-weight: var(--ref-font-weight-bold);
-  font-size: var(--sys-text-style-caption-size);
-}
-
 /* ── 3 · A gallery of outcomes ────────────────────────────────────────────── */
 .nch-gallery {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--nch-cols, 3), minmax(0, 1fr));
   gap: var(--ref-spacing-xs);
   width: 100%;
   max-width: 960px;
@@ -771,32 +777,6 @@
 .nch-pick__vis:has(.nch-pick__well) {
   padding: var(--ref-spacing-xxs);
   background: #000;
-}
-
-.nch-pick__verb {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: auto;
-  color: var(--ref-color-electric-blue-100);
-  font-weight: var(--ref-font-weight-bold);
-}
-
-.nch-pick__verb i {
-  background-color: currentColor;
-  transition: translate var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.nch-pick:hover .nch-pick__verb i {
-  translate: 3px 0;
-}
-
-.nch-picks__note {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin: var(--ref-spacing-sm) 0 0;
-  color: var(--ref-color-grey-80);
 }
 
 /* ── 5 · Show and do ──────────────────────────────────────────────────────── */
@@ -882,7 +862,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .nch-row[aria-selected="true"]:not(.is-held) .nch-row__bar {
+  .nch:not(.is-reading) .nch-row[aria-selected="true"]:not(.is-held) .nch-row__bar {
     animation: nch-progress 4200ms linear;
   }
 }
@@ -928,7 +908,13 @@
   transition: opacity var(--ref-animation-long) var(--app-ease-out);
 }
 
-.nch-slide--video {
+.nch-slide__well {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+  border-radius: var(--nch-radius);
   background: #000;
 }
 
@@ -963,10 +949,6 @@
   margin: 0;
   color: var(--ref-color-grey-80);
   text-align: center;
-}
-
-.nch-slide--video .nch-slide__cap {
-  color: #fff;
 }
 
 /* ── Narrow ───────────────────────────────────────────────────────────────── */
@@ -1007,4 +989,63 @@
   .nch-modes__tabs .ap-tabs-nav {
     overflow-x: auto;
   }
+}
+
+/* ── The verb: every door says what a click does, the same words for the
+   same object in all five homes. The arrow steps forward on hover. ───────── */
+.nch-verb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.nch-verb i {
+  background-color: currentColor;
+}
+
+.nch-verb__arrow {
+  transition: translate var(--ref-animation-short) var(--app-ease-standard);
+}
+
+:is(.nch-can__card, .nch-item, .nch-tile-card, .nch-pick):is(:hover, :focus-visible) .nch-verb__arrow {
+  translate: 3px 0;
+}
+
+.nch-can__card > .nch-verb,
+.nch-tile-card > .nch-verb {
+  padding: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
+}
+
+.nch-can__say,
+.nch-tile-card__say {
+  padding-bottom: var(--ref-spacing-xs);
+}
+
+/* ── A clip says it plays: a mark until it does ───────────────────────────── */
+.nch-clip__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  pointer-events: none;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-clip__play i {
+  background-color: currentColor;
+}
+
+[data-playing] > .nch-clip__play {
+  opacity: 0;
 }

@@ -22,19 +22,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2595";
-import { chatStarters } from "../../mocks.js?v=2595";
-import { getVideos, exampleVideo } from "../../videos-store.js?v=2595";
-import { getTopPosts } from "../../top-posts-store.js?v=2595";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2595";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2595";
-import { findTopicSource } from "../../topics-catalog.js?v=2595";
-import { getContextById } from "../../contexts-store.js?v=2595";
-import { voicesToFinish } from "../../voice-parts.js?v=2595";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2595";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2595";
-import { escapeHtml } from "../../utils.js?v=2595";
-import "../../archie-pixels.js?v=2595";
+import { isFlagOn } from "../../feature-flags.js?v=2597";
+import { chatStarters } from "../../mocks.js?v=2597";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2597";
+import { getTopPosts } from "../../top-posts-store.js?v=2597";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2597";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2597";
+import { findTopicSource } from "../../topics-catalog.js?v=2597";
+import { getContextById } from "../../contexts-store.js?v=2597";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2597";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2597";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2597";
+import { escapeHtml } from "../../utils.js?v=2597";
+import "../../archie-pixels.js?v=2597";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -84,7 +84,8 @@ const KINDS = {
     name: "A doc or a link",
     does: "I find the ideas, then draft the posts",
     hint: "Paste a link or drop a file. I'll find the ideas and draft the posts.",
-    door: () => starterAttrs("open-batch"),
+    go: "Find ideas",
+    door: () => ({ attrs: starterAttrs("open-batch") }),
   },
   video: {
     tone: "clip",
@@ -92,7 +93,8 @@ const KINDS = {
     name: "A video",
     does: "I cut it into vertical clips",
     hint: "Drop a video or paste a YouTube link. I'll cut it into clips.",
-    door: () => starterAttrs("open-video-clips"),
+    go: "Get clips",
+    door: () => ({ attrs: starterAttrs("open-video-clips") }),
   },
   top: {
     tone: "top",
@@ -100,7 +102,8 @@ const KINDS = {
     name: "A post that worked",
     does: "I write new ones on its pattern",
     hint: "Tell me which post did well, or let me show you your best ones.",
-    door: () => `data-add-source="top-posts"`,
+    go: "Write from this post",
+    door: () => ({ attrs: `data-add-source="top-posts"` }),
   },
   topic: {
     tone: "topic",
@@ -108,7 +111,8 @@ const KINDS = {
     name: "A Topic",
     does: "I give you your take on it",
     hint: "Pick a Topic from this week, or tell me what to react to.",
-    door: () => `data-add-source="topic"`,
+    go: "Draft my take",
+    door: () => ({ attrs: `data-add-source="topic"` }),
   },
 };
 
@@ -116,6 +120,52 @@ const tile = (k, size = "") => `
   <span class="nch-tile nch-tone--${KINDS[k].tone}${size ? ` nch-tile--${size}` : ""}" aria-hidden="true">
     <i class="${KINDS[k].icon}"></i>
   </span>`;
+
+// ── Doors: each one opens ITS object ────────────────────────────────────────
+// A card that shows a post, a video or a clip opens that post, that video, that
+// clip — never a generic flow that asks for it again. `{ href }` renders an
+// <a>, `{ attrs }` a <button> carrying a hook session.js already reads.
+const clipsOn = () => isFlagOn("clipsSpace");
+const inLibrary = (video) => !!getVideo(video.id);
+
+const DOORS = {
+  // The Clips space has the video (flag clipsSpace): open its project / that
+  // clip's editor. Otherwise, or for the new user's example: the video starter.
+  video: (video) =>
+    clipsOn() && inLibrary(video)
+      ? { href: `#/clips/${encodeURIComponent(video.id)}`, verb: "Open in Clips" }
+      : { ...KINDS.video.door(), verb: "Cut the clips" },
+  clip: (video, clip) =>
+    clipsOn() && inLibrary(video)
+      ? {
+          href: `#/clips/${encodeURIComponent(video.id)}/edit/${encodeURIComponent(clip.id)}`,
+          verb: "Edit this clip",
+        }
+      : { ...KINDS.video.door(), verb: "Cut the clips" },
+  // The winners board's own hook: echo this post, then straight to the
+  // profiles step (startRepurposeFlow).
+  post: (p) => ({ attrs: `data-top-post-repurpose="${esc(p.id)}"`, verb: "Write from this post" }),
+  topic: (t) => ({ attrs: `data-topic-use="${esc(t.id)}"`, verb: "Use in chat" }),
+  fill: (text) => ({ attrs: `data-nch-fill="${esc(text)}"`, verb: "Use this request", icon: "ap-icon-pen" }),
+  images: (ctx) => ({
+    attrs: ctx ? `data-open-playbook="${ctx.id}" data-open-playbook-tab="images"` : "",
+    verb: "Open image settings",
+  }),
+  voice: (ctx, net) => ({
+    attrs: `data-finish-voices="${ctx.id}" data-finish-voices-net="${net}"`,
+    verb: "Add its voice",
+  }),
+  source: () => ({ ...KINDS.source.door(), verb: "Add a file or a link" }),
+};
+
+const verb = (d) =>
+  `<span class="nch-verb">${d.icon ? `<i class="${d.icon}" aria-hidden="true"></i>` : ""}${esc(d.verb)}<i class="ap-icon-arrow-right nch-verb__arrow" aria-hidden="true"></i></span>`;
+
+// One clickable card. `inner` is its body; the verb closes it.
+const doorEl = (cls, d, inner) =>
+  d.href
+    ? `<a class="${cls}" href="${d.href}">${inner}${verb(d)}</a>`
+    : `<button type="button" class="${cls}" ${d.attrs || ""}>${inner}${verb(d)}</button>`;
 
 // The seeded podcast (or the Clips space's example for a new user), and three
 // of its clips. Each speaker is framed the way the Clips space frames them: the
@@ -130,23 +180,24 @@ function footage(session) {
 // that window on the speaker's centre (25% or 75% of the frame).
 const SPEAKER = ["13%", "87%"];
 
+// A still until you point at it; the play mark says it moves, and goes while it
+// does (data-playing, set by <archie-home> on the media's own events).
 function clipMedia(video, clip, i, { autoplay = false } = {}) {
   const t = `#t=${(clip.startMs / 1000).toFixed(1)},${(clip.endMs / 1000).toFixed(1)}`;
   return `
     <span class="nch-clip" data-nch-play>
       <video class="nch-clip__video" src="${esc(video.url)}${t}" muted playsinline loop preload="metadata"
         ${autoplay ? "data-nch-autoplay" : ""} style="object-position:${SPEAKER[i % 2]} 50%" aria-hidden="true"></video>
+      ${autoplay ? "" : `<span class="nch-clip__play" aria-hidden="true"><i class="ap-icon-play"></i></span>`}
       <span class="nch-clip__len">${Math.round((clip.endMs - clip.startMs) / 1000)}s</span>
     </span>`;
 }
 
 function videoMedia(video) {
   const t = `#t=${((video.posterMs || 0) / 1000).toFixed(1)}`;
-  const min = Math.round((video.durationMs || 0) / 60000);
   return `
-    <span class="nch-video" data-nch-play>
+    <span class="nch-video">
       <video class="nch-video__media" src="${esc(video.url)}${t}" muted playsinline preload="metadata" aria-hidden="true"></video>
-      ${min ? `<span class="nch-clip__len">${min} min</span>` : ""}
     </span>`;
 }
 
@@ -182,10 +233,9 @@ const bestPosts = (n) =>
     .sort((a, b) => (b.vsAvg || 0) - (a.vsAvg || 0))
     .slice(0, n);
 
-// A draft-ish preview: three posts as stacked network cards with a few lines.
 // What a draft looks like coming out: the brand's own posts, real sentences,
 // fanned like cards dealt on the table. They spread when you hover the door
-// that holds them. `posts` overrides the default three.
+// that holds them. `texts` overrides the default sentences.
 const SAMPLE = {
   linkedin: "We spent Q2 planning a launch nobody asked for. Here's what the offsite taught us about listening first.",
   x: "We shipped less this quarter, on purpose. What we cut, and why it was the best call we made:",
@@ -204,6 +254,20 @@ const draftStack = (nets = ["linkedin", "x", "instagram"], texts = []) => `
     )
     .join("")}</span>`;
 
+const fileToDrafts = (name = "notes.pdf") =>
+  `<span class="nch-flow"><span class="nch-file"><i class="ap-icon-file--pdf" aria-hidden="true"></i><span>${esc(name)}</span></span>${draftStack()}</span>`;
+
+const brandImages = `<span class="nch-brand" aria-hidden="true"><span class="nch-brand__img nch-brand__img--a">Listen first, launch second</span><span class="nch-brand__img nch-brand__img--b">18% more activation</span></span>`;
+
+// The networks and where each one's voice stands (flag voicePerNetwork).
+const voiceRows = (voices) =>
+  `<span class="nch-voices">${["linkedin", "x", "instagram"]
+    .map(
+      (n) =>
+        `<span class="nch-voice"><i class="${networkIcon(n)}" aria-hidden="true"></i><span>${voices.includes(n) ? "Follows your default voice" : "A voice of its own"}</span></span>`,
+    )
+    .join("")}</span>`;
+
 function shell(variant, body) {
   return `
     <archie-home class="empty-chat empty-chat--rows nch nch--${variant}" data-empty-chat>
@@ -218,19 +282,41 @@ const lead = (composer) => `
     ${composer}
   </div>`;
 
+const ctxOf = (session) => (session?.contextId ? getContextById(session.contextId) : null);
+
 // ── 1 · One input, the starting points beside it ────────────────────────────
 // The box takes a file, a video, a link or a sentence. The four chips are the
 // starting points; hovering one says in the box what it will do, a click starts
 // it. Under them, three things a newcomer would not guess, each shown working.
 function oneInput({ composer, session }) {
   const { video, clips } = footage(session);
+  const ctx = ctxOf(session);
+  const { topics, href } = freshTopics(session, 1);
   const chip = (k) => `
-    <button type="button" class="nch-chip" ${KINDS[k].door()} data-nch-hint="${esc(KINDS[k].hint)}">
+    <button type="button" class="nch-chip" ${KINDS[k].door().attrs} data-nch-hint="${esc(KINDS[k].hint)}">
       ${tile(k, "sm")}<span>${esc(KINDS[k].name)}</span>
     </button>`;
-  const ctx = session?.contextId ? getContextById(session.contextId) : null;
+  const card = (d, vis, name, line, well = false) =>
+    doorEl(
+      "nch-can__card",
+      d,
+      `<span class="nch-can__vis${well ? " nch-can__vis--well" : ""}">${vis}</span>
+       <span class="nch-can__say"><span class="nch-can__name">${name}</span><span class="nch-can__line">${line}</span></span>`,
+    );
   const voices = voicesToFinish(ctx);
-  const topic = freshTopics(session, 1).topics[0];
+  // The third card: the voice per network when that feature is on, else the
+  // brand's images — never a feature the app doesn't have.
+  const third =
+    networkVoiceOn() && ctx
+      ? card(
+          voices.length
+            ? DOORS.voice(ctx, voices[0])
+            : { attrs: `data-open-playbook="${ctx.id}" data-open-playbook-tab="voice"`, verb: "Open my voices" },
+          voiceRows(voices),
+          "A voice for each network",
+          "LinkedIn and X don't sound the same. Your drafts won't either.",
+        )
+      : card(DOORS.images(ctx), brandImages, "Images in your brand", "Your colours and fonts, made with each draft.");
   return shell(
     "one",
     `
@@ -241,37 +327,41 @@ function oneInput({ composer, session }) {
     <section class="nch-can" aria-labelledby="nchCan">
       <h2 class="nch__h" id="nchCan">What else I can do</h2>
       <div class="nch-can__grid">
-        <button type="button" class="nch-can__card" ${KINDS.video.door()}>
-          <span class="nch-can__vis nch-can__vis--well">${clips
+        ${card(
+          DOORS.video(video),
+          clips
             .slice(0, 2)
             .map((c, i) => clipMedia(video, c, i))
-            .join("")}</span>
-          <span class="nch-can__say"><span class="nch-can__name">Clips from one video</span><span class="nch-can__line">One podcast, ${video.clips.length} vertical clips with subtitles.</span></span>
-        </button>
-        <a class="nch-can__card" href="#/topics">
-          <span class="nch-can__vis">${topic ? topicMini(topic) : draftStack()}</span>
-          <span class="nch-can__say"><span class="nch-can__name">What your market talks about</span><span class="nch-can__line">I follow your competitors and bring back the week's Topics.</span></span>
-        </a>
-        <button type="button" class="nch-can__card" ${ctx ? `data-open-playbook="${ctx.id}"` : ""}>
-          <span class="nch-can__vis">
-            <span class="nch-voices">${["linkedin", "x", "instagram"]
-              .map(
-                (n) =>
-                  `<span class="nch-voice"><i class="${networkIcon(n)}" aria-hidden="true"></i><span>${voices.includes(n) ? "Default voice" : "Its own voice"}</span></span>`,
+            .join(""),
+          "Clips from one video",
+          `One video, ${video.clips.length} vertical clips with subtitles.`,
+          true,
+        )}
+        ${
+          topics[0]
+            ? card(
+                { href, verb: "Open Topic Feed" },
+                topicMini(topics[0]),
+                "What your market talks about",
+                "I follow your competitors and bring back the week's Topics.",
               )
-              .join("")}</span>
-          </span>
-          <span class="nch-can__say"><span class="nch-can__name">A voice for each network</span><span class="nch-can__line">LinkedIn and X don't sound the same. Your drafts won't either.</span></span>
-        </button>
+            : card(
+                DOORS.source(),
+                fileToDrafts(),
+                "Posts from a doc or a link",
+                "The ideas first, then a draft for each network.",
+              )
+        }
+        ${third}
       </div>
     </section>`,
   );
 }
 
-// ── 2 · Modes fused to the input ────────────────────────────────────────────
-// Four tabs sit on the composer's top edge like folder tabs. A mode changes what
-// the box asks for and what lies under it: your files to start from, your
-// videos, your best posts, this week's Topics. Each item is a door.
+// ── 2 · Modes on the input ──────────────────────────────────────────────────
+// Four DS tabs over the composer. A mode changes what the box asks for and what
+// lies under it: requests to try, your video's clips, your best posts, this
+// week's Topics. Every item says what a click does, and does it to that item.
 function modes({ composer, session }) {
   const { video, clips } = footage(session);
   const posts = bestPosts(3);
@@ -285,75 +375,75 @@ function modes({ composer, session }) {
       <header class="nch-pane__head"><p class="nch-pane__lede">${head}</p>${more}</header>
       <div class="nch-pane__grid">${items}</div>
     </section>`;
-  const tryReq = (text, vis) => `
-    <button type="button" class="nch-item" data-nch-fill="${esc(text)}">
-      <span class="nch-item__vis">${vis}</span><span class="nch-item__name">${esc(text)}</span>
-    </button>`;
-
+  // An item is its picture (in a well) and its name, or an object card as is.
+  const item = (d, body) => doorEl("nch-item", d, body);
+  const pictured = (vis, name, { well = false } = {}) =>
+    `<span class="nch-item__vis${well ? " nch-item__vis--well" : ""}">${vis}</span><span class="nch-item__name">${esc(name)}</span>`;
+  const empty = (text, button = "") => `<div class="nch-empty"><p>${text}</p>${button}</div>`;
+  const REQUESTS = [
+    ["Turn our offsite notes into a week of posts", draftStack()],
+    [
+      "3 LinkedIn posts from our latest blog article",
+      draftStack(
+        ["linkedin", "linkedin", "linkedin"],
+        [
+          "Most onboarding checklists ask for too much, too early. We cut ours to three steps.",
+          "Activation went up 18% the week we deleted half our setup flow.",
+          "The best onboarding is the one your users never notice. A short read from our blog.",
+        ],
+      ),
+    ],
+    [
+      "A thread for X from the keynote slides",
+      draftStack(
+        ["x", "x", "x"],
+        [
+          "Our keynote in one thread. 1/ Teams don't need more tools, they need fewer handoffs.",
+          "2/ Every handoff costs a day. We counted 14 in a single launch.",
+          "3/ So we rebuilt the launch around one owner per post. Here's how.",
+        ],
+      ),
+    ],
+  ];
   const panes = [
     pane(
       "source",
       0,
-      "Try one of these, or paste your own link.",
-      tryReq("Turn our offsite notes into a week of posts", draftStack()) +
-        tryReq(
-          "3 LinkedIn posts from our latest blog article",
-          draftStack(
-            ["linkedin", "linkedin", "linkedin"],
-            [
-              "Most onboarding checklists ask for too much, too early. We cut ours to three steps.",
-              "Activation went up 18% the week we deleted half our setup flow.",
-              "The best onboarding is the one your users never notice. A short read from our blog.",
-            ],
-          ),
-        ) +
-        tryReq(
-          "A thread for X from the keynote slides",
-          draftStack(
-            ["x", "x", "x"],
-            [
-              "Our keynote in one thread. 1/ Teams don't need more tools, they need fewer handoffs.",
-              "2/ Every handoff costs a day. We counted 14 in a single launch.",
-              "3/ So we rebuilt the launch around one owner per post. Here's how.",
-            ],
-          ),
-        ),
-      `<button type="button" class="ap-button stroked grey" ${KINDS.source.door()}><i class="ap-icon-plus"></i><span>Add a file or a link</span></button>`,
+      "Try one of these requests, or paste your own link.",
+      REQUESTS.map(([text, vis]) => item(DOORS.fill(text), pictured(vis, text))).join(""),
+      `<button type="button" class="ap-button stroked grey" ${KINDS.source.door().attrs}><i class="ap-icon-plus"></i><span>Add a file or a link</span></button>`,
     ),
     pane(
       "video",
       1,
-      `${esc(video.name.replace(/\.mp4$/, ""))}: ${video.clips.length} clips ready to cut.`,
+      `Your latest video: ${video.clips.length} clips ready to cut.`,
       clips
-        .map(
-          (c, i) => `
-        <button type="button" class="nch-item nch-item--clip" ${KINDS.video.door()}>
-          <span class="nch-item__vis nch-item__vis--well">${clipMedia(video, c, i)}</span><span class="nch-item__name">${esc(c.title)}</span>
-        </button>`,
-        )
+        .map((c, i) => item(DOORS.clip(video, c), pictured(clipMedia(video, c, i), c.title, { well: true })))
         .join(""),
-      `<button type="button" class="ap-button stroked grey" ${KINDS.video.door()}><i class="ap-icon-upload"></i><span>Add a video</span></button>`,
+      `<button type="button" class="ap-button stroked grey" ${KINDS.video.door().attrs}><i class="ap-icon-upload"></i><span>Add a video</span></button>`,
     ),
     pane(
       "top",
       2,
-      "Your best posts this quarter. Pick one and I'll write new ones on its pattern.",
       posts.length
-        ? posts
-            .map((p) => `<button type="button" class="nch-item" ${KINDS.top.door()}>${topPostMini(p)}</button>`)
-            .join("")
-        : `<p class="nch-empty">Connect an account and your best posts show up here.</p>`,
+        ? "Your best posts. Pick one and I'll write new ones on its pattern."
+        : "Your best posts will show up here.",
+      posts.length
+        ? posts.map((p) => item(DOORS.post(p), topPostMini(p))).join("")
+        : empty(
+            "Once your posts start performing, I'll surface the best ones so you can write more like them.",
+            `<button type="button" class="ap-button stroked grey" ${KINDS.top.door().attrs}><i class="ap-icon-line-graph"></i><span>Find my top posts</span></button>`,
+          ),
     ),
     pane(
       "topic",
       3,
-      topics.length ? `${topics.length} of ${total} Topics from this week's listening.` : "Nothing new this week.",
-      topics
-        .map(
-          (t) => `
-        <button type="button" class="nch-item" data-topic-use="${esc(t.id)}">${topicMini(t)}<span class="nch-item__go">Use in chat</span></button>`,
-        )
-        .join(""),
+      topics.length
+        ? `${topics.length} of ${total} Topics from this week's listening.`
+        : "Nothing new from your listening this week.",
+      topics.length
+        ? topics.map((t) => item(DOORS.topic(t), topicMini(t))).join("")
+        : empty("I'll bring back what your competitors and favourite voices post about.", ""),
       `<a class="ap-link standalone small" href="${href}">Open Topic Feed<i class="ap-icon-arrow-right" aria-hidden="true"></i></a>`,
     ),
   ].join("");
@@ -372,102 +462,87 @@ function modes({ composer, session }) {
 }
 
 // ── 3 · A gallery of outcomes ───────────────────────────────────────────────
-// Six tiles, each a picture of what comes back, each a door into its flow. The
-// composer stays below for anything the tiles don't cover.
+// Tiles, each a picture of what comes back and a door into it; six when the
+// Playbook has everything, four otherwise, so the grid never has a hole.
 function gallery({ composer, session }) {
   const { video, clips } = footage(session);
   const post = bestPosts(1)[0];
   const topic = freshTopics(session, 1).topics[0];
-  const ctx = session?.contextId ? getContextById(session.contextId) : null;
-  const t = (attrs, vis, name, line, mod = "") => `
-    <button type="button" class="nch-tile-card${mod}" ${attrs}>
-      <span class="nch-tile-card__vis">${vis}</span>
-      <span class="nch-tile-card__say"><span class="nch-tile-card__name">${name}</span><span class="nch-tile-card__line">${line}</span></span>
-    </button>`;
-  const tiles = [
+  const ctx = ctxOf(session);
+  const t = (d, vis, name, line, mod = "") =>
+    doorEl(
+      `nch-tile-card${mod}`,
+      d,
+      `<span class="nch-tile-card__vis">${vis}</span>
+       <span class="nch-tile-card__say"><span class="nch-tile-card__name">${name}</span><span class="nch-tile-card__line">${line}</span></span>`,
+    );
+  const all = [
+    t(DOORS.source(), fileToDrafts(), "Posts from a doc or a link", "The ideas first, then a draft for each network"),
     t(
-      KINDS.source.door(),
-      `<span class="nch-flow"><span class="nch-file"><i class="ap-icon-file--pdf" aria-hidden="true"></i><span>notes.pdf</span></span><i class="ap-icon-arrow-right nch-flow__arrow" aria-hidden="true"></i>${draftStack()}</span>`,
-      "Posts from a doc or a link",
-      "The ideas first, then a draft for each network",
-    ),
-    t(
-      KINDS.video.door(),
+      DOORS.video(video),
       clips.map((c, i) => clipMedia(video, c, i)).join(""),
       "Clips from a video",
       "Vertical, framed on the speaker, with subtitles",
       " nch-tile-card--well",
     ),
-    post
-      ? t(
-          KINDS.top.door(),
-          topPostMini(post, { withImage: false }),
-          "New posts from a top post",
-          "Same pattern, a new angle",
-        )
-      : "",
-    topic
-      ? t(
-          `data-topic-use="${esc(topic.id)}"`,
-          topicMini(topic),
-          "Your take on a Topic",
-          "What your market talks about this week",
-        )
-      : "",
+    post &&
+      t(
+        DOORS.post(post),
+        topPostMini(post, { withImage: false }),
+        "New posts from your best one",
+        "Same pattern, a new angle",
+      ),
+    topic && t(DOORS.topic(topic), topicMini(topic), "Your take on a Topic", "What your market talks about this week"),
+    t(DOORS.images(ctx), brandImages, "Images in your brand", "Your colours and fonts, made with each draft"),
     t(
-      ctx ? `data-open-playbook="${ctx.id}"` : "",
-      `<span class="nch-brand"><span class="nch-brand__img nch-brand__img--a">Listen first, launch second</span><span class="nch-brand__img nch-brand__img--b">18% more activation</span></span>`,
-      "Images in your brand",
-      "Your colours and fonts, made with each draft",
-    ),
-    t(
-      KINDS.source.door(),
+      DOORS.fill("Plan a week of posts around our next launch"),
       `<span class="nch-week" aria-hidden="true">${["Mon", "Tue", "Wed", "Thu", "Fri"]
         .map((d, i) => `<span class="nch-week__day${i % 2 ? "" : " is-on"}"><small>${d}</small><i></i></span>`)
         .join("")}</span>`,
       "A week of posts",
       "Planned around a launch or an event",
     ),
-  ].join("");
+  ].filter(Boolean);
+  const tiles = all.slice(0, all.length >= 6 ? 6 : 4);
   return shell(
     "gallery",
     `
     ${WORDMARK}
     <h1 class="nch__title">What do you want to make?</h1>
-    <div class="nch-gallery" role="group" aria-label="What I can make">${tiles}</div>
+    <div class="nch-gallery" style="--nch-cols:${tiles.length >= 6 ? 3 : 2}" role="group" aria-label="What I can make">${tiles.join("")}</div>
     ${lead(composer)}`,
   );
 }
 
-// ── 4 · Four posts I can write today ────────────────────────────────────────
+// ── 4 · Posts I can write today ─────────────────────────────────────────────
 // Archie starts: four posts it can already write from what the Playbook has,
 // one per feature, so the product is learnt by using it. Built on the Topic
-// Feed and the user's own material only.
+// Feed and the user's own material only; four whatever the Playbook holds.
 function picks({ composer, session }) {
   const { video, clips } = footage(session);
   const post = bestPosts(1)[0];
   const topic = freshTopics(session, 1).topics[0];
-  const ctx = session?.contextId ? getContextById(session.contextId) : null;
+  const ctx = ctxOf(session);
   const voices = voicesToFinish(ctx);
-  const card = (k, from, vis, title, verb, attrs) => `
-    <button type="button" class="nch-pick" ${attrs}>
-      <span class="nch-pick__from">${tile(k, "sm")}<span>${from}</span></span>
-      <span class="nch-pick__vis">${vis}</span>
-      <span class="nch-pick__title">${title}</span>
-      <span class="nch-pick__verb">${verb}<i class="ap-icon-arrow-right" aria-hidden="true"></i></span>
-    </button>`;
+  const card = (k, from, vis, title, d) =>
+    doorEl(
+      "nch-pick",
+      d,
+      `<span class="nch-pick__from">${tile(k, "sm")}<span>${from}</span></span>
+       <span class="nch-pick__vis">${vis}</span>
+       <span class="nch-pick__title">${title}</span>`,
+    );
   const cards = [
     clips[0] &&
       card(
         "video",
-        "From your podcast",
+        inLibrary(video) ? "From your latest video" : "From a video",
         `<span class="nch-pick__well">${clips
           .slice(0, 2)
           .map((c, i) => clipMedia(video, c, i))
           .join("")}</span>`,
-        `${clips.length} clips, starting with “${esc(clips[0].title)}”`,
-        "Get the clips",
-        KINDS.video.door(),
+        `${video.clips.length} clips from your latest video`,
+        DOORS.video(video),
       ),
     post &&
       card(
@@ -475,33 +550,24 @@ function picks({ composer, session }) {
         "From your best post",
         topPostMini(post, { withImage: false }),
         "A follow-up on the same pattern",
-        "Draft it",
-        KINDS.top.door(),
+        DOORS.post(post),
       ),
     topic &&
+      card("topic", "Trending this week", topicMini(topic), "Your take on it, in your voice", DOORS.topic(topic)),
+    voices.length &&
       card(
-        "topic",
-        "Trending this week",
-        topicMini(topic),
-        "Your take on it, in your voice",
-        "Draft it",
-        `data-topic-use="${esc(topic.id)}"`,
+        "source",
+        "From your Playbook",
+        voiceRows(voices),
+        `Give ${esc(networkLabel(voices[0]))} its own voice`,
+        DOORS.voice(ctx, voices[0]),
       ),
-    card(
-      "source",
-      "From a doc or a link",
-      `<span class="nch-flow"><span class="nch-file"><i class="ap-icon-file--pdf" aria-hidden="true"></i><span>notes.pdf</span></span><i class="ap-icon-arrow-right nch-flow__arrow" aria-hidden="true"></i>${draftStack()}</span>`,
-      "A week of posts from your notes",
-      "Add a file",
-      KINDS.source.door(),
-    ),
+    card("source", "From your brand", brandImages, "An image for your next post", DOORS.images(ctx)),
+    card("source", "From a doc or a link", fileToDrafts(), "A week of posts from your notes", DOORS.source()),
   ]
     .filter(Boolean)
     .slice(0, 4)
     .join("");
-  const voiceLine = voices.length
-    ? `<p class="nch-picks__note"><i class="ap-icon-quote" aria-hidden="true"></i>${esc(networkLabel(voices[0]))} still uses your default voice. <button type="button" class="ap-link" data-finish-voices="${ctx.id}" data-finish-voices-net="${voices[0]}">Add its voice</button></p>`
-    : "";
   return shell(
     "picks",
     `
@@ -509,14 +575,14 @@ function picks({ composer, session }) {
     <h1 class="nch__title">Posts I can write for you today</h1>
     <p class="nch__sub">From your videos, your best posts and this week's Topics. Pick one, or start your own.</p>
     <div class="nch-picks" role="group" aria-label="Ready to write">${cards}</div>
-    ${voiceLine}
     ${lead(composer)}`,
   );
 }
 
 // ── 5 · Show and do ─────────────────────────────────────────────────────────
 // Left: what you can give me, and the box. Right: a stage that plays each before
-// and after in turn. Choosing a row holds the stage on it and sets the box.
+// and after in turn. Choosing a row holds the stage on it and sets the box;
+// pointing at the stage or the rows pauses it.
 function showcase({ composer, session }) {
   const { video, clips } = footage(session);
   const post = bestPosts(1)[0];
@@ -529,9 +595,11 @@ function showcase({ composer, session }) {
     </button>`;
   const slides = {
     video: `
-      <div class="nch-slide__in">${videoMedia(video)}</div>
-      <div class="nch-slide__out nch-slide__out--clips">${clips.map((c, i) => clipMedia(video, c, i, { autoplay: true })).join("")}</div>
-      <p class="nch-slide__cap">One podcast, ${video.clips.length} clips</p>`,
+      <div class="nch-slide__well">
+        <div class="nch-slide__in">${videoMedia(video)}</div>
+        <div class="nch-slide__out nch-slide__out--clips">${clips.map((c, i) => clipMedia(video, c, i, { autoplay: true })).join("")}</div>
+      </div>
+      <p class="nch-slide__cap">One video, ${video.clips.length} clips</p>`,
     source: `
       <div class="nch-slide__in"><span class="nch-file nch-file--lg"><i class="ap-icon-file--pdf" aria-hidden="true"></i><span>q2-strategy-offsite-notes.pdf</span></span></div>
       <div class="nch-slide__out">${draftStack()}</div>
@@ -549,6 +617,21 @@ function showcase({ composer, session }) {
       <p class="nch-slide__cap">Your take, in your voice</p>`
       : "",
   };
+  // The stage's button starts the kind on the very object it shows.
+  const go = {
+    video: DOORS.video(video),
+    source: DOORS.source(),
+    top: post && DOORS.post(post),
+    topic: topic && DOORS.topic(topic),
+  };
+  const button = (k, i) => {
+    const d = go[k];
+    const label = `<i class="ap-icon-sparkles" aria-hidden="true"></i><span>${esc(KINDS[k].go)}</span>`;
+    const tab = i ? 'tabindex="-1"' : "";
+    return d.href
+      ? `<a class="ap-button primary orange nch-slide__go" href="${d.href}" ${tab}>${label}</a>`
+      : `<button type="button" class="ap-button primary orange nch-slide__go" ${d.attrs} ${tab}>${label}</button>`;
+  };
   return shell(
     "show",
     `
@@ -565,7 +648,7 @@ function showcase({ composer, session }) {
             (k, i) => `
           <section class="nch-slide nch-slide--${k}${i === 0 ? " is-on" : ""}" role="tabpanel" data-nch-slide="${i}" ${i ? 'aria-hidden="true"' : ""}>
             ${slides[k]}
-            <button type="button" class="ap-button primary orange nch-slide__go" ${KINDS[k].door()} ${i ? "tabindex=-1" : ""}><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Try it</span></button>
+            ${button(k, i)}
           </section>`,
           )
           .join("")}
@@ -590,15 +673,28 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("pointerout", this);
     this.addEventListener("focusin", this);
     this.addEventListener("focusout", this);
+    // Media events don't bubble: listen in the capture phase. A playing clip
+    // drops its play mark.
+    const playing = (e) => e.target.closest?.("[data-nch-play]")?.toggleAttribute("data-playing", e.type === "play");
+    this.addEventListener("play", playing, true);
+    this.addEventListener("pause", playing, true);
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
-      this.timer = setInterval(() => {
-        if (memory.held || reduced() || document.hidden || this.matches(":focus-within")) return;
-        const n = this.querySelectorAll("[data-nch-slide]").length;
-        this.setSlide((memory.slide + 1) % n);
-      }, 4200);
+      this.restart();
     }
+  }
+
+  // The stage moves on every 4.2s unless held, read (pointer on the stage or
+  // the rows, focus inside) or out of sight. Restarted when the pointer leaves,
+  // so the progress hairline and the step start together.
+  restart() {
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      if (memory.held || this.reading || reduced() || document.hidden || this.matches(":focus-within")) return;
+      const n = this.querySelectorAll("[data-nch-slide]").length;
+      this.setSlide((memory.slide + 1) % n);
+    }, 4200);
   }
 
   disconnectedCallback() {
@@ -690,6 +786,19 @@ class ArchieHome extends HTMLElement {
       next.focus();
       next.click();
       return;
+    }
+    // Pointing at the stage or the rows pauses the stage (and its hairline).
+    const reading = t.closest(".nch-stage, .nch-rows");
+    if (reading && this.querySelector("[data-nch-stage]")) {
+      if (e.type === "pointerover" && !this.reading) {
+        this.reading = true;
+        this.classList.add("is-reading");
+      } else if (e.type === "pointerout" && !e.relatedTarget?.closest?.(".nch-stage, .nch-rows")) {
+        this.reading = false;
+        this.classList.remove("is-reading");
+        this.setSlide(memory.slide);
+        this.restart();
+      }
     }
     // Hover or focus on a starting point says, in the box, what it will do.
     const hinted = t.closest(".nch-chip[data-nch-hint]");
