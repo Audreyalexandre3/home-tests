@@ -258,6 +258,61 @@ export const FLAGS = Object.freeze([
       "three Topics to review instead of six.",
   },
   {
+    id: "homeOneInput",
+    group: "Chat & drafts",
+    tip: "A new chat opens on one box that takes a video, a file, a link or a sentence, four starting points as chips under it, and three things I can do shown working.",
+    label: "HOME-1: one input + chips",
+    // One of five new-chat homes (2026-11-02, screens/session/home-directions.js).
+    // The first ON in the order 1 to 5 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows the wordmark, « What are we posting today? », the composer, four chips (a doc or a link, a video, a post that worked, a Topic: hovering one says in the box what it does, a click starts it) and « What else I can do »: clips from one video (the podcast plays on hover), the week's Topics, a voice per network. Replaces the workflow rows and the Topics row.",
+  },
+  {
+    id: "homeModes",
+    group: "Chat & drafts",
+    tip: "Four tabs on the composer's top edge: each one changes what the box asks for and what sits under it.",
+    label: "HOME-2: modes on the input",
+    // One of five new-chat homes (2026-11-02, screens/session/home-directions.js).
+    // The first ON in the order 1 to 5 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows « What are we starting from? » and four tabs fused to the composer (a doc or a link, a video, a post that worked, a Topic). Each tab sets the box's placeholder and shows its own panel: requests to try, the podcast's clips, your three best posts, this week's Topics. Every item starts its flow.",
+  },
+  {
+    id: "homeGallery",
+    group: "Chat & drafts",
+    tip: "Six tiles, each a picture of what you get back, with the composer under them.",
+    label: "HOME-3: gallery of outcomes",
+    // One of five new-chat homes (2026-11-02, screens/session/home-directions.js).
+    // The first ON in the order 1 to 5 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows « What do you want to make? » and six tiles: posts from a doc, clips from a video (they play on hover), new posts from a top post, your take on a Topic, images in your brand, a week of posts. Each tile starts its flow; the composer sits below.",
+  },
+  {
+    id: "homePicks",
+    group: "Chat & drafts",
+    tip: "I open with four posts I can already write from your own material, one per feature.",
+    label: "HOME-4: posts I can write today",
+    // One of five new-chat homes (2026-11-02, screens/session/home-directions.js).
+    // The first ON in the order 1 to 5 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat opens on « Posts I can write for you today »: four cards built from the Playbook's own material (the podcast's clips, your best post, the trending Topic, your notes), each starting its flow; a one-line voice nudge when a network has no voice; the composer under them.",
+  },
+  {
+    id: "homeShowcase",
+    group: "Chat & drafts",
+    tip: "What you can give me on the left, a stage playing each before and after on the right.",
+    label: "HOME-5: show and do",
+    // One of five new-chat homes (2026-11-02, screens/session/home-directions.js).
+    // The first ON in the order 1 to 5 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat splits in two: on the left the wordmark, « Give me anything. I'll turn it into posts. », four rows (a video, a doc or a link, a post that worked, a Topic) and the composer; on the right a stage that plays each before and after in turn (the podcast's clips playing), with Try it. Choosing a row holds the stage on it and sets the box.",
+  },
+  {
     id: "chatPreviewTool",
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",

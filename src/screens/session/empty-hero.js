@@ -1,21 +1,22 @@
 // A new chat's hero: the greeting, the workflow starters, and the "Fresh
 // topics to review" grid (flag topicFeed). Moved out of session.js, unchanged.
 
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2592";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2592";
-import { getContextById } from "../../contexts-store.js?v=2592";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2592";
-import { renderTopicCard } from "../../components/topic-card.js?v=2592";
-import { findTopicSource } from "../../topics-catalog.js?v=2592";
-import { html, raw } from "../../utils.js?v=2592";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=2592";
-import { renderStarterCards } from "../../components/starter-card.js?v=2592";
-import { isFlagOn } from "../../feature-flags.js?v=2592";
-import { isDemo } from "../../demo-mode.js?v=2592";
-import { voicesToFinish } from "../../voice-parts.js?v=2592";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2592";
-import { parseHashParams } from "../../url-state.js?v=2592";
-import "../../archie-pixels.js?v=2592";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2594";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2594";
+import { getContextById } from "../../contexts-store.js?v=2594";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2594";
+import { renderTopicCard } from "../../components/topic-card.js?v=2594";
+import { findTopicSource } from "../../topics-catalog.js?v=2594";
+import { html, raw } from "../../utils.js?v=2594";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=2594";
+import { renderStarterCards } from "../../components/starter-card.js?v=2594";
+import { isFlagOn } from "../../feature-flags.js?v=2594";
+import { isDemo } from "../../demo-mode.js?v=2594";
+import { voicesToFinish } from "../../voice-parts.js?v=2594";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2594";
+import { parseHashParams } from "../../url-state.js?v=2594";
+import "../../archie-pixels.js?v=2594";
+import { activeHomeDirection } from "./home-directions.js?v=2594";
 
 // Composer "Add" menu — "Connected sources" is a nested submenu (Codex-style
 // "Modules d'extension ▸" flyout), not a first-level list. The flyout lists the
@@ -138,6 +139,13 @@ function renderFreshTopics(session, { staged = false } = {}) {
 // ("Quick — which context?") was removed — the composer picker is now
 // the single, always-visible context affordance.
 export function renderEmptyHero(sessionId, composerMarkup = "", session = null) {
+  // Five new-chat homes, one flag each (home-directions.js); the first ON wins.
+  // The first chat after the run keeps its « Playbook is ready » box on top.
+  const direction = activeHomeDirection();
+  if (direction) {
+    const page = direction({ composer: composerMarkup, session });
+    return page.replace("data-empty-chat>", `data-empty-chat>${playbookReadyBlock(session)}`);
+  }
   const sources = getStreamSources(sessionId);
   const firstSource = sources.find((s) => s.status !== "Processing") || sources[0] || null;
   const sourceLabel = firstSource ? `"${firstSource.filename}"` : "your source";

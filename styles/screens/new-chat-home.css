@@ -1,0 +1,911 @@
+/* A new chat's home, five directions (flags homeOneInput … homeShowcase,
+   screens/session/home-directions.js). Everything is scoped under .nch, which
+   also carries .empty-chat.empty-chat--rows so the hero's own rules keep
+   working: the topbar drops, the menus open down, the composer leads.
+
+   One language for the five: white surfaces on the conversation's ground,
+   grey-20 hairlines, a bigger radius for what you click (16) than for what it
+   holds (10–12), the product's own media on black wells, the tone of each
+   starting point on its icon tile only, blue for hover and focus. The one
+   entrance is the hero's staggered rise; the rest moves only when you do. */
+
+.nch {
+  /* The display size of the five headlines. The DS stops at 24 (h1 /
+     marketing); a home's single question earns one step more. */
+  --nch-display-size: 32px;
+  --nch-display-line: 40px;
+  --nch-radius: 16px;
+  --nch-radius-inner: 12px;
+  --nch-media-radius: 10px;
+  gap: 0;
+  padding-top: var(--ref-spacing-lg);
+  padding-bottom: var(--ref-spacing-xl);
+}
+
+.session__assistant > .session__assistant-thread > .nch {
+  max-width: min(1040px, 100%);
+}
+
+.nch__mark {
+  display: block;
+  height: 28px;
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+.nch__mark img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.nch__title {
+  margin: 0;
+  max-width: 20ch;
+  color: var(--ref-color-grey-100);
+  font-size: var(--nch-display-size);
+  line-height: var(--nch-display-line);
+  font-weight: var(--ref-font-weight-bold);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.nch__sub {
+  margin: var(--ref-spacing-xxs) 0 0;
+  max-width: 56ch;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-subtitle-size);
+  line-height: var(--sys-text-style-subtitle-line-height);
+}
+
+.nch__h {
+  margin: 0 0 var(--ref-spacing-xs);
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--ref-font-weight-bold);
+  text-align: left;
+}
+
+.nch__lead {
+  margin-top: var(--ref-spacing-md);
+}
+
+/* The pixel halo is positioned (z 0) inside a wrapper that is itself a
+   stacking context, so it would paint over the unpositioned siblings sharing
+   that wrapper (the mode tabs, the rows of 5). They stand on it instead. */
+.nch-modes__tabs,
+.nch-split__do > :not(.nch__lead) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Tone tiles: the only place a starting point's colour shows ───────────── */
+/* .nch-tone--*, .nch--<variant> and .nch-slide--<kind> are built by
+   concatenation in home-directions.js: a rename here must follow there. */
+.nch-tone--src {
+  --nch-tone-bg: var(--ref-color-purple-10);
+  --nch-tone: var(--ref-color-purple-100);
+}
+.nch-tone--clip {
+  --nch-tone-bg: var(--ref-color-yellow-10);
+  --nch-tone: var(--ref-color-yellow-150);
+}
+.nch-tone--top {
+  --nch-tone-bg: var(--ref-color-green-10);
+  --nch-tone: var(--ref-color-green-100);
+}
+.nch-tone--topic {
+  --nch-tone-bg: var(--ref-color-orange-10);
+  --nch-tone: var(--ref-color-orange-100);
+}
+
+.nch-tile {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--nch-tone-bg);
+  color: var(--nch-tone);
+}
+
+.nch-tile i {
+  background-color: currentColor;
+}
+
+.nch-tile--sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+}
+
+/* ── Media: the product's own footage, framed on a speaker ────────────────── */
+.nch-clip,
+.nch-video {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--nch-media-radius);
+  background: #000;
+}
+
+.nch-clip {
+  aspect-ratio: 9 / 16;
+  height: 100%;
+}
+
+.nch-video {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+.nch-clip__video,
+.nch-video__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nch-clip__len {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+/* ── Mini objects ──────────────────────────────────────────────────────────── */
+.nch-post,
+.nch-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--nch-radius-inner);
+  background: #fff;
+  text-align: left;
+}
+
+.nch-post__head,
+.nch-topic__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.nch-post__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.nch-post__img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.nch-score,
+.nch-trend {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border-radius: var(--ref-border-radius-sm);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+.nch-score {
+  background: var(--ref-color-green-10);
+  color: var(--ref-color-green-150);
+}
+
+.nch-trend {
+  margin-left: auto;
+  background: var(--ref-color-yellow-10);
+  color: var(--ref-color-yellow-150);
+}
+
+.nch-topic__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.nch-drafts {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 72px);
+  gap: 6px;
+}
+
+.nch-draft {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.nch-draft i {
+  margin-bottom: 2px;
+}
+
+.nch-line {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ref-color-grey-20);
+}
+
+.nch-flow {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.nch-flow__arrow {
+  color: var(--ref-color-grey-60);
+}
+
+.nch-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-caption-size);
+  white-space: nowrap;
+}
+
+.nch-file--lg {
+  padding: 10px 14px;
+  font-size: var(--sys-text-style-body-size);
+}
+
+.nch-week {
+  display: grid;
+  grid-template-columns: repeat(5, 36px);
+  gap: 6px;
+}
+
+.nch-week__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 8px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.nch-week__day small {
+  color: var(--ref-color-grey-80);
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.nch-week__day i {
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ref-color-grey-10);
+}
+
+.nch-week__day.is-on i {
+  background: var(--ref-color-orange-100);
+}
+
+.nch-brand {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+}
+
+.nch-brand__img {
+  display: flex;
+  align-items: flex-end;
+  width: 96px;
+  height: 96px;
+  padding: 8px;
+  border-radius: var(--nch-media-radius);
+  color: #fff;
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: var(--ref-font-weight-bold);
+  text-align: left;
+}
+
+.nch-brand__img--a {
+  background: linear-gradient(160deg, var(--ref-color-orange-100), var(--ref-color-orange-150));
+}
+
+.nch-brand__img--b {
+  background: linear-gradient(160deg, var(--ref-color-purple-80), var(--ref-color-purple-150));
+}
+
+.nch-voices {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 200px;
+}
+
+.nch-voice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ref-color-grey-100);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.nch-empty {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+}
+
+/* ── The door: every clickable card in the five shares it ─────────────────── */
+.nch-can__card,
+.nch-item,
+.nch-tile-card,
+.nch-pick {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--nch-radius);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-can__card:hover,
+.nch-item:hover,
+.nch-tile-card:hover,
+.nch-pick:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.nch-can__card:focus-visible,
+.nch-item:focus-visible,
+.nch-tile-card:focus-visible,
+.nch-pick:focus-visible,
+.nch-chip:focus-visible,
+.nch-row:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
+/* ── 1 · One input, the starting points beside it ─────────────────────────── */
+.nch-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.nch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  height: 40px;
+  padding: 0 var(--ref-spacing-sm) 0 8px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  transition: border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-chip:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.nch-can {
+  width: 100%;
+  max-width: 960px;
+  margin-top: var(--ref-spacing-xxl);
+}
+
+.nch-can__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.nch-can__vis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  height: 152px;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-grey-05);
+}
+
+.nch-can__vis--well {
+  background: #000;
+  padding: var(--ref-spacing-xs);
+}
+
+.nch-can__say,
+.nch-tile-card__say {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-sm);
+}
+
+.nch-can__name,
+.nch-tile-card__name,
+.nch-item__name,
+.nch-pick__title {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.nch-can__line,
+.nch-tile-card__line {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+/* ── 2 · Modes on the input ───────────────────────────────────────────────── */
+.nch-modes {
+  width: 100%;
+  max-width: 740px;
+  margin-top: var(--ref-spacing-md);
+}
+
+.nch-modes__tabs {
+  display: flex;
+  justify-content: center;
+}
+
+.nch-modes__tabs .ap-tabs-nav {
+  gap: var(--ref-spacing-xs);
+}
+
+.nch-modes .nch__lead {
+  margin-top: var(--ref-spacing-sm);
+}
+
+.nch-pane {
+  width: 100%;
+  max-width: 920px;
+  margin-top: var(--ref-spacing-lg);
+}
+
+.nch-pane[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nch-pane:not([hidden]) {
+    animation: nch-pane-in var(--ref-animation-long) var(--app-ease-out);
+  }
+}
+
+@keyframes nch-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.nch-pane__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  margin-bottom: var(--ref-spacing-xs);
+}
+
+.nch-pane__lede {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  text-align: left;
+}
+
+/* One height for the four panels, so switching mode never moves the page
+   (the hero is centred vertically and would jump with each panel's height). */
+.nch-pane__grid {
+  min-height: 236px;
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.nch-item {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
+}
+
+.nch-item > .nch-post,
+.nch-item > .nch-topic {
+  max-width: none;
+  padding: 0;
+  border: 0;
+}
+
+.nch-item__vis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 112px;
+  border-radius: var(--nch-radius-inner);
+  background: var(--ref-color-grey-05);
+}
+
+.nch-item__vis--well {
+  height: 180px;
+  background: #000;
+}
+
+.nch-item__go {
+  margin-top: auto;
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* ── 3 · A gallery of outcomes ────────────────────────────────────────────── */
+.nch-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  max-width: 960px;
+  margin-top: var(--ref-spacing-lg);
+}
+
+.nch-tile-card__vis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  height: 168px;
+  padding: var(--ref-spacing-sm);
+  background: var(--ref-color-grey-05);
+}
+
+.nch-tile-card--well .nch-tile-card__vis {
+  padding: var(--ref-spacing-xs);
+  background: #000;
+}
+
+.nch-tile-card__vis > .nch-post,
+.nch-tile-card__vis > .nch-topic {
+  max-width: 240px;
+}
+
+/* ── 4 · Posts I can write today ──────────────────────────────────────────── */
+.nch-picks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  margin-top: var(--ref-spacing-lg);
+}
+
+.nch-pick {
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm);
+}
+
+.nch-pick__from {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.nch-pick__vis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 156px;
+  padding: var(--ref-spacing-xs);
+  border-radius: var(--nch-radius-inner);
+  background: var(--ref-color-grey-05);
+  overflow: hidden;
+}
+
+.nch-pick__vis > .nch-post,
+.nch-pick__vis > .nch-topic {
+  max-width: none;
+}
+
+.nch-pick__well {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.nch-pick__vis:has(.nch-pick__well) {
+  padding: var(--ref-spacing-xxs);
+  background: #000;
+}
+
+.nch-pick__verb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.nch-pick__verb i {
+  background-color: currentColor;
+  transition: translate var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-pick:hover .nch-pick__verb i {
+  translate: 3px 0;
+}
+
+.nch-picks__note {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: var(--ref-spacing-sm) 0 0;
+  color: var(--ref-color-grey-80);
+}
+
+/* ── 5 · Show and do ──────────────────────────────────────────────────────── */
+.nch--show {
+  align-items: stretch;
+  text-align: left;
+}
+
+.nch-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--ref-spacing-xl);
+  align-items: center;
+  width: 100%;
+}
+
+.nch-split__do {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nch-split__do .nch__title {
+  max-width: 14ch;
+}
+
+.nch-rows {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--ref-spacing-md);
+}
+
+.nch-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid transparent;
+  border-radius: var(--nch-radius-inner);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.nch-row:hover {
+  background: rgb(255 255 255 / 0.6);
+}
+
+.nch-row[aria-selected="true"] {
+  border-color: var(--ref-color-grey-20);
+  background: #fff;
+}
+
+.nch-row__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.nch-row__name {
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.nch-row__does {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+}
+
+/* How long the stage stays on this row before it moves on: a hairline that
+   fills along the bottom edge. Gone once you choose a row. */
+.nch-row__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--ref-color-grey-40);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nch-row[aria-selected="true"]:not(.is-held) .nch-row__bar {
+    animation: nch-progress 4200ms linear;
+  }
+}
+
+@keyframes nch-progress {
+  to {
+    width: 100%;
+  }
+}
+
+.nch--show .nch__lead {
+  justify-content: flex-start;
+}
+
+.nch-stage {
+  position: relative;
+  height: 560px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 24px;
+  background: var(--ref-color-grey-05);
+  overflow: hidden;
+}
+
+.nch-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-lg);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--ref-animation-long) var(--app-ease-out),
+    visibility 0s linear var(--ref-animation-long);
+}
+
+.nch-slide.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--ref-animation-long) var(--app-ease-out);
+}
+
+.nch-slide--video {
+  background: #000;
+}
+
+.nch-slide__in {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.nch-slide__in .nch-video {
+  width: 260px;
+}
+
+.nch-slide__out {
+  display: flex;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.nch-slide__out--clips {
+  height: 208px;
+}
+
+.nch-slide__out .nch-drafts {
+  grid-auto-columns: 96px;
+}
+
+.nch-slide__cap {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+  text-align: center;
+}
+
+.nch-slide--video .nch-slide__cap {
+  color: #fff;
+}
+
+/* ── Narrow ───────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .nch-can__grid,
+  .nch-pane__grid,
+  .nch-gallery {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nch-picks {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nch-split {
+    grid-template-columns: 1fr;
+    gap: var(--ref-spacing-lg);
+  }
+
+  .nch-stage {
+    height: 440px;
+  }
+}
+
+@media (max-width: 600px) {
+  .nch {
+    --nch-display-size: 24px;
+    --nch-display-line: 32px;
+  }
+
+  .nch-can__grid,
+  .nch-pane__grid,
+  .nch-gallery,
+  .nch-picks {
+    grid-template-columns: 1fr;
+  }
+
+  .nch-modes__tabs .ap-tabs-nav {
+    overflow-x: auto;
+  }
+}
+
+.nch-pick .nch-drafts {
+  grid-auto-columns: minmax(0, 48px);
+}
