@@ -1,27 +1,27 @@
-import { html, raw, escapeAttr } from "../utils.js?v=2579";
-import { conceptText } from "../concepts.js?v=2579";
-import { renderTopbar } from "../components/topbar.js?v=2579";
+import { html, raw, escapeAttr } from "../utils.js?v=2580";
+import { conceptText } from "../concepts.js?v=2580";
+import { renderTopbar } from "../components/topbar.js?v=2580";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=2579";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2579";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2579";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2579";
-import { navigate, getPath } from "../router.js?v=2579";
-import { isFlagOn } from "../feature-flags.js?v=2579";
-import { setHandoff } from "../handoff.js?v=2579";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2579";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=2579";
-import { visibleContexts, usableContexts } from "../playbook-access.js?v=2579";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2579";
-import { voicesToFinish } from "../voice-parts.js?v=2579";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=2579";
-import { installMoreMenu } from "../components/more-menu.js?v=2579";
-import { showToast } from "../components/toast.js?v=2579";
-import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2579";
+} from "../contexts-store.js?v=2580";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2580";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2580";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2580";
+import { navigate, getPath } from "../router.js?v=2580";
+import { isFlagOn } from "../feature-flags.js?v=2580";
+import { setHandoff } from "../handoff.js?v=2580";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2580";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=2580";
+import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2580";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2580";
+import { voicesToFinish } from "../voice-parts.js?v=2580";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=2580";
+import { installMoreMenu } from "../components/more-menu.js?v=2580";
+import { showToast } from "../components/toast.js?v=2580";
+import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2580";
 import {
   chatPlaybook,
   renderChatsTab,
@@ -29,7 +29,7 @@ import {
   renderContextsEmpty,
   renderGhostCard,
   renderPlaybooksTable,
-} from "./home/lists.js?v=2579";
+} from "./home/lists.js?v=2580";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -81,7 +81,9 @@ let unsubs = [];
 // every repaint path (a store notify, Clear search, a tab switch) has to reach
 // it, and bind() is handed the SECTION, not this.
 let mountTarget = null;
-export let pageState = { query: "", pickedPlaybookId: null };
+// `owner` — the catalogue's sort by ownership (all · mine · shared), flag
+// playbookSharing only: without the flag every Playbook is mine.
+export let pageState = { query: "", pickedPlaybookId: null, owner: "all" };
 // Which of the two surfaces this mount is. Module-level rather than threaded
 // through every renderer: the search's partial repaint needs it too.
 let isHome = false;
@@ -130,7 +132,7 @@ function mountScreen(target, home) {
     // Switching tab is a query-only change, which re-runs this handler: the
     // path is already the NEW one here, so a tab switch keeps the search box
     // and leaving the surface forgets it.
-    if (getPath() !== "/home") pageState = { query: "", pickedPlaybookId: null };
+    if (getPath() !== "/home") pageState = { query: "", pickedPlaybookId: null, owner: "all" };
   };
 }
 
@@ -206,7 +208,7 @@ function renderPage() {
               : "",
           )}
         </header>
-        ${raw(voicesWarning(all))}
+        ${raw(voicesWarning(all))} ${raw(renderOwnerTabs(all))}
         <div class="contexts-view__body">${raw(renderTabBody())}</div>
       </div>
     `;
@@ -237,7 +239,7 @@ function renderPage() {
 function renderTabBody() {
   if (isHome && activeTab() === "chats") return renderChatsTab();
   const all = visibleContexts();
-  const visible = filter(all, pageState);
+  const visible = filter(isHome ? all : byOwner(all, pageState.owner), pageState);
   if (visible.length === 0) return renderContextsEmpty(all, pageState);
   // On the home the Playbooks tab is a LIST of full-width rows, not a grid of
   // tiles. Two reasons, and the second is the one that matters: the numbers
@@ -247,7 +249,9 @@ function renderTabBody() {
   // tab's own rows. Flag OFF the catalogue keeps its grid: it is a page for
   // browsing fiches, and its cards are the object, not a door.
   if (isHome) return renderPlaybooksTable(visible);
-  return `<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}${renderGhostCard()}</div>`;
+  // No « Create a Playbook » ghost among other people's: a new one is mine.
+  const ghost = pageState.owner === "shared" ? "" : renderGhostCard();
+  return `<div class="contexts-view__grid">${visible.map(renderContextCard).join("")}${ghost}</div>`;
 }
 
 function renderSearchField() {
@@ -320,6 +324,46 @@ function renderHomeToolbar(tab, totalChats) {
       <div class="home-toolbar__actions">
         ${renderSearchField()}
         ${tab === "playbooks" ? renderCreateButton() : ""}
+      </div>
+    </div>
+  `;
+}
+
+// ── Mine · Shared with me (flag playbookSharing) ─────────────────────────
+// The catalogue sorted by whose it is, the way a gallery of design systems
+// splits yours from the ones shared with you. DS tabs: one list on screen, three
+// views of it, each counting Playbooks. Nothing shared with me → no tabs, there
+// is nothing to sort. Flag OFF isMine() is always true, so they never show.
+function byOwner(list, owner) {
+  if (owner === "mine") return list.filter(isMine);
+  if (owner === "shared") return list.filter((c) => !isMine(c));
+  return list;
+}
+
+function renderOwnerTabs(all) {
+  const shared = byOwner(all, "shared").length;
+  if (!shared) return "";
+  const item = (id, label, count) => {
+    const on = pageState.owner === id;
+    return `
+      <button
+        type="button"
+        class="ap-tabs-tab${on ? " active" : ""}"
+        role="tab"
+        aria-selected="${on ? "true" : "false"}"
+        data-contexts-owner="${id}"
+      >
+        <span>${label}</span>
+        <span class="ap-counter normal ${on ? "blue" : "grey"}">${count}</span>
+      </button>
+    `;
+  };
+  return `
+    <div class="ap-tabs">
+      <div class="ap-tabs-nav" role="tablist" aria-label="Sort Playbooks by owner">
+        ${item("all", "All", all.length)}
+        ${item("mine", "Mine", all.length - shared)}
+        ${item("shared", "Shared with me", shared)}
       </div>
     </div>
   `;
@@ -452,6 +496,12 @@ function bind(root) {
     }
     if (event.target.closest("[data-contexts-new]")) {
       openNewPlaybookFlow(catalogueRoute());
+      return;
+    }
+    const ownerTab = event.target.closest("[data-contexts-owner]");
+    if (ownerTab) {
+      pageState.owner = ownerTab.dataset.contextsOwner;
+      paint();
       return;
     }
     if (event.target.closest("[data-contexts-clear-query]")) {
