@@ -1,27 +1,27 @@
-import { html, raw, escapeAttr } from "../utils.js?v=2588";
-import { conceptText } from "../concepts.js?v=2588";
-import { renderTopbar } from "../components/topbar.js?v=2588";
+import { html, raw, escapeAttr } from "../utils.js?v=2589";
+import { conceptText } from "../concepts.js?v=2589";
+import { renderTopbar } from "../components/topbar.js?v=2589";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=2588";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2588";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2588";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2588";
-import { navigate, getPath } from "../router.js?v=2588";
-import { isFlagOn } from "../feature-flags.js?v=2588";
-import { setHandoff } from "../handoff.js?v=2588";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2588";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=2588";
-import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2588";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2588";
-import { voicesToFinish } from "../voice-parts.js?v=2588";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=2588";
-import { installMoreMenu } from "../components/more-menu.js?v=2588";
-import { showToast } from "../components/toast.js?v=2588";
-import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2588";
+} from "../contexts-store.js?v=2589";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2589";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2589";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2589";
+import { navigate, getPath } from "../router.js?v=2589";
+import { isFlagOn } from "../feature-flags.js?v=2589";
+import { setHandoff } from "../handoff.js?v=2589";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2589";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=2589";
+import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2589";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2589";
+import { voicesToFinish } from "../voice-parts.js?v=2589";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=2589";
+import { installMoreMenu } from "../components/more-menu.js?v=2589";
+import { showToast } from "../components/toast.js?v=2589";
+import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2589";
 import {
   chatPlaybook,
   renderChatsTab,
@@ -29,7 +29,7 @@ import {
   renderContextsEmpty,
   renderGhostCard,
   renderPlaybooksTable,
-} from "./home/lists.js?v=2588";
+} from "./home/lists.js?v=2589";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -199,16 +199,20 @@ function renderPage() {
             <p class="contexts-view__sub concept-lead">${conceptText("playbook")}</p>
           </div>
           ${raw(
-            // Nothing to search and nothing to add next to: the empty state's
-            // « Create your first Playbook » is then the one next step.
-            all.length
-              ? html`<div class="contexts-view__head-actions">
-                  ${raw(renderSearchField())}${raw(renderCreateButton())}
-                </div>`
-              : "",
+            // Nothing to add next to: the empty state's « Create your first
+            // Playbook » is then the one next step. The page's one primary
+            // sits on the title's row, never wrapped under the sentence.
+            all.length ? renderCreateButton() : "",
           )}
         </header>
-        ${raw(voicesWarning(all))} ${raw(renderOwnerTabs(all))}
+        ${raw(voicesWarning(all))}
+        ${raw(
+          // One toolbar over the grid: the owner tabs (when something is shared
+          // with me) on the left, the search on the right.
+          all.length
+            ? `<div class="contexts-view__toolbar">${renderOwnerTabs(all) || "<span></span>"}${renderSearchField()}</div>`
+            : "",
+        )}
         <div class="contexts-view__body">${raw(renderTabBody())}</div>
       </div>
     `;

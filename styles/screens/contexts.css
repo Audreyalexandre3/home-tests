@@ -25,7 +25,8 @@
 
 .contexts-view__head {
   display: flex;
-  align-items: flex-end;
+  /* The button on the title's row, not on the sentence's last line. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--ref-spacing-md);
   flex-wrap: wrap;
@@ -55,14 +56,22 @@
   color: var(--ref-color-grey-80);
 }
 
-.contexts-view__head-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-}
-
 .contexts-view__search {
   flex: 0 0 240px;
+}
+
+/* Over the grid: the owner tabs (or an empty slot) left, the search right,
+   on the tabs' baseline. */
+.contexts-view__toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+}
+
+.contexts-view__toolbar > .ap-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Narrow viewports (right panel open or mobile) — let the search input
@@ -121,52 +130,30 @@
 }
 
 /* ── Ghost card ────────────────────────────────────────────────────
-   Trailing cell in the contexts grid that invites the user to create a
-   new Playbook from the grid itself (rather than chasing the header
-   button after scrolling). Matches the regular card footprint, but
-   uses a dashed border + centered glyph + mermaid hover tint so the
-   eye reads it as "an empty slot waiting for a Playbook". */
+   The trailing « Create a Playbook » cell: the card's anatomy, empty. A
+   transparent body (an empty slot), a butter cover (Archie's surface) and
+   the Archie mark astride its edge where a brand's logo would sit. Card
+   hover = blue border; the mark's tile turns brand orange. */
 
-.contexts-card--ghost {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
-  text-align: center;
-  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+.contexts-card.contexts-card--ghost {
+  padding: 0;
   background: transparent;
-  border: 2px dashed var(--app-border);
-  border-radius: var(--ref-border-radius-md);
-  cursor: pointer;
-  min-height: 200px;
-  /* The four rows a Playbook card spans, so the ghost sits in line with them. */
-  grid-row: span 4;
+  font: inherit;
+  text-align: left;
   color: var(--ref-color-grey-100);
-  font-family: inherit;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    background-color var(--ref-animation-short) var(--app-ease-out);
 }
 
-/* Card hover = blue border, no lift, no accent edge (house rules). */
-.contexts-card--ghost:hover,
-.contexts-card--ghost:focus-visible {
-  outline: none;
-  border-color: var(--ref-color-electric-blue-100);
+.contexts-card--ghost .contexts-card__cover {
   background: var(--app-butter);
-  color: var(--ref-color-grey-100);
 }
 
-/* Rest: butter tile with the Archie logo in brand orange (the logo mask paints
-   in currentColor, so `color` drives it). */
 .contexts-card--ghost__glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--app-radius-circle);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--ref-border-radius-sm);
   background: var(--app-butter);
   color: var(--app-archie-mark);
   transition:
@@ -178,26 +165,16 @@
   font-size: var(--sys-icon-css-md);
 }
 
-/* Hover: tile turns brand orange, logo flips to white (via currentColor). */
 .contexts-card--ghost:hover .contexts-card--ghost__glyph,
 .contexts-card--ghost:focus-visible .contexts-card--ghost__glyph {
   background: var(--app-archie-mark);
   color: var(--ref-color-white);
 }
 
-.contexts-card--ghost__title {
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
-  color: var(--ref-color-grey-100);
-}
-
-.contexts-card--ghost__sub {
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
-  max-width: 220px;
-  line-height: var(--sys-text-style-caption-line-height);
+.contexts-card--ghost:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+  border-color: var(--ref-color-electric-blue-100);
 }
 
 /* ── ContextCard ───────────────────────────────────────────────────
@@ -221,12 +198,6 @@
   overflow: hidden;
   cursor: pointer;
   transition: border-color var(--ref-animation-short) var(--app-ease-out);
-}
-
-/* The ghost carries .contexts-card too: it spans the four rows, but stacks
-   its own content. */
-.contexts-card.contexts-card--ghost {
-  display: flex;
 }
 
 /* The card hover of the house (design-guidelines §4): a blue border, no

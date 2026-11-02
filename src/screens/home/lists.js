@@ -11,19 +11,19 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2588";
-import { isFlagOn } from "../../feature-flags.js?v=2588";
-import { escapeAttr, escapeText } from "../../utils.js?v=2588";
-import { brandCoverStyle, voiceSentence } from "../../brand-cover.js?v=2588";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2588";
-import { getSessions } from "../../sessions-store.js?v=2588";
-import { renderEmptyState } from "../../components/empty-state.js?v=2588";
-import { getSources, getIdeas } from "../../library.js?v=2588";
-import { getPosts } from "../../posts-store.js?v=2588";
-import { getContextById } from "../../contexts-store.js?v=2588";
-import { voicesToFinish } from "../../voice-parts.js?v=2588";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2588";
-import { pageState } from "../home.js?v=2588";
+} from "../../playbook-access.js?v=2589";
+import { isFlagOn } from "../../feature-flags.js?v=2589";
+import { escapeAttr, escapeText } from "../../utils.js?v=2589";
+import { brandCoverStyle, voiceSentence } from "../../brand-cover.js?v=2589";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2589";
+import { getSessions } from "../../sessions-store.js?v=2589";
+import { renderEmptyState } from "../../components/empty-state.js?v=2589";
+import { getSources, getIdeas } from "../../library.js?v=2589";
+import { getPosts } from "../../posts-store.js?v=2589";
+import { getContextById } from "../../contexts-store.js?v=2589";
+import { voicesToFinish } from "../../voice-parts.js?v=2589";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2589";
+import { pageState } from "../home.js?v=2589";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -355,11 +355,17 @@ export function renderContextsEmpty(allContexts, pageState) {
 // itself, so the user doesn't have to chase the header CTA after scrolling.
 // Triggers the same `data-contexts-new` handler as the header button.
 export function renderGhostCard() {
+  // The card's own anatomy, empty: a butter cover (Archie's surface), the
+  // Archie mark astride its edge where a brand's logo would sit, then the
+  // name slot and one sentence. It spans the grid's four rows like a card.
   return `
     <button type="button" class="contexts-card contexts-card--ghost" data-contexts-new aria-label="Create a Playbook">
-      <span class="contexts-card--ghost__glyph"><i class="ap-icon-archie-official"></i></span>
-      <span class="contexts-card--ghost__title">Create a Playbook</span>
-      <span class="contexts-card--ghost__sub">One Brand, its voice and its goal. I write every draft from it.</span>
+      <span class="contexts-card__cover"></span>
+      <span class="contexts-card__body">
+        <span class="contexts-card__mark"><span class="contexts-card--ghost__glyph"><i class="ap-icon-archie-official" aria-hidden="true"></i></span></span>
+        <span class="contexts-card__name">Create a Playbook</span>
+        <span class="contexts-card__brief">One Brand, its voice and its goal. I write every draft from it.</span>
+      </span>
     </button>
   `;
 }
