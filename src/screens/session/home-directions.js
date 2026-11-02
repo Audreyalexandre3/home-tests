@@ -22,19 +22,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2602";
-import { chatStarters } from "../../mocks.js?v=2602";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2602";
-import { getTopPosts } from "../../top-posts-store.js?v=2602";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2602";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2602";
-import { findTopicSource } from "../../topics-catalog.js?v=2602";
-import { getContextById } from "../../contexts-store.js?v=2602";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2602";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2602";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2602";
-import { escapeHtml } from "../../utils.js?v=2602";
-import "../../archie-pixels.js?v=2602";
+import { isFlagOn } from "../../feature-flags.js?v=2606";
+import { chatStarters } from "../../mocks.js?v=2606";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2606";
+import { getTopPosts } from "../../top-posts-store.js?v=2606";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2606";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2606";
+import { findTopicSource } from "../../topics-catalog.js?v=2606";
+import { getContextById } from "../../contexts-store.js?v=2606";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2606";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2606";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2606";
+import { escapeHtml } from "../../utils.js?v=2606";
+import "../../archie-pixels.js?v=2606";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -193,11 +193,13 @@ function clipMedia(video, clip, i, { autoplay = false } = {}) {
     </span>`;
 }
 
-function videoMedia(video) {
+function videoMedia(video, { len = false } = {}) {
   const t = `#t=${((video.posterMs || 0) / 1000).toFixed(1)}`;
+  const s = Math.round((video.durationMs || 0) / 1000);
   return `
     <span class="nch-video">
       <video class="nch-video__media" src="${esc(video.url)}${t}" muted playsinline preload="metadata" aria-hidden="true"></video>
+      ${len && s ? `<span class="nch-clip__len">${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}</span>` : ""}
     </span>`;
 }
 
@@ -593,29 +595,49 @@ function showcase({ composer, session }) {
       ${tile(k)}<span class="nch-row__text"><span class="nch-row__name">${esc(KINDS[k].name)}</span><span class="nch-row__does">${esc(KINDS[k].does)}</span></span>
       <span class="nch-row__bar" aria-hidden="true"></span>
     </button>`;
+  // Each scene reads top to bottom: what you give me, what I do with it (my
+  // butter seam), what you get. The foot names the result and holds the verb.
+  const mins = Math.round((video.durationMs || 0) / 60000);
+  const length = mins > 1 ? `a ${mins}-minute video` : "a one-minute video";
+  const scene = (input, does, output) => `
+      <div class="nch-scene">
+        <div class="nch-scene__in">${input}</div>
+        <div class="nch-seam"><span class="nch-seam__pill"><i class="ap-icon-sparkles" aria-hidden="true"></i>${esc(does)}</span></div>
+        <div class="nch-scene__out">${output}</div>
+      </div>`;
   const slides = {
-    video: `
-      <div class="nch-slide__well">
-        <div class="nch-slide__in">${videoMedia(video)}</div>
-        <div class="nch-slide__out nch-slide__out--clips">${clips.map((c, i) => clipMedia(video, c, i, { autoplay: true })).join("")}</div>
-      </div>
-      <p class="nch-slide__cap">One video, ${video.clips.length} clips</p>`,
-    source: `
-      <div class="nch-slide__in"><span class="nch-file nch-file--lg"><i class="ap-icon-file--pdf" aria-hidden="true"></i><span>q2-strategy-offsite-notes.pdf</span></span></div>
-      <div class="nch-slide__out">${draftStack()}</div>
-      <p class="nch-slide__cap">9 ideas, a draft for each network</p>`,
+    video: scene(
+      videoMedia(video, { len: true }),
+      "I find the moments worth a clip",
+      `<span class="nch-scene__clips">${clips
+        .map(
+          (c, i) =>
+            `<span class="nch-scene__clip">${clipMedia(video, c, i, { autoplay: true })}<span class="nch-scene__clip-title">${esc(c.title || "")}</span></span>`,
+        )
+        .join("")}</span>`,
+    ),
+    source: scene(
+      `<span class="nch-doc">
+        <span class="nch-doc__head"><span class="nch-doc__icon" aria-hidden="true"><i class="ap-icon-file--pdf"></i></span><span class="nch-doc__name">q2-strategy-offsite-notes.pdf</span><span class="nch-doc__meta">8 pages</span></span>
+        <span class="nch-doc__text">…and the roadmap review kept coming back to one point. <mark>We shipped less this quarter, on purpose.</mark> The launches we cut freed the team for…</span>
+      </span>`,
+      "I pull out the ideas",
+      draftStack(),
+    ),
     top: post
-      ? `
-      <div class="nch-slide__in">${topPostMini(post, { withImage: false })}</div>
-      <div class="nch-slide__out">${draftStack(["linkedin", "linkedin", "x"])}</div>
-      <p class="nch-slide__cap">New posts on the same pattern</p>`
+      ? scene(
+          topPostMini(post, { withImage: false }),
+          "I find why it worked",
+          draftStack(["linkedin", "linkedin", "x"]),
+        )
       : "",
-    topic: topic
-      ? `
-      <div class="nch-slide__in">${topicMini(topic)}</div>
-      <div class="nch-slide__out">${draftStack(["linkedin"])}</div>
-      <p class="nch-slide__cap">Your take, in your voice</p>`
-      : "",
+    topic: topic ? scene(topicMini(topic), "I write your angle on it", draftStack(["linkedin"])) : "",
+  };
+  const result = {
+    video: [`${video.clips.length} clips, cut and captioned`, `From ${length}`],
+    source: ["9 ideas, a draft for each network", "From one PDF"],
+    top: ["New posts on the same pattern", "Same hook, a new subject"],
+    topic: ["Your take, in your voice", "Drafted for LinkedIn"],
   };
   // The stage's button starts the kind on the very object it shows.
   const go = {
@@ -648,7 +670,10 @@ function showcase({ composer, session }) {
             (k, i) => `
           <section class="nch-slide nch-slide--${k}${i === 0 ? " is-on" : ""}" role="tabpanel" data-nch-slide="${i}" ${i ? 'aria-hidden="true"' : ""}>
             ${slides[k]}
-            ${button(k, i)}
+            <footer class="nch-slide__foot">
+              <span class="nch-slide__result"><span class="nch-slide__what">${esc(result[k][0])}</span><span class="nch-slide__from">${esc(result[k][1])}</span></span>
+              ${button(k, i)}
+            </footer>
           </section>`,
           )
           .join("")}
