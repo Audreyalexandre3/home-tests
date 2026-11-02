@@ -23,45 +23,20 @@
   margin: 0 auto;
 }
 
-/* Title left, search + Create right on the same line, the concept sentence
-   under them across the width: the controls never wrap under the sentence. */
-.contexts-view__head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: var(--ref-spacing-md);
-  row-gap: var(--ref-spacing-xxxs);
-}
-
-.contexts-view__head .contexts-view__sub {
-  grid-column: 1 / -1;
-}
-
-.contexts-view__title {
+/* The page's lead: the concept sentence, first thing under the topbar. */
+.contexts-view__lead {
   margin: 0;
-  font-family: var(--sys-text-style-h1-font-family);
-  font-size: var(--sys-text-style-h1-size);
-  line-height: var(--sys-text-style-h1-line-height);
-  font-weight: var(--sys-text-style-h1-weight);
-  color: var(--ref-color-grey-100);
 }
 
-.contexts-view__sub {
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-80);
-}
-
-.contexts-view__search {
-  flex: 0 0 240px;
-}
-
-.contexts-view__head-actions {
+/* The list's toolbar: search first, on the left (DS page-patterns P3). */
+.contexts-view__toolbar {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xs);
+}
+
+.contexts-view__search {
+  flex: 0 0 320px;
 }
 
 /* Narrow viewports (right panel open or mobile) — let the search input

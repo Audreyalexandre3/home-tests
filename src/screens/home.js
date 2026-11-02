@@ -1,27 +1,27 @@
-import { html, raw, escapeAttr } from "../utils.js?v=2591";
-import { conceptText } from "../concepts.js?v=2591";
-import { renderTopbar } from "../components/topbar.js?v=2591";
+import { html, raw, escapeAttr } from "../utils.js?v=2592";
+import { conceptText } from "../concepts.js?v=2592";
+import { renderTopbar, setTopbarActions } from "../components/topbar.js?v=2592";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=2591";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2591";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2591";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2591";
-import { navigate, getPath } from "../router.js?v=2591";
-import { isFlagOn } from "../feature-flags.js?v=2591";
-import { setHandoff } from "../handoff.js?v=2591";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2591";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=2591";
-import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2591";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2591";
-import { voicesToFinish } from "../voice-parts.js?v=2591";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=2591";
-import { installMoreMenu } from "../components/more-menu.js?v=2591";
-import { showToast } from "../components/toast.js?v=2591";
-import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2591";
+} from "../contexts-store.js?v=2592";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2592";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2592";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2592";
+import { navigate, getPath } from "../router.js?v=2592";
+import { isFlagOn } from "../feature-flags.js?v=2592";
+import { setHandoff } from "../handoff.js?v=2592";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2592";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=2592";
+import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2592";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2592";
+import { voicesToFinish } from "../voice-parts.js?v=2592";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=2592";
+import { installMoreMenu } from "../components/more-menu.js?v=2592";
+import { showToast } from "../components/toast.js?v=2592";
+import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2592";
 import {
   chatPlaybook,
   renderChatsTab,
@@ -29,7 +29,7 @@ import {
   renderContextsEmpty,
   renderGhostCard,
   renderPlaybooksTable,
-} from "./home/lists.js?v=2591";
+} from "./home/lists.js?v=2592";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -127,8 +127,18 @@ function mountScreen(target, home) {
   // The Chats tab has to move when a chat is renamed, pinned or deleted
   // somewhere else — the rail's ⋮ menu, mostly.
   if (home) unsubs.push(subscribeSessions(() => paint()));
+  // The topbar lives outside the section, so its Create needs its own listener.
+  if (!home) {
+    const topbar = document.getElementById("topbar");
+    const onTopbarClick = (event) => {
+      if (event.target.closest("[data-contexts-topbar] [data-contexts-new]")) openNewPlaybookFlow(catalogueRoute());
+    };
+    topbar?.addEventListener("click", onTopbarClick);
+    unsubs.push(() => topbar?.removeEventListener("click", onTopbarClick));
+  }
   return () => {
     drainSubs();
+    if (!home) setTopbarActions(null);
     // Switching tab is a query-only change, which re-runs this handler: the
     // path is already the NEW one here, so a tab switch keeps the search box
     // and leaving the surface forgets it.
@@ -145,6 +155,15 @@ function paint() {
   const target = mountTarget;
   if (!target) return;
   target.innerHTML = html`<section class="screen contexts-view" data-home-root>${raw(renderPage())}</section>`;
+  // The catalogue's primary rides the topbar (DS Top bar: actions on the
+  // right). None while there is nothing yet: the empty state's « Create your
+  // first Playbook » is then the one next step.
+  if (!isHome) {
+    setTopbarActions(
+      "/contexts",
+      visibleContexts().length ? `<div data-contexts-topbar>${renderCreateButton()}</div>` : null,
+    );
+  }
   // ⚠️ Bind to the SECTION, not to `target`. `target` is #app, which paint()
   // never replaces — so every repaint (a store notify, Clear search) stacked
   // another pair of listeners on it, and after two paints one click on the
@@ -193,21 +212,15 @@ function renderPage() {
   if (!isHome) {
     return html`
       <div class="contexts-view__page">
-        <header class="contexts-view__head">
-          <h1 class="contexts-view__title">Playbooks</h1>
-          ${raw(
-            // Nothing to search and nothing to add next to: the empty state's
-            // « Create your first Playbook » is then the one next step. Search
-            // and Create sit on the title's row, never wrapped under the
-            // sentence, and never on a row of their own (tried, 2026-11-02:
-            // a lone search field over the grid).
-            all.length
-              ? `<div class="contexts-view__head-actions">${renderSearchField()}${renderCreateButton()}</div>`
-              : "",
-          )}
-          <p class="contexts-view__sub concept-lead">${conceptText("playbook")}</p>
-        </header>
-        ${raw(voicesWarning(all))} ${raw(renderOwnerTabs(all))}
+        <!-- No drawn <h1>: the topbar names the route and carries the page's
+             primary (DS Top bar, page-patterns P1/P2) — the Topic Feed and
+             Connectors already work this way. The concept sentence leads the
+             page, then the owner tabs (P4), then the toolbar, search first on
+             the left (P3). -->
+        <p class="concept-lead contexts-view__lead">${conceptText("playbook")}</p>
+        ${raw(renderOwnerTabs(all))}
+        ${raw(all.length ? `<div class="contexts-view__toolbar">${renderSearchField()}</div>` : "")}
+        ${raw(voicesWarning(all))}
         <div class="contexts-view__body">${raw(renderTabBody())}</div>
       </div>
     `;

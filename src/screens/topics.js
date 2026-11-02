@@ -32,17 +32,17 @@
 // view. There is an explicit Load more too, and both do exactly the same thing —
 // an infinite list with no button is unusable by keyboard.
 
-import { html, raw, escapeAttr } from "../utils.js?v=2591";
-import { conceptText } from "../concepts.js?v=2591";
-import { navigate, getPath } from "../router.js?v=2591";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2591";
-import { renderTopbar } from "../components/topbar.js?v=2591";
-import { showToast } from "../components/toast.js?v=2591";
-import { renderEmptyState } from "../components/empty-state.js?v=2591";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2591";
-import { getContexts, getContextById, getDefaultContext } from "../contexts-store.js?v=2591";
-import { getActivePlaybook, isWorkspaceMode, subscribe as subscribeScope } from "../active-playbook.js?v=2591";
-import { getFeedForPlaybook, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=2591";
+import { html, raw, escapeAttr } from "../utils.js?v=2592";
+import { conceptText } from "../concepts.js?v=2592";
+import { navigate, getPath } from "../router.js?v=2592";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2592";
+import { renderTopbar } from "../components/topbar.js?v=2592";
+import { showToast } from "../components/toast.js?v=2592";
+import { renderEmptyState } from "../components/empty-state.js?v=2592";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2592";
+import { getContexts, getContextById, getDefaultContext } from "../contexts-store.js?v=2592";
+import { getActivePlaybook, isWorkspaceMode, subscribe as subscribeScope } from "../active-playbook.js?v=2592";
+import { getFeedForPlaybook, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=2592";
 import {
   getTopicsForFeed,
   groupTopicsByAge,
@@ -53,7 +53,7 @@ import {
   ignoreTopic,
   unignoreTopic,
   subscribe as subscribeTopics,
-} from "../topics-store.js?v=2591";
+} from "../topics-store.js?v=2592";
 import {
   TOPIC_SOURCES,
   TOPIC_KINDS,
@@ -62,13 +62,13 @@ import {
   findTopicSource,
   findCadence,
   isLiveSource,
-} from "../topics-catalog.js?v=2591";
-import { renderTopicCard } from "../components/topic-card.js?v=2591";
-import { renderTopicArticle, renderTopicHeader, renderTopicActions } from "../topic-article.js?v=2591";
-import { openIgnoreReason } from "../components/topic-ignore-modal.js?v=2591";
-import { openTopicHistory } from "../components/topic-history-modal.js?v=2591";
-import { useTopicInChat } from "../topic-flow.js?v=2591";
-import { canEdit } from "../playbook-access.js?v=2591";
+} from "../topics-catalog.js?v=2592";
+import { renderTopicCard } from "../components/topic-card.js?v=2592";
+import { renderTopicArticle, renderTopicHeader, renderTopicActions } from "../topic-article.js?v=2592";
+import { openIgnoreReason } from "../components/topic-ignore-modal.js?v=2592";
+import { openTopicHistory } from "../components/topic-history-modal.js?v=2592";
+import { useTopicInChat } from "../topic-flow.js?v=2592";
+import { canEdit } from "../playbook-access.js?v=2592";
 
 const PAGE = 10;
 // Long enough to read the scanning line, short enough that nobody waits for it
@@ -398,10 +398,8 @@ function renderPage(pb) {
 //
 // The rule the app actually keeps: the topbar names the route, and a screen
 // draws its own title only where the topbar has CEDED it to a back control
-// (/playbook/:id, /topics/settings). /contexts is the apparent exception and is
-// not one — its head row carries a data-bearing subtitle, a search field and a
-// primary CTA, so the title is one element of four rather than a row's whole
-// reason to exist.
+// (/playbook/:id, /topics/settings). /contexts follows it too since 2026-11-02:
+// its title row went, its Create a Playbook moved to the topbar.
 //
 // Dropping it costs nothing for screen readers either: the topbar's
 // .app-topbar__title IS an <h1>, so the document goes from two to one.
