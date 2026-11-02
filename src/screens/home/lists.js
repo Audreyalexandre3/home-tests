@@ -11,18 +11,18 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2573";
-import { isFlagOn } from "../../feature-flags.js?v=2573";
-import { escapeAttr, escapeText } from "../../utils.js?v=2573";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2573";
-import { getSessions } from "../../sessions-store.js?v=2573";
-import { renderEmptyState } from "../../components/empty-state.js?v=2573";
-import { getSources, getIdeas } from "../../library.js?v=2573";
-import { getPosts } from "../../posts-store.js?v=2573";
-import { getContextById } from "../../contexts-store.js?v=2573";
-import { voicesToFinish } from "../../voice-parts.js?v=2573";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2573";
-import { pageState } from "../home.js?v=2573";
+} from "../../playbook-access.js?v=2575";
+import { isFlagOn } from "../../feature-flags.js?v=2575";
+import { escapeAttr, escapeText } from "../../utils.js?v=2575";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2575";
+import { getSessions } from "../../sessions-store.js?v=2575";
+import { renderEmptyState } from "../../components/empty-state.js?v=2575";
+import { getSources, getIdeas } from "../../library.js?v=2575";
+import { getPosts } from "../../posts-store.js?v=2575";
+import { getContextById } from "../../contexts-store.js?v=2575";
+import { voicesToFinish } from "../../voice-parts.js?v=2575";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2575";
+import { pageState } from "../home.js?v=2575";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -109,8 +109,10 @@ function renderPlaybookRow(ctx) {
 
 // The brand's own mark where the analysis found a logo, its initials where it
 // didn't — so the column keeps one width and one shape, and never a stretched
-// or cropped lockup.
-function playbookThumb(ctx) {
+// or cropped lockup. A square takes the brand's square mark (its « Icon » logo)
+// when there is one: a wordmark shrunk into a square can't be read.
+function playbookThumb(ctx, size = 32) {
+  const logo = ctx.brandLogos?.find((l) => l.label === "Icon")?.url || ctx.brandLogo;
   const initials = String(ctx.name || "")
     .split("·")[0]
     .split(/\s+/)
@@ -119,10 +121,10 @@ function playbookThumb(ctx) {
     .map((w) => w[0])
     .join("");
   return `
-    <span class="ap-avatar square size-32 home-playbooks__thumb" aria-hidden="true">
+    <span class="ap-avatar square size-${size} home-playbooks__thumb" aria-hidden="true">
       ${
-        ctx.brandLogo
-          ? `<img src="${escapeAttr(ctx.brandLogo)}" alt="" />`
+        logo
+          ? `<img src="${escapeAttr(logo)}" alt="" />`
           : `<span class="ap-avatar-initials">${escapeText(initials)}</span>`
       }
     </span>
@@ -381,10 +383,14 @@ export function renderContextCard(ctx) {
         .filter((c, i, arr) => c && arr.indexOf(c) === i)
         .slice(0, 3)
     : [];
-  const dotsHtml = paletteDots.length
-    ? `<div class="contexts-card__palette" aria-hidden="true">${paletteDots
-        .map((c) => `<span class="contexts-card__palette-dot" style="background:${escapeAttr(c)};"></span>`)
-        .join("")}</div>`
+  // The cover: the brand's palette as flat bands (60 / 25 / 15, or 70 / 30 for
+  // two colours). A 64px field, not a strip: it overrules PB-01 (2026-11-02, the
+  // user's call). No palette → the grey-05 field the CSS paints by default.
+  const stops = paletteDots.length === 3 ? [0, 60, 85, 100] : paletteDots.length === 2 ? [0, 70, 100] : [0, 100];
+  const coverStyle = paletteDots.length
+    ? ` style="--cover: linear-gradient(90deg, ${paletteDots
+        .map((c, i) => `${escapeAttr(c)} ${stops[i]}% ${stops[i + 1]}%`)
+        .join(", ")});"`
     : "";
   const isDefaultBadge = defaultBadge(ctx);
   // Who this Playbook belongs to, in the card's metadata corner next to the
@@ -449,23 +455,33 @@ export function renderContextCard(ctx) {
   // The tile's own pieces. What the two shapes must say IDENTICALLY — the
   // default star, the Current mark, the title of the click — comes from the
   // shared helpers above, the same rule topic-card.js follows for its shapes.
-  const voiceHtml = voiceHeadline
-    ? `<span class="ap-tag grey contexts-card__voice"><span>${escapeText(voiceHeadline)}</span></span>`
+  // The voice reads as a sentence, not a tag: "Direct, operator-first, specific."
+  const voiceSentence = voiceHeadline
+    ? voiceHeadline
+        .split(/\s*·\s*/)
+        .filter(Boolean)
+        .join(", ")
+        .replace(/^./, (c) => c.toUpperCase()) + "."
     : "";
+  const voiceHtml = voiceSentence ? `<p class="contexts-card__voice">${escapeText(voiceSentence)}</p>` : "";
   const briefHtml = summary
     ? `<p class="contexts-card__brief">${escapeText(summary)}</p>`
     : `<p class="contexts-card__brief contexts-card__brief--empty">${escapeText(playbookBrief(ctx))}</p>`;
-  // Each figure names what it counts: an icon beside a number never did.
-  const counter = (icon, n, one, many) =>
-    `<span class="contexts-card__counter"><i class="${icon}" aria-hidden="true"></i><span>${n} ${n === 1 ? one : many}</span></span>`;
-  const countersHtml = `
-    <div class="contexts-card__counters">
-      ${counter("ap-icon-single-chat-bubble", usedIn, "chat", "chats")}
-      ${audienceCount ? counter("ap-icon-target", audienceCount, "audience", "audiences") : ""}
-      ${competitorCount ? counter("ap-icon-buildings", competitorCount, "competitor", "competitors") : ""}
-      ${influencerCount ? counter("ap-icon-star", influencerCount, "influencer", "influencers") : ""}
+  // What I know about the brand's world: three fixed columns, every card the
+  // same, so the figures line up across the grid. Each figure names what it
+  // counts in text: an icon beside a number never did.
+  const stat = (n, one, many) =>
+    `<div class="contexts-card__stat"><span class="contexts-card__stat-n">${n}</span><span class="contexts-card__stat-label">${n === 1 ? one : many}</span></div>`;
+  const statsHtml = `
+    <div class="contexts-card__stats">
+      ${stat(audienceCount, "audience", "audiences")}
+      ${stat(competitorCount, "competitor", "competitors")}
+      ${stat(influencerCount, "influencer", "influencers")}
     </div>
   `;
+  const activity = [`${usedIn} ${usedIn === 1 ? "chat" : "chats"}`, ctx.updatedAt ? `Updated ${ctx.updatedAt}` : ""]
+    .filter(Boolean)
+    .join(" · ");
   // Voices to finish (2026-10-29, asked: « une indication quand une voice n'est
   // pas complète ou manquante sur la card d'un playbook »): how many, and on
   // which networks.
@@ -486,41 +502,41 @@ export function renderContextCard(ctx) {
       ${cardTitle ? `title="${escapeAttr(cardTitle)}"` : ""}`;
 
   // ── The tile ────────────────────────────────────────────────────────────
-  // The catalogue's own shape, flag OFF: the brand mark (the table's, never
-  // a colour strip, which read as an edge-accent bar — ui-polish PB-01), the voice chip, three
-  // counters, the palette, the hover toolbar. A Playbook is an OBJECT you
-  // browse here. On the home the same Playbook is a row you pick from
-  // (renderPlaybookRow), which is why the two shapes differ in everything but
-  // the words they say.
+  // The catalogue's own shape, flag OFF: a brand sheet. The palette cover and
+  // the brand mark say whose it is, then the name, the voice as a sentence, the
+  // brief; then what I know of its world (three figures); then the activity and
+  // its state tags. A Playbook is an OBJECT you browse here. On the home the
+  // same Playbook is a row you pick from (renderPlaybookRow), which is why the
+  // two shapes differ in everything but the words they say.
   return `
     <article class="contexts-card"${openAttrs}>
 
+      <div class="contexts-card__cover"${coverStyle}></div>
       <div class="contexts-card__actions" data-contexts-card-actions>${actions}</div>
 
-      <header class="contexts-card__head">
-        ${playbookThumb(ctx)}
+      <div class="contexts-card__body">
+        <div class="contexts-card__mark">${playbookThumb(ctx, 56)}</div>
         <h3 class="contexts-card__name">
           <!-- The keyboard way in: the tile is no longer a role=button wrapping
                its own action buttons (ARIA nested interactive). A click anywhere
                on the tile still opens it (delegated on data-contexts-card). -->
-          <button type="button" class="contexts-card__open"${cardTitle ? ` aria-label="${escapeAttr(cardTitle)}"` : ""}>${escapeText(ctx.name)}</button>
+          <button type="button" class="contexts-card__open" title="${escapeAttr(ctx.name)}"${cardTitle ? ` aria-label="${escapeAttr(cardTitle)}"` : ""}>${escapeText(ctx.name)}</button>
           ${isDefaultBadge}
         </h3>
-      </header>
+        ${voiceHtml}
+        ${briefHtml}
+      </div>
 
-      ${voiceHtml} ${briefHtml}
+      ${statsHtml}
 
       <footer class="contexts-card__foot">
-        ${countersHtml}
+        <span class="contexts-card__activity">${escapeText(activity)}</span>
         <div class="contexts-card__meta">
           ${currentTag}
           ${ownerTag}
-          ${dotsHtml}
+          ${voicesHtml}
         </div>
       </footer>
-
-      ${voicesHtml}
-      ${ctx.updatedAt ? `<div class="contexts-card__updated">Updated ${escapeText(ctx.updatedAt)}</div>` : ""}
     </article>
   `;
 }

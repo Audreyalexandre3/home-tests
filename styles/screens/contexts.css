@@ -140,6 +140,8 @@
   border-radius: var(--ref-border-radius-md);
   cursor: pointer;
   min-height: 200px;
+  /* The four rows a Playbook card spans, so the ghost sits in line with them. */
+  grid-row: span 4;
   color: var(--ref-color-grey-100);
   font-family: inherit;
   transition:
@@ -199,26 +201,32 @@
 }
 
 /* ── ContextCard ───────────────────────────────────────────────────
-   Summary card that lets a user spot which context is which at a
-   glance. Modelled on the Claude Projects pattern: color stripe on
-   top, title, voice headline, multi-line summary, footer counters +
-   brand palette dots, "Updated X ago" timestamp. Secondary actions
-   (Edit / Duplicate / Delete) hide by default and reveal on hover
-   so the card stays uncluttered. */
+   A brand sheet. The palette cover and the brand mark say whose it is;
+   then the name, the voice as a sentence, the brief; then three figures
+   in fixed columns (so they line up across the grid); then the activity
+   and the state tags. Hierarchy by size, weight and ink, never by tint.
+   Secondary actions (Share / Edit / Duplicate / Delete) reveal on hover.
+   Each card spans four rows of the grid's subgrid (cover · body · figures ·
+   foot), so a row of cards shares one line for each, whatever a card holds. */
 
 .contexts-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-md);
-  padding-top: var(--ref-spacing-md);
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 4;
+  row-gap: 0;
   background: var(--app-surface);
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   overflow: hidden;
   cursor: pointer;
   transition: border-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+/* The ghost carries .contexts-card too: it spans the four rows, but stacks
+   its own content. */
+.contexts-card.contexts-card--ghost {
+  display: flex;
 }
 
 /* The card hover of the house (design-guidelines §4): a blue border, no
@@ -235,24 +243,17 @@
   outline-offset: 2px;
 }
 
-/* The name is the tile's button: it reads as the title it was. */
-.contexts-card__open {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+/* The cover: the brand's palette as flat bands, set inline as --cover from
+   the analysed website (lists.js). A 64px field, not an edge strip — PB-01
+   overruled by the user on 2026-11-02. No palette → a quiet grey-05 field. */
+.contexts-card__cover {
+  flex: 0 0 auto;
+  height: 64px;
+  background: var(--cover, var(--ref-color-grey-05));
 }
 
-.contexts-card__open:focus-visible {
-  outline: none;
-}
-
-/* Hover-reveal action toolbar — sits in the top-right corner, hidden
-   by default. Matches Claude / Linear / Notion's "actions appear on
-   hover" pattern so the card body stays clean to scan. */
+/* Hover-reveal action toolbar — on the cover, top-right, hidden by default
+   so the card stays clean to scan. */
 .contexts-card__actions {
   position: absolute;
   top: var(--ref-spacing-xs);
@@ -275,60 +276,68 @@
   pointer-events: auto;
 }
 
-/* ponytail: 28px is off the DS (36px, no size modifier) — kept because 36px
-   buttons push the head's reserve to 124px and wrap most names onto two lines.
-   DS gap: a compact icon button; drop this once the DS ships one. */
+/* ponytail: 28px is off the DS (36px, no size modifier) — kept so the
+   toolbar stays a small object on the cover. DS gap: a compact icon button;
+   drop this once the DS ships one. */
 .contexts-card__actions .ap-icon-button {
   width: 28px;
   height: 28px;
 }
 
-.contexts-card__head {
+.contexts-card__body {
   display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  /* Reserve horizontal space for the hover-reveal action toolbar so
-     long names don't crash into it on hover. */
-  padding-right: 100px;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+  padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
+}
+
+/* The brand mark sits astride the cover's edge on a white mat, so a wordmark
+   logo reads against any palette. */
+.contexts-card__mark {
+  align-self: flex-start;
+  display: flex;
+  margin-top: -30px;
+  margin-bottom: var(--ref-spacing-xs);
+  padding: 2px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
 }
 
 .contexts-card__name {
   margin: 0;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
+  min-width: 0;
   font-size: var(--sys-text-style-h3-size);
   line-height: var(--sys-text-style-h3-line-height);
   font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
-/* The card's metadata corner: ownership then the brand palette, right-aligned
-   opposite the counters. Never a coloured border or an edge accent — a card's
-   state belongs in its content. Mine-and-private renders nothing at all. */
-.contexts-card__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
+/* The name is the tile's button: it reads as the title it was, on one line. */
+.contexts-card__open {
   min-width: 0;
-}
-.contexts-card__owner {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-.contexts-card__owner > i {
-  color: var(--ref-color-grey-80);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* "Current" — the card of the workspace you are in (flag playbookWorkspace).
-   Sits first in the metadata corner, before the owner tag: it is a fact about
-   YOUR position, which outranks whose fiche it is. Never a border or a tint on
-   the card itself — a card's state goes in its content. */
-.contexts-card__current {
-  flex: 0 0 auto;
+.contexts-card__open:focus-visible {
+  outline: none;
 }
 
 .contexts-card__badge {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -339,19 +348,13 @@
   font-weight: var(--sys-text-style-body-weight);
 }
 
-/* Voice headline — the brand's tones joined, a DS grey tag (static data:
-   no blue glyph). Only its place in the column and the truncation here. */
+/* The voice, as the brand would say it: a sentence in body bold. */
 .contexts-card__voice {
-  align-self: flex-start;
-  max-width: 100%;
-}
-
-/* The DS caps a tag's text at 180px; the tile column is the cap here. */
-.contexts-card__voice > span {
-  max-width: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-100);
 }
 
 .contexts-card__brief {
@@ -359,68 +362,93 @@
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-weight);
-  color: var(--ref-color-grey-100);
+  color: var(--ref-color-grey-80);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .contexts-card__brief--empty {
-  color: var(--ref-color-grey-80);
   font-style: italic;
+}
+
+/* Three figures, three fixed columns: the same on every card. */
+.contexts-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ref-spacing-xs);
+  margin: 0 var(--ref-spacing-md);
+  padding: var(--ref-spacing-sm) 0;
+  border-top: 1px solid var(--ref-color-grey-20);
+  border-bottom: 1px solid var(--ref-color-grey-20);
+}
+
+.contexts-card__stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.contexts-card__stat-n {
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--ref-color-grey-100);
+  font-variant-numeric: tabular-nums;
+}
+
+.contexts-card__stat-label {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--ref-color-grey-80);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contexts-card__foot {
   display: flex;
-  /* Top, so the palette dots pin to the first counter line when they wrap. */
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs);
-  margin-top: auto;
-  padding-top: var(--ref-spacing-xs);
-}
-
-.contexts-card__counters {
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--ref-spacing-xxxs) var(--ref-spacing-sm);
-  min-width: 0;
+  align-content: flex-start;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  min-height: 48px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
+  box-sizing: border-box;
 }
 
-.contexts-card__counter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
+.contexts-card__activity {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   font-weight: var(--sys-text-style-caption-weight);
   color: var(--ref-color-grey-80);
 }
 
-.contexts-card__counter > i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-
-/* Brand palette preview — tiny colored dots from the analysed
-   website. Three dots overlap slightly like avatar stacks. */
-.contexts-card__palette {
-  display: inline-flex;
+/* The state corner: Current, then whose it is, then voices to finish. Never
+   a coloured border or a tint on the card — a card's state goes in its
+   content. Mine-and-private renders nothing at all. */
+.contexts-card__meta {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: var(--ref-spacing-xs);
+  min-width: 0;
 }
 
-.contexts-card__palette-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--ref-color-white);
-  margin-left: -6px;
+.contexts-card__current {
+  flex: 0 0 auto;
 }
 
-.contexts-card__palette-dot:first-child {
-  margin-left: 0;
+.contexts-card__owner {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.contexts-card__owner > i {
+  color: var(--ref-color-grey-80);
 }
 
 /* Voices to finish on a card: the count, then the networks it's about. */
@@ -433,11 +461,4 @@
 .contexts-card__voice-nets {
   display: inline-flex;
   gap: var(--ref-spacing-xxs);
-}
-
-.contexts-card__updated {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  font-weight: var(--sys-text-style-caption-weight);
-  color: var(--ref-color-grey-80);
 }
