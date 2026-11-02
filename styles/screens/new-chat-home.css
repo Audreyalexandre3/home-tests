@@ -884,6 +884,8 @@
 .nch-stage {
   position: relative;
   height: 600px;
+  /* The frame: without it the wash fades into the page and the stage floats. */
+  border: 1px solid var(--ref-color-grey-20);
   border-radius: 24px;
   background: linear-gradient(160deg, var(--ref-color-orange-10), var(--ref-color-yellow-10));
   overflow: hidden;
