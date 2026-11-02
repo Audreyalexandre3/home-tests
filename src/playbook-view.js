@@ -14,8 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2584";
-import { conceptHint } from "./concepts.js?v=2584";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2585";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2585";
+import { conceptHint } from "./concepts.js?v=2585";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -30,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2584";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2584";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2584";
-import { isFlagOn } from "./feature-flags.js?v=2584";
-import { clipLookOf } from "./videos-store.js?v=2584";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2584";
-import { parseHashParams } from "./url-state.js?v=2584";
+} from "./playbook-brand-kit.js?v=2585";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2585";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2585";
+import { isFlagOn } from "./feature-flags.js?v=2585";
+import { clipLookOf } from "./videos-store.js?v=2585";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2585";
+import { parseHashParams } from "./url-state.js?v=2585";
 import {
   isListPart,
   voiceParts,
@@ -55,13 +56,13 @@ import {
   canLearnFrom,
   ADAPTED_FROM,
   voiceHasRules,
-} from "./voice-parts.js?v=2584";
-import { showToast } from "./components/toast.js?v=2584";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2584";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2584";
-import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2584";
-import { consumeHandoff } from "./handoff.js?v=2584";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2584";
+} from "./voice-parts.js?v=2585";
+import { showToast } from "./components/toast.js?v=2585";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2585";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2585";
+import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2585";
+import { consumeHandoff } from "./handoff.js?v=2585";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2585";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -70,7 +71,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2584";
+} from "./social-profiles.js?v=2585";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2170,8 +2171,14 @@ function renderHeader2(data) {
   ]
     .filter(Boolean)
     .join("");
+  // The saved Playbook's page wears its card: the palette cover, the mark
+  // astride its edge, the voice as a sentence under the name. The creation
+  // review keeps the plain header — its brand is still being read.
+  const cover = cfg.mode === "library";
+  const voice = cover ? voiceSentence(data) : "";
   return `
-    <header class="pb2-hero">
+    <header class="pb2-hero${cover ? " pb2-hero--cover" : ""}">
+      ${cover ? `<div class="pb2-hero__cover"${brandCoverStyle(data)}></div>` : ""}
       <div class="pb2-hero__id">
         <span class="pb2-hero__mark">${renderHeaderMark(data, accent, primary, { square: true })}</span>
         <div class="pb2-hero__text">
@@ -2189,6 +2196,7 @@ function renderHeader2(data) {
                 : ""
             }
           </div>
+          ${voice ? `<p class="pb2-hero__voice">${esc(voice)}</p>` : ""}
           <div class="pb2-meta">${meta}</div>
         </div>
       </div>

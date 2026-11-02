@@ -11,18 +11,19 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2584";
-import { isFlagOn } from "../../feature-flags.js?v=2584";
-import { escapeAttr, escapeText } from "../../utils.js?v=2584";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2584";
-import { getSessions } from "../../sessions-store.js?v=2584";
-import { renderEmptyState } from "../../components/empty-state.js?v=2584";
-import { getSources, getIdeas } from "../../library.js?v=2584";
-import { getPosts } from "../../posts-store.js?v=2584";
-import { getContextById } from "../../contexts-store.js?v=2584";
-import { voicesToFinish } from "../../voice-parts.js?v=2584";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2584";
-import { pageState } from "../home.js?v=2584";
+} from "../../playbook-access.js?v=2585";
+import { isFlagOn } from "../../feature-flags.js?v=2585";
+import { escapeAttr, escapeText } from "../../utils.js?v=2585";
+import { brandCoverStyle, voiceSentence } from "../../brand-cover.js?v=2585";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2585";
+import { getSessions } from "../../sessions-store.js?v=2585";
+import { renderEmptyState } from "../../components/empty-state.js?v=2585";
+import { getSources, getIdeas } from "../../library.js?v=2585";
+import { getPosts } from "../../posts-store.js?v=2585";
+import { getContextById } from "../../contexts-store.js?v=2585";
+import { voicesToFinish } from "../../voice-parts.js?v=2585";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2585";
+import { pageState } from "../home.js?v=2585";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -365,39 +366,19 @@ export function renderGhostCard() {
 
 export function renderContextCard(ctx) {
   const summary = (ctx.businessSummary || ctx.briefSummary || "").trim();
-  const voiceHeadline =
-    ctx.voiceProfile?.headline ||
-    (Array.isArray(ctx.tones) && ctx.tones.length ? ctx.tones.join(" · ").toLowerCase() : "");
   const audienceCount = Array.isArray(ctx.audience) ? ctx.audience.length : ctx.audience ? 1 : 0;
   // `suggested` entries are still pending proposals from Archie, not
   // competitors of this brand yet — they must not inflate the count.
   const competitorCount = Array.isArray(ctx.competitors) ? ctx.competitors.filter((c) => !c.suggested).length : 0;
   const influencerCount = Array.isArray(ctx.influencers) ? ctx.influencers.filter((c) => !c.suggested).length : 0;
   const usedIn = ctx.usedIn || 0;
-  // Brand color preview — first website's primary / accent / link from
-  // imageVoice, up to 3 dots. Matches the "people avatars" affordance
-  // in the Claude reference but uses the analysed brand palette.
-  const site = ctx.imageVoice?.websites?.[0];
-  const paletteDots = site
-    ? [site.colors?.primary, site.colors?.accent, site.colors?.link]
-        .filter((c, i, arr) => c && arr.indexOf(c) === i)
-        .slice(0, 3)
-    : [];
-  // The cover: the brand's palette as flat bands (60 / 25 / 15, or 70 / 30 for
-  // two colours). A 64px field, not a strip: it overrules PB-01 (2026-11-02, the
-  // user's call). No palette → the grey-05 field the CSS paints by default.
-  const stops = paletteDots.length === 3 ? [0, 60, 85, 100] : paletteDots.length === 2 ? [0, 70, 100] : [0, 100];
-  const coverStyle = paletteDots.length
-    ? ` style="--cover: linear-gradient(90deg, ${paletteDots
-        .map((c, i) => `${escapeAttr(c)} ${stops[i]}% ${stops[i + 1]}%`)
-        .join(", ")});"`
-    : "";
+  // The palette cover — the same field the fiche's header carries.
+  const coverStyle = brandCoverStyle(ctx);
   const isDefaultBadge = defaultBadge(ctx);
-  // Who this Playbook belongs to, in the card's metadata corner next to the
-  // palette dots — never a coloured border, a card's state goes in its content.
-  // It tried living beside the title first and broke long names onto two lines;
-  // the foot is also where the Claude reference puts its people avatars.
-  // Mine-and-private says nothing, because that's the default nobody needs told.
+  // Who this Playbook belongs to, on the cover's top left — never a coloured
+  // border, a card's state goes in its content. It tried living beside the
+  // title first and broke long names onto two lines, then in the foot, which it
+  // overflowed. Mine-and-private says nothing: the default nobody needs told.
   const access = accessLabel(ctx);
   const ownerTag = access
     ? `<span class="ap-tag grey mini contexts-card__owner" title="${escapeAttr(access)}">
@@ -455,15 +436,8 @@ export function renderContextCard(ctx) {
   // The tile's own pieces. What the two shapes must say IDENTICALLY — the
   // default star, the Current mark, the title of the click — comes from the
   // shared helpers above, the same rule topic-card.js follows for its shapes.
-  // The voice reads as a sentence, not a tag: "Direct, operator-first, specific."
-  const voiceSentence = voiceHeadline
-    ? voiceHeadline
-        .split(/\s*·\s*/)
-        .filter(Boolean)
-        .join(", ")
-        .replace(/^./, (c) => c.toUpperCase()) + "."
-    : "";
-  const voiceHtml = voiceSentence ? `<p class="contexts-card__voice">${escapeText(voiceSentence)}</p>` : "";
+  const voice = voiceSentence(ctx);
+  const voiceHtml = voice ? `<p class="contexts-card__voice">${escapeText(voice)}</p>` : "";
   const briefHtml = summary
     ? `<p class="contexts-card__brief">${escapeText(summary)}</p>`
     : `<p class="contexts-card__brief contexts-card__brief--empty">${escapeText(playbookBrief(ctx))}</p>`;

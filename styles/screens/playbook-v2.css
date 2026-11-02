@@ -75,6 +75,51 @@
   letter-spacing: -0.01em;
 }
 
+/* ── The saved Playbook's header wears its card (mode library) ──────────
+   The palette cover (--cover from brand-cover.js, grey-05 without a palette),
+   the mark astride its bottom edge on a white mat, then the name, the voice
+   as a sentence and the facts, stacked under the mark. */
+.pb2-hero--cover {
+  align-items: flex-end;
+}
+
+.pb2-hero__cover {
+  flex: 0 0 100%;
+  height: 96px;
+  border-radius: var(--ref-border-radius-md);
+  background: var(--cover, var(--ref-color-grey-05));
+}
+
+.pb2-hero--cover .pb2-hero__id {
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  /* The cover's gap to the id block is eaten by the mark rising into it. */
+  margin-top: calc(-1 * var(--ref-spacing-md));
+  padding-left: var(--ref-spacing-md);
+}
+
+.pb2-hero--cover .pb2-hero__mark {
+  margin-top: -48px;
+  padding: 3px;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.pb2-hero--cover .pb2-hero__mark .recap__monogram {
+  width: 72px;
+  height: 72px;
+}
+
+/* The voice, as the brand would say it: one size under the name, in ink. */
+.pb2-hero__voice {
+  margin: 0;
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--ref-color-grey-100);
+}
+
 /* The facts line: glyph + words per item, a hairline between items (drawn on
    the item, so a wrapped line never starts with one). */
 .pb2-meta {

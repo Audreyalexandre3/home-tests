@@ -61,6 +61,7 @@ src/
                           reads it flag or no flag.
   playbook-access.js    — who may view/use/edit/share a Playbook; the store never filters
   playbook-brand-kit.js — the Playbook's brand-kit rows (flag `sexySquirrel`), called by playbook-view
+  brand-cover.js — the palette cover + the voice as a sentence, shared by the catalogue card and the fiche header
   modules/image-studio/ — the Image Generator (flag `sexySquirrel`): the draft's studio, the brand's
                           styles row + creator. Self-contained (index.js is its only door):
                           config/ (formats, fonts, networks, style presets, mocks) · model/schema ·
