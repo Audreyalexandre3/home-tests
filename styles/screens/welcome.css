@@ -568,76 +568,13 @@ body:not(.onboarding) .welcome-intro__wordmark {
   animation: none;
 }
 
-/* Progress: done = butter + check, current = butter ring, ahead = white.
-   It sits right above the step's title — in the reading path, not in a corner. */
+/* Progress: the DS stepper, right above the step's title. */
 .welcome-flow__progress {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
   margin-bottom: var(--ref-spacing-md);
 }
 
-.welcome-flow__dots {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.welcome-flow__dot {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--ref-color-grey-20);
-  background: var(--app-surface);
-  color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  line-height: 1;
-}
-
-.welcome-flow__dot + .welcome-flow__dot {
-  margin-left: var(--ref-spacing-sm);
-}
-
-/* The line between two dots. */
-.welcome-flow__dot + .welcome-flow__dot::before {
-  content: "";
-  position: absolute;
-  right: 100%;
-  width: calc(var(--ref-spacing-sm) + 2px);
-  height: 2px;
-  background: var(--ref-color-grey-20);
-}
-
-.welcome-flow__dot.is-done,
-.welcome-flow__dot.is-current {
-  background: var(--app-butter);
-  border-color: var(--app-butter-accent);
-}
-
-.welcome-flow__dot.is-done + .welcome-flow__dot::before {
-  background: var(--app-butter-accent);
-}
-
-.welcome-flow__dot.is-current {
-  box-shadow: 0 0 0 3px var(--app-butter);
-}
-
-.welcome-flow__dot i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-.welcome-flow__count {
-  font-size: var(--sys-text-style-body-bold-size);
-  line-height: var(--sys-text-style-body-bold-line-height);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--ref-color-grey-100);
-  white-space: nowrap;
+.welcome-flow__progress .ap-stepper-item:not(.active) .welcome-flow__step-label {
+  display: none;
 }
 
 /* The step's title: a size under the intro's display, the same voice. */

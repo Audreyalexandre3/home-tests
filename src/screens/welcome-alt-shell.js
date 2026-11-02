@@ -9,11 +9,11 @@
 // the session id the recap already uses (`welcomeAltSessionId`), and persisted
 // on every change so a reload lands on the same step with the same answers.
 
-import "../archie-pixels.js?v=2597";
-import { html, raw, escapeHtml } from "../utils.js?v=2597";
-import { navigate } from "../router.js?v=2597";
-import { parseHashParams } from "../url-state.js?v=2597";
-import { isFlagOn } from "../feature-flags.js?v=2597";
+import "../archie-pixels.js?v=2600";
+import { html, raw, escapeHtml } from "../utils.js?v=2600";
+import { navigate } from "../router.js?v=2600";
+import { parseHashParams } from "../url-state.js?v=2600";
+import { isFlagOn } from "../feature-flags.js?v=2600";
 import {
   altSteps,
   createAltDraft,
@@ -21,9 +21,9 @@ import {
   isAnalysisReady,
   restoreDraft,
   subscribeDraft,
-} from "../context-builder.js?v=2597";
-import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2597";
-import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2597";
+} from "../context-builder.js?v=2600";
+import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2600";
+import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2600";
 import {
   readSessionId,
   isIntegrated,
@@ -33,26 +33,31 @@ import {
   LOADING_STAGES,
   FILE_LOADING_STAGES,
   INTERVIEW_LOADING_STAGES,
-} from "./welcome-alt-recap.js?v=2597";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2597";
+} from "./welcome-alt-recap.js?v=2600";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2600";
 
 const PREFILLED_URL = "https://nicesoap.com";
 const SESSION_KEY = "welcomeAltSessionId";
 
 // What each step is called, everywhere it's named (the intro's list, the
-// progress, each screen's title).
+// progress, each screen's title). `step`: its short name in the stepper.
 export const STEP_TEXT = {
-  url: { title: "Share your website", desc: "Your website, a few files, or a handful of questions." },
-  language: { title: "Pick your language", desc: "The one I'll write your posts in." },
-  documents: { title: "Add brand documents", desc: "Optional: a brand book or guidelines." },
-  voiceFrom: { title: "Choose how I learn your voice", desc: "Your posts, a document, or your own words." },
+  url: { step: "Website", title: "Share your website", desc: "Your website, a few files, or a handful of questions." },
+  language: { step: "Language", title: "Pick your language", desc: "The one I'll write your posts in." },
+  documents: { step: "Documents", title: "Add brand documents", desc: "Optional: a brand book or guidelines." },
+  voiceFrom: {
+    step: "Voice source",
+    title: "Choose how I learn your voice",
+    desc: "Your posts, a document, or your own words.",
+  },
   voice: {
+    step: "Voice",
     title: "Check your voice",
     // Flag OFF there is one voice, not one per network: say it the review's way.
     // (Flags change with a reload, so reading it at load is enough.)
     desc: networkVoiceOn() ? "How you sound, on every network." : "How you sound, everywhere.",
   },
-  recap: { title: "Check what I learned", desc: "Fix anything that's off before I write." },
+  recap: { step: "Review", title: "Check what I learned", desc: "Fix anything that's off before I write." },
 };
 
 const ROUTE = {
@@ -392,22 +397,26 @@ function renderCard(sid, build) {
 function renderProgress(step) {
   const steps = flowSteps();
   const at = steps.indexOf(step);
+  // The DS stepper: done = completed + check, the current one active, the rest
+  // pending. Only the current step shows its name: the column is too narrow for all.
   return html`
-    <div class="welcome-flow__progress" aria-label="Step ${at + 1} of ${steps.length}">
-      <ol class="welcome-flow__dots" aria-hidden="true">
-        ${steps.map(
-          (id, i) => html`
-            <li
-              class="welcome-flow__dot ${i < at ? "is-done" : i === at ? "is-current" : ""}"
+    <nav class="ap-stepper welcome-flow__progress" aria-label="Step ${at + 1} of ${steps.length}">
+      ${raw(
+        steps
+          .map((id, i) => {
+            const state = i < at ? "completed" : i === at ? "active" : "pending";
+            return html`<div
+              class="ap-stepper-item ${state}"
               title="${STEP_TEXT[id].title}"
+              ${i === at ? raw('aria-current="step"') : ""}
             >
-              ${i < at ? raw(`<i class="ap-icon-check"></i>`) : i + 1}
-            </li>
-          `,
-        )}
-      </ol>
-      <span class="welcome-flow__count">Step ${at + 1} of ${steps.length}</span>
-    </div>
+              <span>${i < at ? raw(`<i class="ap-icon-check" aria-hidden="true"></i>`) : i + 1}</span>
+              <span class="welcome-flow__step-label">${STEP_TEXT[id].step}</span>
+            </div>`;
+          })
+          .join(`<span class="ap-stepper-separator" aria-hidden="true"><i class="ap-icon-chevron-right"></i></span>`),
+      )}
+    </nav>
   `;
 }
 
