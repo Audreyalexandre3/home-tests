@@ -935,6 +935,70 @@ button.ap-link {
   right: var(--ref-spacing-sm);
 }
 
+/* ── .ap-stepper — restyled to Figma's « Stepper » (V2 Atoms 7873:1568) ─────
+   CSS-UI's stepper (24px badges, electric-blue-100 on a blue-10 halo, regular
+   labels) predates the V2 Atoms component. Transcribed from it: a 20px badge,
+   current = electric-blue-150 filled + white number, future = grey-20 outline
+   + grey-80 number, labels Body Bold 14/18 in the badge's ink, 8px inside a
+   step and between a step and its chevron. Figma has no « done » state: a
+   completed step keeps the future look, its number swapped for a check. The
+   day CSS-UI ships the V2 look this block is a delete. Used by the onboarding
+   run's progress and the Clips project bar. */
+.ap-stepper {
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.ap-stepper .ap-stepper-item {
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.ap-stepper .ap-stepper-item > span:first-child,
+.ap-stepper .ap-stepper-item.active > span:first-child,
+.ap-stepper .ap-stepper-item.completed > span:first-child,
+.ap-stepper .ap-stepper-item.pending > span:first-child {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 50%;
+  box-shadow: none;
+  background: transparent;
+  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.ap-stepper .ap-stepper-item.active > span:first-child {
+  border-color: var(--ref-color-electric-blue-150);
+  background: var(--ref-color-electric-blue-150);
+  color: var(--ref-color-white);
+}
+
+.ap-stepper .ap-stepper-item > span:last-child {
+  margin: 0;
+  padding: 0;
+  color: var(--ref-color-grey-80);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
+  white-space: nowrap;
+}
+
+.ap-stepper .ap-stepper-item.active > span:last-child {
+  color: var(--ref-color-electric-blue-150);
+}
+
+.ap-stepper .ap-stepper-item.clickable:hover > span:last-child {
+  color: var(--ref-color-electric-blue-150);
+}
+
+.ap-stepper .ap-stepper-separator {
+  margin: 0;
+}
+
 /* ── .ap-close-button — a PORT of the DS component (Figma: « Helper - Clear Button ») ──
    `@agorapulse/ui-components/close-button` is Angular only (<ap-close-button>);
    CSS-UI ships its look only inside other components (.ap-infobox-close,

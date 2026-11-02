@@ -570,7 +570,8 @@ body:not(.onboarding) .welcome-intro__wordmark {
 
 /* Progress: the DS stepper, right above the step's title. */
 .welcome-flow__progress {
-  margin-bottom: var(--ref-spacing-md);
+  /* A step carries 8px of padding: the first badge lines up with the title. */
+  margin: 0 0 var(--ref-spacing-md) calc(-1 * var(--ref-spacing-xxs));
 }
 
 .welcome-flow__progress .ap-stepper-item:not(.active) .welcome-flow__step-label {
