@@ -75,30 +75,36 @@
   letter-spacing: -0.01em;
 }
 
-/* ── The saved Playbook's header wears its card (mode library) ──────────
-   The palette cover (--cover from brand-cover.js, grey-05 without a palette),
-   the mark astride its bottom edge on a white mat, then the name, the voice
-   as a sentence and the facts, stacked under the mark. */
+/* ── The saved Playbook's header is its card, opened (mode library) ────
+   The catalogue card's anatomy at page size: one white surface with a grey-20
+   border, the palette cover clipped at its top (--cover from brand-cover.js,
+   grey-05 without a palette), the mark astride the cover's edge, the name and
+   the voice, then the facts in a grey-05 foot band — the card's own foot. */
 .pb2-hero--cover {
-  align-items: flex-end;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  background: var(--app-surface);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  overflow: hidden;
 }
 
 .pb2-hero__cover {
-  flex: 0 0 100%;
+  flex: 0 0 auto;
   height: 96px;
-  border-radius: var(--ref-border-radius-md);
   background: var(--cover, var(--ref-color-grey-05));
 }
 
 .pb2-hero--cover .pb2-hero__id {
   flex-direction: column;
   gap: var(--ref-spacing-sm);
-  /* The cover's gap to the id block is eaten by the mark rising into it. */
-  margin-top: calc(-1 * var(--ref-spacing-md));
-  padding-left: var(--ref-spacing-md);
+  padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
 }
 
 .pb2-hero--cover .pb2-hero__mark {
+  align-self: flex-start;
   margin-top: -48px;
   padding: 3px;
   background: var(--ref-color-white);
@@ -109,6 +115,16 @@
 .pb2-hero--cover .pb2-hero__mark .recap__monogram {
   width: 72px;
   height: 72px;
+}
+
+.pb2-hero__foot {
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  background: var(--ref-color-grey-05);
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+
+.pb2-hero--cover .pb2-hero__actions {
+  padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
 }
 
 /* The voice, as the brand would say it: one size under the name, in ink. */
