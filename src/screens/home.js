@@ -1,27 +1,27 @@
-import { html, raw, escapeAttr } from "../utils.js?v=2580";
-import { conceptText } from "../concepts.js?v=2580";
-import { renderTopbar } from "../components/topbar.js?v=2580";
+import { html, raw, escapeAttr } from "../utils.js?v=2582";
+import { conceptText } from "../concepts.js?v=2582";
+import { renderTopbar } from "../components/topbar.js?v=2582";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=2580";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2580";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2580";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2580";
-import { navigate, getPath } from "../router.js?v=2580";
-import { isFlagOn } from "../feature-flags.js?v=2580";
-import { setHandoff } from "../handoff.js?v=2580";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2580";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=2580";
-import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2580";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2580";
-import { voicesToFinish } from "../voice-parts.js?v=2580";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=2580";
-import { installMoreMenu } from "../components/more-menu.js?v=2580";
-import { showToast } from "../components/toast.js?v=2580";
-import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2580";
+} from "../contexts-store.js?v=2582";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2582";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2582";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2582";
+import { navigate, getPath } from "../router.js?v=2582";
+import { isFlagOn } from "../feature-flags.js?v=2582";
+import { setHandoff } from "../handoff.js?v=2582";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2582";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=2582";
+import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2582";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2582";
+import { voicesToFinish } from "../voice-parts.js?v=2582";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=2582";
+import { installMoreMenu } from "../components/more-menu.js?v=2582";
+import { showToast } from "../components/toast.js?v=2582";
+import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2582";
 import {
   chatPlaybook,
   renderChatsTab,
@@ -29,7 +29,7 @@ import {
   renderContextsEmpty,
   renderGhostCard,
   renderPlaybooksTable,
-} from "./home/lists.js?v=2580";
+} from "./home/lists.js?v=2582";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -239,7 +239,7 @@ function renderPage() {
 function renderTabBody() {
   if (isHome && activeTab() === "chats") return renderChatsTab();
   const all = visibleContexts();
-  const visible = filter(isHome ? all : byOwner(all, pageState.owner), pageState);
+  const visible = filter(byOwner(all, pageState.owner), pageState);
   if (visible.length === 0) return renderContextsEmpty(all, pageState);
   // On the home the Playbooks tab is a LIST of full-width rows, not a grid of
   // tiles. Two reasons, and the second is the one that matters: the numbers
@@ -322,7 +322,7 @@ function renderHomeToolbar(tab, totalChats) {
     <div class="home-toolbar">
       ${hint}
       <div class="home-toolbar__actions">
-        ${renderSearchField()}
+        ${tab === "playbooks" ? renderOwnerSelect(visibleContexts()) : ""} ${renderSearchField()}
         ${tab === "playbooks" ? renderCreateButton() : ""}
       </div>
     </div>
@@ -369,6 +369,39 @@ function renderOwnerTabs(all) {
   `;
 }
 
+// The same sort on the home's Playbooks tab, as a DS single-select in the
+// toolbar: the page's tabs already say Chats / Playbooks, and a second row of
+// tabs under them would be tabs in tabs.
+function renderOwnerSelect(all) {
+  const shared = byOwner(all, "shared").length;
+  if (!shared) return "";
+  const options = [
+    ["all", "All Playbooks", all.length],
+    ["mine", "Mine", all.length - shared],
+    ["shared", "Shared with me", shared],
+  ];
+  const current = options.find(([id]) => id === pageState.owner) || options[0];
+  const opts = options
+    .map(([id, label, n]) => {
+      const on = id === current[0];
+      return `
+      <div class="ap-select-option${on ? " selected" : ""}" role="option" tabindex="0" aria-selected="${on}" data-contexts-owner="${id}">
+        <span class="ap-select-option-text"><span class="ap-select-option-title">${label} (${n})</span></span>
+        ${on ? '<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>' : ""}
+      </div>`;
+    })
+    .join("");
+  return `
+    <details class="ap-select home-toolbar__owner" data-home-owner>
+      <summary class="ap-select-trigger" aria-label="Sort Playbooks by owner">
+        <span class="ap-select-value">${current[1]}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown" role="listbox"><div class="ap-select-options">${opts}</div></div>
+    </details>
+  `;
+}
+
 // ── The three pieces both shapes must say the same way ───────────────────
 
 function filter(list, { query }) {
@@ -401,8 +434,9 @@ function bind(root) {
     // the dispatch guards, so a click on empty page space shuts them. No
     // document listener — paint() recreates these nodes, and a document
     // listener would outlive them.
-    const openPicker = root.querySelector("[data-home-pb][open]");
-    if (openPicker && !openPicker.contains(event.target)) openPicker.removeAttribute("open");
+    for (const open of root.querySelectorAll("[data-home-pb][open], [data-home-owner][open]")) {
+      if (!open.contains(event.target)) open.removeAttribute("open");
+    }
     if (!event.target.closest(".home-hero__add")) closeAddMenu(root);
 
     // Add — the same menu the composer carries, launching instead of staging.
@@ -579,6 +613,15 @@ function bind(root) {
   });
 
   root.addEventListener("keydown", (event) => {
+    // The owner select's options are divs (the DS markup): Enter / Space pick.
+    if (
+      event.target.matches(".ap-select-option[data-contexts-owner]") &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
+      event.preventDefault();
+      event.target.click();
+      return;
+    }
     // Enter sends, Shift+Enter is a newline — the composer's contract, because
     // this is the same gesture one screen earlier.
     if (event.target.matches("[data-home-prompt]") && event.key === "Enter" && !event.shiftKey) {

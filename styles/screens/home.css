@@ -177,6 +177,14 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* The owner sort (flag playbookSharing): as wide as its longest option, not
+   the DS select's full width. */
+.home-toolbar__owner {
+  width: auto;
+  min-width: calc(var(--ref-spacing-xxxl) * 3.5);
+  flex-shrink: 0;
+}
+
 /* ── The workflows ─────────────────────────────────────────────────────────
    The same three cards the chat's hero carries, from the same renderer. Full
    page width, unlike the hero's 720px column, so they share their edges with
