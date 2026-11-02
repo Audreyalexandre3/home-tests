@@ -5,16 +5,39 @@
  *
  * Vertical rhythm — proximity says what belongs together, so no two
  * neighbouring gaps are equal:
- *   topbar ─32─ header card ─40─                        = the Playbook itself
+ *   topbar ─32─ header ─24─ tabs   = the page's head
  *   tabs ─32─ tab lead ─16─ blocks (24 between them)     = the tab's content
  * The lead used to sit 24 under the tabs and 32 over its own blocks, so it
- * belonged to neither and floated between the two. Since the header became a
- * bordered card (2026-11-02) it is a section of its own: 24 under it squeezed
- * the tabs against it, so the widest gap of the page now sits there. */
+ * belonged to neither and floated between the two.
+ *
+ * The saved Playbook's page (mode library) runs tighter since its header became
+ * a card (2026-11-02, « resserrer, pas élargir ») — a 40 under the card was
+ * tried and reverted the same day:
+ *   topbar ─24─ header card ─24─ tabs ─20─ tab lead ─12─ blocks (16 between) */
 
 .pb2__body.welcome-screen__body.recap {
   gap: var(--ref-spacing-md);
   padding-top: var(--ref-spacing-lg);
+}
+
+/* The saved Playbook's tighter rhythm (see the head of this file). */
+.welcome-screen--library .pb2__body.welcome-screen__body.recap {
+  gap: var(--ref-spacing-sm);
+  padding-top: var(--ref-spacing-md);
+}
+
+.welcome-screen--library .pb2-hero--cover {
+  /* 24 to the tabs, with the body's 16 gap. */
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+.welcome-screen--library .pb2-tabhead {
+  /* 20 under the tabs, 12 to the blocks (with the panel's 4). */
+  padding: var(--ref-spacing-xxxs) 0 var(--ref-spacing-xxs);
+}
+
+.welcome-screen--library .pb2-grid {
+  gap: var(--ref-spacing-sm);
 }
 
 /* ── Identity header ──────────────────────────────────────────────────── */
@@ -91,25 +114,23 @@
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   overflow: hidden;
-  /* 40 to the tabs, with the body's 24 gap. */
-  margin-bottom: calc(var(--ref-spacing-xl) - var(--ref-spacing-md));
 }
 
 .pb2-hero__cover {
   flex: 0 0 auto;
-  height: 96px;
+  height: 80px;
   background: var(--cover, var(--ref-color-grey-05));
 }
 
 .pb2-hero--cover .pb2-hero__id {
   flex-direction: column;
-  gap: var(--ref-spacing-sm);
-  padding: 0 var(--ref-spacing-md) var(--ref-spacing-md);
+  gap: var(--ref-spacing-xs);
+  padding: 0 var(--ref-spacing-md) var(--ref-spacing-sm);
 }
 
 .pb2-hero--cover .pb2-hero__mark {
   align-self: flex-start;
-  margin-top: -48px;
+  margin-top: -40px;
   padding: 3px;
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-20);
