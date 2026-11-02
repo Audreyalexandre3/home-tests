@@ -5,10 +5,12 @@
  *
  * Vertical rhythm — proximity says what belongs together, so no two
  * neighbouring gaps are equal:
- *   topbar ─32─ header (mark + name + facts) ─24─ tabs   = the page's head
+ *   topbar ─32─ header card ─40─                        = the Playbook itself
  *   tabs ─32─ tab lead ─16─ blocks (24 between them)     = the tab's content
  * The lead used to sit 24 under the tabs and 32 over its own blocks, so it
- * belonged to neither and floated between the two. */
+ * belonged to neither and floated between the two. Since the header became a
+ * bordered card (2026-11-02) it is a section of its own: 24 under it squeezed
+ * the tabs against it, so the widest gap of the page now sits there. */
 
 .pb2__body.welcome-screen__body.recap {
   gap: var(--ref-spacing-md);
@@ -89,6 +91,8 @@
   border: 1px solid var(--ref-color-grey-20);
   border-radius: var(--ref-border-radius-md);
   overflow: hidden;
+  /* 40 to the tabs, with the body's 24 gap. */
+  margin-bottom: calc(var(--ref-spacing-xl) - var(--ref-spacing-md));
 }
 
 .pb2-hero__cover {
@@ -118,7 +122,8 @@
 }
 
 .pb2-hero__foot {
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  /* 12 above and below the facts: a base for the card, lighter than its body. */
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
   background: var(--ref-color-grey-05);
   border-top: 1px solid var(--ref-color-grey-20);
 }
