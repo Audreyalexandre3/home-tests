@@ -878,15 +878,14 @@
 }
 
 /* The stage: one scene at a time, read top to bottom — what you give me, my
-   seam (butter: it's me working), what you get — then a white foot that names
-   the result and holds the verb, right-grouped like any footer. Hairlines
-   only inside: the stage is the one surface. */
+   seam, what you get — then a white foot that names the result and holds the
+   verb, right-grouped like any footer. A quiet warm wash, my colours at their
+   lightest (the pixel field behind it was too loud, 2026-11-02). */
 .nch-stage {
   position: relative;
   height: 600px;
-  border: 1px solid var(--ref-color-grey-20);
   border-radius: 24px;
-  background: var(--ref-color-grey-05);
+  background: linear-gradient(160deg, var(--ref-color-orange-10), var(--ref-color-yellow-10));
   overflow: hidden;
 }
 
@@ -940,13 +939,14 @@
   width: 220px;
 }
 
-/* The seam: an olive thread, and on it what I do, in my own words. */
+/* The seam: a thread, and on it what I do, in my own words. */
 .nch-seam {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* An olive thread, a white pill on it: the olive glyph says it's me. */
 .nch-seam::before,
 .nch-seam::after {
   content: "";
@@ -960,9 +960,8 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   padding: 6px var(--ref-spacing-xs);
-  border: 1px solid var(--app-butter-accent);
   border-radius: 999px;
-  background: var(--app-butter);
+  background: var(--ref-color-white);
   color: var(--ref-color-grey-100);
   font-size: var(--sys-text-style-caption-bold-size);
   line-height: var(--sys-text-style-caption-bold-line-height);
@@ -975,7 +974,7 @@
   background-color: currentColor;
 }
 
-/* The clips: each on its own black well, its title under it. */
+/* The clips: each on its own black well, on a white card with its title. */
 .nch-scene__clips {
   display: flex;
   justify-content: center;
@@ -986,7 +985,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
-  width: 112px;
+  width: 124px;
+  padding: 6px 6px var(--ref-spacing-xxs);
+  border-radius: var(--nch-radius-inner);
+  background: var(--ref-color-white);
 }
 
 .nch-scene__clip .nch-clip {
@@ -1148,7 +1150,7 @@
   }
 
   .nch-scene__clip {
-    width: calc((100cqi - 48px) / 3);
+    width: calc((100cqi - 24px) / 3);
   }
 }
 
