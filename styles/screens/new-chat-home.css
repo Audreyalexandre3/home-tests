@@ -234,42 +234,127 @@
   line-height: var(--sys-text-style-body-line-height);
 }
 
-.nch-drafts {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 72px);
+/* A dealt hand of drafts: the brand's posts, fanned; they spread on hover of
+   the door that holds them. The cards sit on a grey well inside a bordered
+   door, so a hairline, not a shadow, separates them (no nested elevation). */
+.nch-fan {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 236px;
+  height: 116px;
+}
+
+.nch-mini {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 148px;
+  padding: 10px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  translate: -50% 0;
+  transition:
+    translate var(--ref-animation-long) var(--app-ease-out),
+    rotate var(--ref-animation-long) var(--app-ease-out);
+}
+
+/* The middle card faces up and reads in full; the two behind it show only
+   whose post and which network. */
+.nch-mini:nth-child(1) {
+  translate: calc(-50% - 30px) 8px;
+  rotate: -7deg;
+}
+
+.nch-mini:nth-child(2) {
+  z-index: 1;
+}
+
+.nch-mini:nth-child(3) {
+  translate: calc(-50% + 30px) 8px;
+  rotate: 7deg;
+}
+
+.nch-mini:not(:nth-child(2)):not(:only-child) .nch-mini__text {
+  visibility: hidden;
+}
+
+.nch-mini:only-child {
+  translate: -50% 0;
+  rotate: none;
+}
+
+:is(.nch-item, .nch-tile-card, .nch-pick):hover .nch-mini:nth-child(1) {
+  translate: calc(-50% - 46px) 12px;
+  rotate: -10deg;
+}
+
+:is(.nch-item, .nch-tile-card, .nch-pick):hover .nch-mini:nth-child(3) {
+  translate: calc(-50% + 46px) 12px;
+  rotate: 10deg;
+}
+
+.nch-mini__head {
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-.nch-draft {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 8px;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: 8px;
-  background: #fff;
+.nch-mini__head i {
+  margin-left: auto;
 }
 
-.nch-draft i {
-  margin-bottom: 2px;
+.nch-mini__av {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ref-color-orange-100);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--ref-font-weight-bold);
 }
 
-.nch-line {
-  display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ref-color-grey-20);
+.nch-mini__name {
+  color: var(--ref-color-grey-100);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: var(--ref-font-weight-bold);
 }
 
+.nch-mini__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ref-color-grey-100);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+/* A file, and the drafts it turns into: read top to bottom. */
 .nch-flow {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
+  gap: 2px;
+  width: 100%;
 }
 
 .nch-flow__arrow {
+  rotate: 90deg;
   color: var(--ref-color-grey-60);
+  background-color: currentColor;
+}
+
+.nch-flow .nch-fan {
+  height: 92px;
 }
 
 .nch-file {
@@ -493,15 +578,29 @@
 }
 
 /* ── 2 · Modes on the input ───────────────────────────────────────────────── */
+/* Tabs, composer and panel share ONE column, the composer's 740px. The
+   wrapper stays out of the stacking order (z auto), so the composer's pixel
+   halo sits under the headline instead of painting over it. */
 .nch-modes {
   width: 100%;
   max-width: 740px;
   margin-top: var(--ref-spacing-md);
 }
 
+.empty-chat > .nch-modes {
+  z-index: auto;
+}
+
+/* The composer's card sits 16px inside its wrapper; tabs and panel start on
+   the same edge as the card. */
+.nch-modes__tabs,
+.nch-pane {
+  padding-inline: var(--ref-spacing-sm);
+}
+
 .nch-modes__tabs {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .nch-modes__tabs .ap-tabs-nav {
@@ -514,7 +613,7 @@
 
 .nch-pane {
   width: 100%;
-  max-width: 920px;
+  max-width: 740px;
   margin-top: var(--ref-spacing-lg);
 }
 
@@ -575,7 +674,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 112px;
+  height: 140px;
+  overflow: hidden;
   border-radius: var(--nch-radius-inner);
   background: var(--ref-color-grey-05);
 }
@@ -852,8 +952,11 @@
   height: 208px;
 }
 
-.nch-slide__out .nch-drafts {
-  grid-auto-columns: 96px;
+.nch-slide__out .nch-fan {
+  max-width: 300px;
+  height: 140px;
+  transform: scale(1.2);
+  transform-origin: top center;
 }
 
 .nch-slide__cap {
@@ -904,8 +1007,4 @@
   .nch-modes__tabs .ap-tabs-nav {
     overflow-x: auto;
   }
-}
-
-.nch-pick .nch-drafts {
-  grid-auto-columns: minmax(0, 48px);
 }

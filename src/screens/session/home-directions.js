@@ -22,19 +22,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2594";
-import { chatStarters } from "../../mocks.js?v=2594";
-import { getVideos, exampleVideo } from "../../videos-store.js?v=2594";
-import { getTopPosts } from "../../top-posts-store.js?v=2594";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2594";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2594";
-import { findTopicSource } from "../../topics-catalog.js?v=2594";
-import { getContextById } from "../../contexts-store.js?v=2594";
-import { voicesToFinish } from "../../voice-parts.js?v=2594";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2594";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2594";
-import { escapeHtml } from "../../utils.js?v=2594";
-import "../../archie-pixels.js?v=2594";
+import { isFlagOn } from "../../feature-flags.js?v=2595";
+import { chatStarters } from "../../mocks.js?v=2595";
+import { getVideos, exampleVideo } from "../../videos-store.js?v=2595";
+import { getTopPosts } from "../../top-posts-store.js?v=2595";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2595";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2595";
+import { findTopicSource } from "../../topics-catalog.js?v=2595";
+import { getContextById } from "../../contexts-store.js?v=2595";
+import { voicesToFinish } from "../../voice-parts.js?v=2595";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2595";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2595";
+import { escapeHtml } from "../../utils.js?v=2595";
+import "../../archie-pixels.js?v=2595";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -47,7 +47,13 @@ const DIRECTIONS = [
 /** The render function of the direction whose flag is ON, or null. */
 export function activeHomeDirection() {
   const hit = DIRECTIONS.find(([flag]) => isFlagOn(flag));
-  return hit ? hit[1] : null;
+  if (!hit) return null;
+  return (args) => {
+    // The drafts shown are the brand's own: its name from the chat's Playbook.
+    const pb = args.session?.contextId ? getContextById(args.session.contextId) : null;
+    brand = (pb?.name || "Acme").split(" · ")[0];
+    return hit[1](args);
+  };
 }
 
 // ── Shared pieces ───────────────────────────────────────────────────────────
@@ -177,11 +183,24 @@ const bestPosts = (n) =>
     .slice(0, n);
 
 // A draft-ish preview: three posts as stacked network cards with a few lines.
-const draftStack = (nets = ["linkedin", "x", "instagram"]) => `
-  <span class="nch-drafts" aria-hidden="true">${nets
+// What a draft looks like coming out: the brand's own posts, real sentences,
+// fanned like cards dealt on the table. They spread when you hover the door
+// that holds them. `posts` overrides the default three.
+const SAMPLE = {
+  linkedin: "We spent Q2 planning a launch nobody asked for. Here's what the offsite taught us about listening first.",
+  x: "We shipped less this quarter, on purpose. What we cut, and why it was the best call we made:",
+  instagram: "Behind the scenes of our Q2 offsite, in five photos. Swipe for the whiteboard that changed our roadmap.",
+};
+let brand = "Acme";
+
+const draftStack = (nets = ["linkedin", "x", "instagram"], texts = []) => `
+  <span class="nch-fan" aria-hidden="true">${nets
     .map(
-      (n) => `
-    <span class="nch-draft"><i class="${networkIcon(n)}"></i><span class="nch-line" style="width:92%"></span><span class="nch-line" style="width:74%"></span><span class="nch-line" style="width:56%"></span></span>`,
+      (n, i) => `
+    <span class="nch-mini">
+      <span class="nch-mini__head"><span class="nch-mini__av">${esc(brand.charAt(0))}</span><span class="nch-mini__name">${esc(brand)}</span><i class="${networkIcon(n)}"></i></span>
+      <span class="nch-mini__text">${esc(texts[i] || SAMPLE[n] || SAMPLE.linkedin)}</span>
+    </span>`,
     )
     .join("")}</span>`;
 
@@ -277,8 +296,28 @@ function modes({ composer, session }) {
       0,
       "Try one of these, or paste your own link.",
       tryReq("Turn our offsite notes into a week of posts", draftStack()) +
-        tryReq("3 LinkedIn posts from our latest blog article", draftStack(["linkedin", "linkedin", "linkedin"])) +
-        tryReq("A thread for X from the keynote slides", draftStack(["x", "x", "x"])),
+        tryReq(
+          "3 LinkedIn posts from our latest blog article",
+          draftStack(
+            ["linkedin", "linkedin", "linkedin"],
+            [
+              "Most onboarding checklists ask for too much, too early. We cut ours to three steps.",
+              "Activation went up 18% the week we deleted half our setup flow.",
+              "The best onboarding is the one your users never notice. A short read from our blog.",
+            ],
+          ),
+        ) +
+        tryReq(
+          "A thread for X from the keynote slides",
+          draftStack(
+            ["x", "x", "x"],
+            [
+              "Our keynote in one thread. 1/ Teams don't need more tools, they need fewer handoffs.",
+              "2/ Every handoff costs a day. We counted 14 in a single launch.",
+              "3/ So we rebuilt the launch around one owner per post. Here's how.",
+            ],
+          ),
+        ),
       `<button type="button" class="ap-button stroked grey" ${KINDS.source.door()}><i class="ap-icon-plus"></i><span>Add a file or a link</span></button>`,
     ),
     pane(
