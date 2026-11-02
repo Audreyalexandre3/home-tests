@@ -2,7 +2,7 @@
 // the palette cover and the voice as a sentence. One module, two hosts
 // (home/lists.js, playbook-view.js), so the card and the fiche can't drift.
 
-import { escapeAttr } from "./utils.js?v=2589";
+import { escapeAttr } from "./utils.js?v=2591";
 
 // The analysed site's primary / accent / link, deduplicated, up to three.
 function paletteOf(ctx) {
@@ -12,13 +12,29 @@ function paletteOf(ctx) {
     : [];
 }
 
+// A Playbook's own colour (the dot the rail shows beside its chats) as a DS
+// token. « blue » takes the soft blue, like the dot: electric blue is the
+// interactive colour (CH-04).
+const OWN_COLOR = {
+  orange: "orange",
+  blue: "soft-blue",
+  green: "green",
+  purple: "purple",
+  red: "red",
+  yellow: "yellow",
+};
+
 // The cover: the palette as flat bands (60 / 25 / 15, or 70 / 30 for two
 // colours), as an inline ` style="--cover: …"` the host's CSS paints. A field,
 // not a strip: it overrules PB-01 (2026-11-02, the user's call). No palette →
-// "" and the host's CSS falls back to grey-05.
+// the Playbook's own colour, light (-20); no colour either → "" and the host's
+// CSS falls back to grey-05.
 export function brandCoverStyle(ctx) {
   const colors = paletteOf(ctx);
-  if (!colors.length) return "";
+  if (!colors.length) {
+    const own = OWN_COLOR[ctx?.color];
+    return own ? ` style="--cover: var(--ref-color-${own}-20);"` : "";
+  }
   const stops = colors.length === 3 ? [0, 60, 85, 100] : colors.length === 2 ? [0, 70, 100] : [0, 100];
   return ` style="--cover: linear-gradient(90deg, ${colors
     .map((c, i) => `${escapeAttr(c)} ${stops[i]}% ${stops[i + 1]}%`)

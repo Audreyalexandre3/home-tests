@@ -11,19 +11,19 @@ import {
   canManageSharing,
   canDelete,
   canView,
-} from "../../playbook-access.js?v=2589";
-import { isFlagOn } from "../../feature-flags.js?v=2589";
-import { escapeAttr, escapeText } from "../../utils.js?v=2589";
-import { brandCoverStyle, voiceSentence } from "../../brand-cover.js?v=2589";
-import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2589";
-import { getSessions } from "../../sessions-store.js?v=2589";
-import { renderEmptyState } from "../../components/empty-state.js?v=2589";
-import { getSources, getIdeas } from "../../library.js?v=2589";
-import { getPosts } from "../../posts-store.js?v=2589";
-import { getContextById } from "../../contexts-store.js?v=2589";
-import { voicesToFinish } from "../../voice-parts.js?v=2589";
-import { networkIcon, networkLabel } from "../../social-profiles.js?v=2589";
-import { pageState } from "../home.js?v=2589";
+} from "../../playbook-access.js?v=2591";
+import { isFlagOn } from "../../feature-flags.js?v=2591";
+import { escapeAttr, escapeText } from "../../utils.js?v=2591";
+import { brandCoverStyle, voiceSentence } from "../../brand-cover.js?v=2591";
+import { isWorkspaceMode, getActivePlaybookId } from "../../active-playbook.js?v=2591";
+import { getSessions } from "../../sessions-store.js?v=2591";
+import { renderEmptyState } from "../../components/empty-state.js?v=2591";
+import { getSources, getIdeas } from "../../library.js?v=2591";
+import { getPosts } from "../../posts-store.js?v=2591";
+import { getContextById } from "../../contexts-store.js?v=2591";
+import { voicesToFinish } from "../../voice-parts.js?v=2591";
+import { networkIcon, networkLabel } from "../../social-profiles.js?v=2591";
+import { pageState } from "../home.js?v=2591";
 
 // The Playbooks tab — a TABLE, the same shape as the Chats tab beside it.
 //
@@ -355,7 +355,7 @@ export function renderContextsEmpty(allContexts, pageState) {
 // itself, so the user doesn't have to chase the header CTA after scrolling.
 // Triggers the same `data-contexts-new` handler as the header button.
 export function renderGhostCard() {
-  // The card's own anatomy, empty: a butter cover (Archie's surface), the
+  // The card's own anatomy, empty: a neutral cover, the
   // Archie mark astride its edge where a brand's logo would sit, then the
   // name slot and one sentence. It spans the grid's four rows like a card.
   return `

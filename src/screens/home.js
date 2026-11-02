@@ -1,27 +1,27 @@
-import { html, raw, escapeAttr } from "../utils.js?v=2589";
-import { conceptText } from "../concepts.js?v=2589";
-import { renderTopbar } from "../components/topbar.js?v=2589";
+import { html, raw, escapeAttr } from "../utils.js?v=2591";
+import { conceptText } from "../concepts.js?v=2591";
+import { renderTopbar } from "../components/topbar.js?v=2591";
 import {
   getContexts,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=2589";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2589";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=2589";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2589";
-import { navigate, getPath } from "../router.js?v=2589";
-import { isFlagOn } from "../feature-flags.js?v=2589";
-import { setHandoff } from "../handoff.js?v=2589";
-import { openNewPlaybookFlow } from "../context-builder.js?v=2589";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=2589";
-import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2589";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2589";
-import { voicesToFinish } from "../voice-parts.js?v=2589";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=2589";
-import { installMoreMenu } from "../components/more-menu.js?v=2589";
-import { showToast } from "../components/toast.js?v=2589";
-import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2589";
+} from "../contexts-store.js?v=2591";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=2591";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=2591";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=2591";
+import { navigate, getPath } from "../router.js?v=2591";
+import { isFlagOn } from "../feature-flags.js?v=2591";
+import { setHandoff } from "../handoff.js?v=2591";
+import { openNewPlaybookFlow } from "../context-builder.js?v=2591";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=2591";
+import { visibleContexts, usableContexts, isMine } from "../playbook-access.js?v=2591";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=2591";
+import { voicesToFinish } from "../voice-parts.js?v=2591";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=2591";
+import { installMoreMenu } from "../components/more-menu.js?v=2591";
+import { showToast } from "../components/toast.js?v=2591";
+import { pickedPlaybook, renderHeroPicker, renderHomeHero, renderHomeWorkflows } from "./home/hero.js?v=2591";
 import {
   chatPlaybook,
   renderChatsTab,
@@ -29,7 +29,7 @@ import {
   renderContextsEmpty,
   renderGhostCard,
   renderPlaybooksTable,
-} from "./home/lists.js?v=2589";
+} from "./home/lists.js?v=2591";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -194,25 +194,20 @@ function renderPage() {
     return html`
       <div class="contexts-view__page">
         <header class="contexts-view__head">
-          <div class="contexts-view__head-text">
-            <h1 class="contexts-view__title">Playbooks</h1>
-            <p class="contexts-view__sub concept-lead">${conceptText("playbook")}</p>
-          </div>
+          <h1 class="contexts-view__title">Playbooks</h1>
           ${raw(
-            // Nothing to add next to: the empty state's « Create your first
-            // Playbook » is then the one next step. The page's one primary
-            // sits on the title's row, never wrapped under the sentence.
-            all.length ? renderCreateButton() : "",
+            // Nothing to search and nothing to add next to: the empty state's
+            // « Create your first Playbook » is then the one next step. Search
+            // and Create sit on the title's row, never wrapped under the
+            // sentence, and never on a row of their own (tried, 2026-11-02:
+            // a lone search field over the grid).
+            all.length
+              ? `<div class="contexts-view__head-actions">${renderSearchField()}${renderCreateButton()}</div>`
+              : "",
           )}
+          <p class="contexts-view__sub concept-lead">${conceptText("playbook")}</p>
         </header>
-        ${raw(voicesWarning(all))}
-        ${raw(
-          // One toolbar over the grid: the owner tabs (when something is shared
-          // with me) on the left, the search on the right.
-          all.length
-            ? `<div class="contexts-view__toolbar">${renderOwnerTabs(all) || "<span></span>"}${renderSearchField()}</div>`
-            : "",
-        )}
+        ${raw(voicesWarning(all))} ${raw(renderOwnerTabs(all))}
         <div class="contexts-view__body">${raw(renderTabBody())}</div>
       </div>
     `;
