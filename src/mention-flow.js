@@ -1,37 +1,39 @@
 // mention-flow — mentions in drafts, asked in the chat (flag draftMentions).
 //
-//   « mention Notion in the LinkedIn post », « tag Linear in all the drafts »,
-//   « remove the mention of Notion », and my offer after writing drafts that
-//   name a brand (postDraftResult).
+//   « mention Notion in the LinkedIn post », « tag Notion, Figma and Jordan Lee
+//   in all the drafts », « remove the mention of Notion », and my offer after
+//   writing drafts that name a brand (postDraftResult).
 //
-// Each draft has one network, so I ask which account network by network (the
-// mention's text and rules: mentions.js): a search opened on the name said,
-// even when one account matches — you pick, I don't guess (2026-11-03).
-// Instagram / TikTok have no search (prod), so I ask for the username. The
-// questions come one network at a time, then every draft changes at once. Your
-// pick echoes as a chip; I answer in one sentence, no « what changed » card.
+// Each draft has one network, so I ask which accounts network by network (the
+// mention's text and rules: mentions.js): a search where you tick one account
+// or several, each name said with a single match already ticked — you pick, I
+// don't guess (2026-11-03). Instagram / TikTok have no search (prod), so I ask
+// for the usernames. The questions come one network at a time, then every
+// draft changes at once. Your pick echoes as a chip; I answer in one sentence,
+// no « what changed » card.
 
-import { postAssistantMessage, postUserTurn, postActivity, postSelectionEcho } from "./assistant.js?v=2631";
-import * as inlineQuestion from "./inline-question.js?v=2631";
-import { getPosts, updatePostContent } from "./posts-store.js?v=2631";
-import { isFlagOn } from "./feature-flags.js?v=2631";
-import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2631";
-import { focusInPanel } from "./components/right-panel.js?v=2631";
-import { escapeHtml } from "./utils.js?v=2631";
+import { postAssistantMessage, postUserTurn, postActivity, postSelectionEcho } from "./assistant.js?v=2632";
+import * as inlineQuestion from "./inline-question.js?v=2632";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2632";
+import { isFlagOn } from "./feature-flags.js?v=2632";
+import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2632";
+import { focusInPanel } from "./components/right-panel.js?v=2632";
+import { escapeHtml } from "./utils.js?v=2632";
 import {
   HANDLE_RE,
+  joinList,
   mentionMode,
   searchMentions,
   mentionAccounts,
   typedAccount,
   mentionCaption,
-  applyMention,
-  removeMention,
+  applyMentions,
+  removeMentions,
   mentionsNamedIn,
   nameForHandle,
-} from "./mentions.js?v=2631";
+} from "./mentions.js?v=2632";
 
-export { MENTION_ASK, UNMENTION_ASK, mentionNameIn } from "./mentions.js?v=2631";
+export { MENTION_ASK, UNMENTION_ASK, mentionNamesIn } from "./mentions.js?v=2632";
 
 const initials = (name) =>
   name
@@ -39,19 +41,24 @@ const initials = (name) =>
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() || "")
     .join("");
+const uniq = (list) => [...new Set(list)];
+const names = (said) => joinList(said.map((s) => escapeHtml(s.name)));
 
-// Add `said` ({ name, handle? }, or null when the sentence names nobody) to
-// `drafts`, the account asked network by network.
-export function mentionInDrafts(sessionId, drafts, said) {
+// Add `said` ([{ name, handle? }], empty when the sentence names nobody) to
+// `drafts`, the accounts asked network by network.
+export function mentionInDrafts(sessionId, drafts, said = []) {
   // « @NotionHQ » names Notion: searched by its name on the other networks.
-  if (said?.handle && nameForHandle(said.handle)) said = { ...said, name: nameForHandle(said.handle) };
+  said = said.map((s) => (s.handle && nameForHandle(s.handle) ? { ...s, name: nameForHandle(s.handle) } : s));
   const networks = [...new Set(drafts.map((d) => normalizeNetwork(d.network)))];
-  const resolved = new Map(); // network → account, or null when skipped
+  const resolved = new Map(); // network → accounts ([] when skipped)
   const questions = [];
   for (const n of networks.filter(mentionMode)) {
-    // A username you typed yourself is your pick; anything else, I ask.
-    if (mentionMode(n) === "typed" && said?.handle && HANDLE_RE.test(said.handle))
-      resolved.set(n, typedAccount(n, said.handle, said.name));
+    // Usernames you typed yourself are your pick; anything else, I ask.
+    if (mentionMode(n) === "typed" && said.length && said.every((s) => s.handle && HANDLE_RE.test(s.handle)))
+      resolved.set(
+        n,
+        said.map((s) => typedAccount(n, s.handle, s.name)),
+      );
     else questions.push(n);
   }
   const total = questions.length;
@@ -59,71 +66,105 @@ export function mentionInDrafts(sessionId, drafts, said) {
     const n = questions.shift();
     if (!n) return apply(sessionId, drafts, resolved, said);
     const step = total > 1 ? `${networkLabel(n)} · ${total - questions.length} of ${total}` : networkLabel(n);
-    askAccount(sessionId, n, said, step, (account) => {
-      resolved.set(n, account);
-      // Named by your first pick: the next network's search opens on it.
-      if (!said && account) said = { name: account.entity };
+    askAccounts(sessionId, n, said, step, (accounts) => {
+      resolved.set(n, accounts);
+      // Named by your first pick: the next network's search ticks them too.
+      if (!said.length) said = uniq(accounts.map((a) => a.entity)).map((name) => ({ name }));
       next();
     });
   };
   next();
 }
 
-// One network's question: the search (LinkedIn, Facebook, X), or the username
-// (Instagram, TikTok). Skipping leaves that network's drafts without it.
-// `again`: a username just refused — the refusal already asked once more.
-function askAccount(sessionId, network, said, step, done, again = false) {
+// One network's question: the search (LinkedIn, Facebook, X), or the usernames
+// (Instagram, TikTok). Skipping leaves that network's drafts without them.
+// `again`: usernames just refused — the refusal already asked once more.
+function askAccounts(sessionId, network, said, step, done, again = false) {
   const label = networkLabel(network);
-  const name = said ? escapeHtml(said.name) : "";
-  const skip = { skipLabel: `Not on ${label}`, onSkip: () => done(null) };
+  const skip = { skipLabel: `Not on ${label}`, onSkip: () => done([]) };
+  const echo = (accounts) =>
+    postSelectionEcho(sessionId, {
+      icon: networkIcon(network),
+      title: joinList(accounts.map((a) => (mentionMode(network) === "typed" ? `@${a.handle}` : a.name))),
+      meta: accounts.length === 1 && mentionMode(network) === "search" ? mentionCaption(accounts[0]) : label,
+    });
   if (mentionMode(network) === "typed") {
     if (!again)
       postAssistantMessage(
         sessionId,
-        `${label} has no search for mentions. ${name ? `What's ${name}'s ${label} username?` : `Which ${label} username should I mention?`}`,
+        `${label} has no search for mentions. ${
+          said.length === 1
+            ? `What's ${names(said)}'s ${label} username?`
+            : `Which ${label} usernames should I mention? Separate them with commas.`
+        }`,
       );
     inlineQuestion.ask(sessionId, {
       title: null,
       stepLabel: step,
       items: [],
-      customPlaceholder: "@username",
+      customPlaceholder: said.length === 1 ? "@username" : "@username, @username",
       customFirst: true,
       customIcon: "ap-icon-at",
       ...skip,
       onCustom: (value) => {
-        const handle = value.trim().replace(/^@/, "");
-        if (!HANDLE_RE.test(handle)) {
-          postUserTurn(sessionId, `@${handle}`);
+        const handles = value
+          .split(/[\s,]+/)
+          .map((h) => h.replace(/^@/, ""))
+          .filter(Boolean);
+        const wrong = handles.filter((h) => !HANDLE_RE.test(h));
+        if (!handles.length || wrong.length) {
+          postUserTurn(sessionId, value.trim());
           postAssistantMessage(
             sessionId,
-            `That isn't a valid ${label} username: letters, numbers, periods and underscores, up to 30. What's the exact one?`,
+            `${wrong.length ? `${joinList(wrong.map((h) => `@${escapeHtml(h)}`))} ${wrong.length === 1 ? "isn't a valid" : "aren't valid"} ${label} username${wrong.length === 1 ? "" : "s"}` : "I need a username"}: letters, numbers, periods and underscores, up to 30. What are the exact ones?`,
           );
-          return askAccount(sessionId, network, said, step, done, true);
+          return askAccounts(sessionId, network, said, step, done, true);
         }
-        postSelectionEcho(sessionId, { icon: networkIcon(network), title: `@${handle}`, meta: label });
-        done(typedAccount(network, handle, said?.name));
+        // Matched to the names said, in order, when there are as many.
+        const accounts = handles.map((h, i) =>
+          typedAccount(network, h, handles.length === said.length ? said[i].name : null),
+        );
+        echo(accounts);
+        done(accounts);
       },
     });
     return;
   }
-  const found = said ? searchMentions(network, said.name) : [];
-  // Every account the search can reach on that network, the matches first; the
-  // search opens on the name, so only the matches show until it's cleared.
+  const matches = said.map((s) => ({ name: s.name, found: searchMentions(network, s.name) }));
+  const found = matches.flatMap((m) => m.found).filter((a, i, all) => all.findIndex((b) => b.id === a.id) === i);
+  // Every account the search can reach on that network, the matches first.
   const accounts = [...found, ...mentionAccounts(network).filter((a) => !found.some((f) => f.id === a.id))];
+  const sure = matches.filter((m) => m.found.length === 1);
+  const unsure = matches.filter((m) => m.found.length > 1);
+  const lost = matches.filter((m) => !m.found.length);
   postAssistantMessage(
     sessionId,
-    !said
+    !said.length
       ? `Who should I mention on ${label}?`
-      : found.length
-        ? `Which ${name} should I mention on ${label}?`
-        : `I couldn't find ${name} on ${label}. Search for the account:`,
+      : said.length === 1
+        ? found.length
+          ? `Which ${names(said)} should I mention on ${label}?`
+          : `I couldn't find ${names(said)} on ${label}. Search for the account:`
+        : [
+            `Who should I mention on ${label}?`,
+            sure.length ? `I ticked ${names(sure)}.` : "",
+            unsure.length ? `Pick the right ${names(unsure)}.` : "",
+            lost.length ? `I couldn't find ${names(lost)}: search for ${lost.length === 1 ? "it" : "them"}.` : "",
+          ]
+            .filter(Boolean)
+            .join(" "),
   );
   inlineQuestion.ask(sessionId, {
     title: null,
     stepLabel: step,
+    multi: true,
+    // One name: the search opens on it. Several: every account shows, each
+    // name's only match ticked.
     searchable: true,
     searchPlaceholder: `Search ${label}…`,
-    searchQuery: found.length ? said.name : "",
+    searchQuery: said.length === 1 && found.length ? said[0].name : "",
+    defaultSelected: sure.map((m) => m.found[0].id),
+    submitLabel: "Mention",
     items: accounts.map((a) => ({
       value: a.id,
       label: a.name,
@@ -132,11 +173,10 @@ function askAccount(sessionId, network, said, step, done, again = false) {
       avatar: { initials: initials(a.name), networkIcon: networkIcon(network) },
     })),
     ...skip,
-    onPick: (id) => {
-      const account = accounts.find((a) => a.id === id);
-      if (!account) return;
-      postSelectionEcho(sessionId, { icon: networkIcon(network), title: account.name, meta: mentionCaption(account) });
-      done(account);
+    onPick: (ids) => {
+      const picked = accounts.filter((a) => ids.includes(a.id));
+      if (picked.length) echo(picked);
+      done(picked);
     },
   });
 }
@@ -144,15 +184,15 @@ function askAccount(sessionId, network, said, step, done, again = false) {
 // Every draft changes at once, then one sentence of mine names them: a mention
 // is no rewrite, so no « what changed » card (and `revision` is cleared, as a
 // hand edit does, so an earlier rewrite's marks don't claim it).
-function commit(sessionId, edits, said, where = "in") {
+function commit(sessionId, edits, lead, where = "in") {
   postActivity(sessionId, ["modify_post"]);
   for (const { post, next } of edits)
     updatePostContent(sessionId, post.id, { text: next.text, mentions: next.mentions, revision: null });
   postAssistantMessage(
     sessionId,
     edits.length === 1
-      ? `${said} ${where} [[post:${edits[0].post.id}]].`
-      : `${said} ${where} these drafts:${edits.map((e) => `\n- [[post:${e.post.id}]]`).join("")}`,
+      ? `${lead} ${where} [[post:${edits[0].post.id}]].`
+      : `${lead} ${where} these drafts:${edits.map((e) => `\n- [[post:${e.post.id}]]`).join("")}`,
   );
   focusInPanel("post", edits[0].post.id);
 }
@@ -162,7 +202,6 @@ function apply(sessionId, drafts, resolved, said) {
   const notes = [];
   const left = [];
   const already = [];
-  const typed = [];
   for (const d of drafts) {
     const post = getPosts(sessionId).find((p) => p.id === d.id);
     if (!post) continue;
@@ -171,50 +210,64 @@ function apply(sessionId, drafts, resolved, said) {
       notes.push(`${networkLabel(n)} doesn't support mentions, so [[post:${post.id}]] stays as it is.`);
       continue;
     }
-    const account = resolved.get(n);
-    if (!account) {
+    const accounts = resolved.get(n) || [];
+    if (!accounts.length) {
       left.push(post);
       continue;
     }
-    const next = applyMention(post, account);
-    if (!next) already.push(post);
-    else edits.push({ post, next, account });
-    if (next && mentionMode(n) === "typed" && !typed.includes(account)) typed.push(account);
+    const next = applyMentions(post, accounts);
+    if (next) edits.push({ post, next, accounts });
+    else already.push(post);
   }
-  const first = edits[0]?.account;
-  const name = escapeHtml(edits.length === 1 || !said ? first?.name || said?.name || "" : said.name);
-  if (already.length) notes.push(`${already.map((p) => `[[post:${p.id}]]`).join(", ")} already mentions ${name}.`);
-  if (left.length) notes.push(`I left ${left.map((p) => `[[post:${p.id}]]`).join(", ")} without the mention.`);
-  // Prod's verify link: nothing checks a typed username, so I point at it.
-  for (const a of typed) {
-    const url =
-      a.network === "tiktok" ? `https://www.tiktok.com/@${a.handle}` : `https://www.instagram.com/${a.handle}/`;
+  const all = edits.flatMap((e) => e.accounts);
+  if (already.length)
     notes.push(
-      `I can't look up ${networkLabel(a.network)} usernames, so <a class="ap-link" href="${url}" target="_blank" rel="noopener">make sure @${a.handle} is the right account</a>.`,
+      `${already.map((p) => `[[post:${p.id}]]`).join(", ")} already ${already.length === 1 ? "has" : "have"} ${said.length === 1 ? "that mention" : "those mentions"}.`,
     );
-  }
-  if (edits.length) commit(sessionId, edits, `I mentioned ${name}`);
-  else if (!notes.length) postAssistantMessage(sessionId, "Okay, no mention.");
+  if (left.length) notes.push(`I left ${left.map((p) => `[[post:${p.id}]]`).join(", ")} without mentions.`);
+  // Prod's verify link: nothing checks a typed username, so I point at it.
+  const typed = all.filter((a) => mentionMode(a.network) === "typed");
+  const links = uniq(typed.map((a) => `${a.network}:${a.handle}`)).map((k) => {
+    const [network, handle] = k.split(":");
+    const url = network === "tiktok" ? `https://www.tiktok.com/@${handle}` : `https://www.instagram.com/${handle}/`;
+    return `<a class="ap-link" href="${url}" target="_blank" rel="noopener">@${handle}</a>`;
+  });
+  if (links.length)
+    notes.push(
+      `I can't look up ${joinList(uniq(typed.map((a) => networkLabel(a.network))))} usernames, so check ${joinList(links)} ${links.length === 1 ? "is the right account" : "are the right accounts"}.`,
+    );
+  if (edits.length) {
+    // The names as they read: an account's own name, a typed username's person.
+    const who = uniq(all.map((a) => (mentionMode(a.network) === "typed" ? a.entity : a.name)));
+    commit(sessionId, edits, `I mentioned ${joinList(who.map(escapeHtml))}`);
+  } else if (!notes.length) postAssistantMessage(sessionId, "Okay, no mention.");
   if (notes.length) postAssistantMessage(sessionId, notes.join("\n\n"));
 }
 
-// « Remove the mention of Notion »: the mention goes back to the plain name.
-export function unmentionInDrafts(sessionId, drafts, said) {
+// « Remove the mention of Notion (and Figma) »: back to the plain names, or
+// out of my sentence.
+export function unmentionInDrafts(sessionId, drafts, said = []) {
   const edits = drafts
     .map((d) => getPosts(sessionId).find((p) => p.id === d.id))
     .filter(Boolean)
-    .map((post) => ({ post, next: said ? removeMention(post, said.handle || said.name) : null }))
+    .map((post) => ({ post, next: said.length ? removeMentions(post, said) : null }))
     .filter((e) => e.next);
   if (!edits.length) {
     postAssistantMessage(
       sessionId,
-      said
-        ? `${drafts.length === 1 ? "That draft doesn't" : "None of these drafts"} mention ${escapeHtml(said.name)}.`
+      said.length
+        ? `${drafts.length === 1 ? "That draft doesn't" : "None of these drafts"} mention ${names(said)}.`
         : "Which mention should I take out? Name the brand or the person.",
     );
     return;
   }
-  commit(sessionId, edits, `I took out the mention of ${escapeHtml(edits[0].next.entity)}`, "from");
+  const gone = uniq(edits.flatMap((e) => e.next.entities));
+  commit(
+    sessionId,
+    edits,
+    `I took out the mention${gone.length === 1 ? "" : "s"} of ${joinList(gone.map(escapeHtml))}`,
+    "from",
+  );
 }
 
 // After writing drafts: when they name someone the search knows and don't
@@ -242,7 +295,7 @@ export function offerMentions(sessionId, drafts) {
     ],
     onPick: (choice) => {
       postUserTurn(sessionId, choice === "yes" ? yes : "Not now");
-      if (choice === "yes") mentionInDrafts(sessionId, m.drafts, { name: m.name });
+      if (choice === "yes") mentionInDrafts(sessionId, m.drafts, [{ name: m.name }]);
       else postAssistantMessage(sessionId, "Okay, no mention.");
     },
   });

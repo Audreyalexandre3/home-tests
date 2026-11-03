@@ -45,12 +45,34 @@ assert.equal(M.removeMention(post, "notion"), null);
 const named = M.mentionsNamedIn([post, tagged, { network: "youtube", text: ["Notion"] }]);
 assert.equal(named[0].name, "Notion");
 assert.equal(named[0].drafts.length, 1, "not the mentioned one, not YouTube");
-const said = (t) => M.mentionNameIn(t);
-assert.deepEqual(said("mention Notion in the LinkedIn post"), { name: "Notion" });
-assert.deepEqual(said("Can you tag Jordan Lee on post 2?"), { name: "Jordan Lee" });
-assert.deepEqual(said("remove the mention of Notion"), { name: "Notion" });
-assert.deepEqual(said("tag @NotionHQ"), { name: "NotionHQ", handle: "NotionHQ" });
-assert.equal(said("mention them"), null);
+const said = (t) => M.mentionNamesIn(t).map((s) => s.name);
+assert.deepEqual(said("mention Notion in the LinkedIn post"), ["Notion"]);
+assert.deepEqual(said("Can you tag Jordan Lee on post 2?"), ["Jordan Lee"]);
+assert.deepEqual(said("remove the mention of Notion"), ["Notion"]);
+assert.deepEqual(M.mentionNamesIn("tag @NotionHQ"), [{ name: "NotionHQ", handle: "NotionHQ" }]);
+assert.deepEqual(said("mention them"), []);
+assert.deepEqual(said("Mention Notion, Figma and Jordan Lee in post 1"), ["Notion", "Figma", "Jordan Lee"]);
+assert.deepEqual(said("tag @a and @b.c"), ["a", "b.c"]);
+assert.equal(M.joinList(["@a", "@b", "@c"]), "@a, @b and @c");
+
+// Several at once: one named in place, the others in one sentence of mine.
+const figmaLi = M.searchMentions("linkedin", "figma")[0];
+const jordanLi = M.searchMentions("linkedin", "jordan")[0];
+const many = M.applyMentions(post, [notionLi, figmaLi, jordanLi]);
+assert.deepEqual(many.text, [
+  "We moved our docs to @Notion last year.",
+  "It stuck. Shout-out to @Figma and @Jordan Lee.",
+]);
+const lessOne = M.removeMention({ ...post, ...many }, "figma");
+assert.equal(
+  lessOne.text[1],
+  "It stuck. Thanks to @Jordan Lee for sharing this.",
+  "the sentence rewritten for the rest",
+);
+assert.equal(lessOne.mentions["@Jordan Lee"].added, "Thanks to @Jordan Lee for sharing this.");
+const none = M.removeMentions({ ...post, ...many }, [{ name: "Notion" }, { name: "Figma" }, { name: "Jordan" }]);
+assert.deepEqual(none.text, post.text, "all out, back to the draft as it was");
+assert.deepEqual(none.entities, ["Notion", "Figma", "Jordan Lee"]);
 assert.ok(M.UNMENTION_ASK.test("remove the mention of Notion") && !M.UNMENTION_ASK.test("mention Notion"));
 assert.ok(M.UNMENTION_ASK.test("remove @Notion from the draft"));
 assert.ok(!M.UNMENTION_ASK.test("delete all the drafts"));

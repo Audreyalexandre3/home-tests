@@ -14,8 +14,8 @@
 // ponytail: the catalogue is a hand-kept list — a new turn variant or route has
 // to be added here too, or it won't show in the menu.
 
-import { escapeHtml, fold } from "../../utils.js?v=2631";
-import { isFlagOn } from "../../feature-flags.js?v=2631";
+import { escapeHtml, fold } from "../../utils.js?v=2632";
+import { isFlagOn } from "../../feature-flags.js?v=2632";
 import {
   postAssistantMessage,
   postUserTurn,
@@ -34,20 +34,20 @@ import {
   GENERIC_FAILURE,
   getThread,
   refreshThread,
-} from "../../assistant.js?v=2631";
-import { getSources, getIdeas } from "../../library.js?v=2631";
-import { getPosts } from "../../posts-store.js?v=2631";
-import { getTopPosts } from "../../top-posts-store.js?v=2631";
-import { getConnectedProfiles } from "../../social-profiles.js?v=2631";
-import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=2631";
-import { getConnectedConnectors } from "../../connectors-store.js?v=2631";
-import { detectUrlService } from "../../url-services.js?v=2631";
-import * as inlineQuestion from "../../inline-question.js?v=2631";
-import { startTopPostsInline } from "../../top-posts-flow.js?v=2631";
-import { startTopicPickerInline } from "../../topic-flow.js?v=2631";
-import { askConnector } from "../../connector-ask.js?v=2631";
-import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=2631";
-import { startIdeaDraft, askSourceUse } from "./draft-questions.js?v=2631";
+} from "../../assistant.js?v=2632";
+import { getSources, getIdeas } from "../../library.js?v=2632";
+import { getPosts } from "../../posts-store.js?v=2632";
+import { getTopPosts } from "../../top-posts-store.js?v=2632";
+import { getConnectedProfiles } from "../../social-profiles.js?v=2632";
+import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=2632";
+import { getConnectedConnectors } from "../../connectors-store.js?v=2632";
+import { detectUrlService } from "../../url-services.js?v=2632";
+import * as inlineQuestion from "../../inline-question.js?v=2632";
+import { startTopPostsInline } from "../../top-posts-flow.js?v=2632";
+import { startTopicPickerInline } from "../../topic-flow.js?v=2632";
+import { askConnector } from "../../connector-ask.js?v=2632";
+import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=2632";
+import { startIdeaDraft, askSourceUse } from "./draft-questions.js?v=2632";
 
 // The intake sample plays the real lifecycle — loading, then ready — under a
 // sample id no source owns, so intake-lifecycle leaves it alone.
@@ -397,52 +397,28 @@ const EDITS = [
 // answers differently. The account directory is src/mocks/mentions.js.
 const MENTIONS = [
   {
-    id: "m-brand",
-    label: "Mention a brand",
-    prompt: "Mention Notion in post 1",
-    hint: "The search opens on Notion: pick the account",
-  },
-  {
-    id: "m-person",
-    label: "Mention a person",
-    prompt: "Mention Jordan Lee in post 1",
-    hint: "Not named in the draft: I bring them in with a sentence",
-  },
-  {
-    id: "m-someone",
+    id: "m-one",
     label: "Mention someone",
-    prompt: "Mention someone in post 1",
-    hint: "No name said: the search opens empty",
+    prompt: "Mention Notion in post 1",
+    hint: "A search opens on the name; you tick the account",
   },
   {
-    id: "m-handle",
-    label: "Mention a handle",
-    prompt: "Tag @NotionHQ in post 1",
-    hint: "The handle names the brand; you still pick the account",
-  },
-  {
-    id: "m-ambiguous",
-    label: "Two accounts, one name",
-    prompt: "Tag Linear in all my drafts",
-    hint: "One search per network, then one sentence for all",
-  },
-  {
-    id: "m-not-found",
-    label: "Nobody found",
-    prompt: "Mention Acme Robotics in post 1",
-    hint: "No match: the search opens on every account",
+    id: "m-several",
+    label: "Mention several people",
+    prompt: "Mention Notion, Figma and Jordan Lee in post 1",
+    hint: "One search, each name's match already ticked",
   },
   {
     id: "m-all",
     label: "Mention in every draft",
     prompt: "Mention Notion in all my drafts",
-    hint: "Instagram and TikTok ask for the username, YouTube is left out",
+    hint: "One search per network; Instagram asks for the username",
   },
   {
     id: "m-remove",
     label: "Remove a mention",
     prompt: "Remove the mention of Notion",
-    hint: "Back to the plain name, or my sentence goes",
+    hint: "Back to the plain name",
   },
 ].map((p) => ({ ...p, when: (sid) => flagOff("draftMentions") || needsDrafts(sid) }));
 
