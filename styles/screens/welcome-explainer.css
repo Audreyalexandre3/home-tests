@@ -1,0 +1,971 @@
+/* A returning user's « Create a Playbook »: the teaching scenes that replace
+   the filling card on the stage (welcome-alt-explainer.js).
+   One 560 × 540 canvas laid out in px and scaled to the stage (--s, set by
+   fit()): the objects keep real product sizes (13–14px text, 32/40px DS
+   avatars) and the pieces flying between them keep their paths.
+   Depth: the canvas is the grey-05 stage; the objects on it sit one level up
+   (one shadow), nothing inside them is lifted again.
+   Motion: one play (objects deal in, pieces fly, slots land), then only the
+   ambient: the scan over the site, the voice print breathing, particles on the
+   threads. Reduced motion: the last frame, still. */
+
+.welcome-explainer {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--ref-spacing-lg);
+  width: 100%;
+  height: 100%;
+  padding: var(--ref-spacing-lg);
+  box-sizing: border-box;
+  color: var(--ref-color-grey-100);
+}
+
+.wx-caption {
+  max-width: 46ch;
+  text-align: center;
+  animation: wx-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.wx-caption__title {
+  margin: 0;
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.wx-caption__text {
+  margin: var(--ref-spacing-xxs) 0 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+  text-wrap: pretty;
+}
+
+.wx-fit {
+  position: relative;
+  width: calc(560px * var(--s, 1));
+  height: calc(var(--h, 540px) * var(--s, 1));
+}
+
+.wx-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 560px;
+  height: var(--h, 540px);
+  transform: scale(var(--s, 1));
+  transform-origin: 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.wx-threads {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+/* ── Placement and entrances ──────────────────────────────────────────── */
+
+.wx-at {
+  position: absolute;
+  z-index: 1;
+  animation: wx-pop 0.8s cubic-bezier(0.34, 1.36, 0.64, 1) var(--d, 0s) both;
+}
+
+.wx-hero {
+  z-index: 2;
+}
+
+.wx-seam-row {
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ── Shared objects ───────────────────────────────────────────────────── */
+
+.wx-browser,
+.wx-book,
+.wx-print,
+.wx-draft,
+.wx-langcard,
+.wx-source,
+.wx-part,
+.wx-post,
+.wx-partchip {
+  box-sizing: border-box;
+  border: 1px solid var(--ref-color-grey-20);
+  background: var(--ref-color-white);
+}
+
+.wx-browser,
+.wx-book,
+.wx-print,
+.wx-draft,
+.wx-langcard {
+  border-radius: 16px;
+  box-shadow: var(--app-shadow-popover-md);
+}
+
+.wx-source,
+.wx-part,
+.wx-post,
+.wx-partchip {
+  border-radius: 14px;
+  box-shadow: var(--app-shadow-subtle);
+}
+
+.wx-mark {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.wx-mark.is-initial {
+  color: var(--ref-color-white);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  font-size: 12px;
+}
+
+.wx-partchip .wx-glyph.welcome-flow__glyph {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.wx-glyph.welcome-flow__glyph {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: var(--sys-icon-css-sm, 16px);
+}
+
+.wx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ref-color-grey-05);
+  font-size: 12px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  white-space: nowrap;
+}
+
+.wx-part .wx-chip,
+.wx-chip.is-tinted {
+  background: var(--part-tint);
+  color: var(--part-ink);
+}
+
+.wx-chip.is-tinted {
+  animation: wx-pop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) var(--d, 0s) both;
+}
+
+.wx-swatches {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.wx-swatches i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+
+.wx-swatches.is-big i {
+  width: 30px;
+  height: 30px;
+}
+
+.wx-font {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-font b {
+  font-size: 18px;
+  color: var(--ref-color-grey-100);
+}
+
+/* My stitch on the thread. */
+.wx-seam {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--app-butter);
+  font-size: 13px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  white-space: nowrap;
+  box-shadow: 0 0 0 4px var(--ref-color-grey-05);
+}
+
+.wx-seam i,
+.wx-tag i,
+.wx-doors i {
+  color: var(--app-butter-accent);
+}
+
+/* ── A part of the Playbook, and the slot a piece lands in ────────────── */
+
+.wx-part {
+  padding: 12px 14px;
+}
+
+.wx-part__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wx-part__head > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.wx-part__head strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.wx-part__head strong + span {
+  font-size: 12px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-slot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 26px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ref-color-grey-20);
+  animation: wx-land 0.7s cubic-bezier(0.34, 1.5, 0.64, 1) var(--d, 0s) both;
+}
+
+.wx-slot__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* A piece of the source on its way to its part. */
+.wx-fly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  offset-anchor: center;
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+  opacity: 0;
+  animation: wx-fly 1.1s cubic-bezier(0.55, 0, 0.3, 1) var(--d, 0s) both;
+}
+
+.wx-chip.is-fly,
+.wx-swatches.is-fly {
+  border: 1px solid var(--ref-color-grey-20);
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-popover-md);
+}
+
+.wx-swatches.is-fly {
+  padding: 5px 7px;
+  border-radius: 999px;
+}
+
+/* ── The website ──────────────────────────────────────────────────────── */
+
+.wx-browser {
+  overflow: hidden;
+}
+
+.wx-browser__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ref-color-grey-20);
+  background: var(--ref-color-grey-05);
+}
+
+.wx-browser__dots {
+  display: flex;
+  gap: 5px;
+}
+
+.wx-browser__dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ref-color-grey-20);
+}
+
+.wx-browser__url {
+  position: absolute;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 12px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: 999px;
+  background: var(--ref-color-white);
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
+  transform: translateX(-50%);
+}
+
+.wx-browser__page {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 14px 16px 16px;
+  overflow: hidden;
+}
+
+.wx-browser__nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-browser__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--ref-color-grey-100);
+}
+
+.wx-browser__hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.wx-browser__copy {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.wx-browser__h {
+  font-size: 19px;
+  line-height: 1.15;
+  font-weight: var(--sys-text-style-h2-weight);
+  letter-spacing: -0.01em;
+}
+
+.wx-browser__sub {
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-browser__cta {
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: var(--ref-color-white);
+  font-size: 11px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-browser__img {
+  height: 104px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 72% 30%, var(--c2) 0 20%, transparent 21%),
+    radial-gradient(circle at 30% 85%, var(--c3) 0 26%, transparent 27%), linear-gradient(140deg, var(--c1), var(--c1));
+}
+
+/* I read it: a butter band passing over the page. */
+.wx-scan {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 44px;
+  background: linear-gradient(transparent, rgb(247 255 197 / 0.85) 50%, transparent);
+  mix-blend-mode: multiply;
+  animation: wx-scan 3.6s ease-in-out 0.6s infinite;
+  opacity: 0;
+}
+
+/* ── The brand book ───────────────────────────────────────────────────── */
+
+.wx-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.wx-book::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 24px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgb(52 69 99 / 0.06) 50%, transparent);
+  border-left: 1px solid var(--ref-color-grey-20);
+}
+
+.wx-book__page {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  padding: 18px 20px;
+}
+
+.wx-book__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.wx-book__label {
+  font-size: 11px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-grey-80);
+}
+
+.wx-book__quote {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.wx-book__quote mark {
+  color: inherit;
+  border-radius: 3px;
+  background: linear-gradient(var(--app-butter), var(--app-butter)) no-repeat left / 0 100%;
+  animation: wx-highlight 0.7s ease-out 1s forwards;
+}
+
+.wx-book__say {
+  font-size: 12px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-book__type {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-book__type b {
+  font-size: 36px;
+  line-height: 1;
+  color: var(--ref-color-grey-100);
+}
+
+/* ── Where a voice is learned from, and the voice print ───────────────── */
+
+.wx-source {
+  display: grid;
+  gap: 7px;
+  height: 92px;
+  padding: 11px 12px;
+  overflow: hidden;
+}
+
+.wx-source__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-mini {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ref-color-grey-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wx-mini.is-doc {
+  white-space: normal;
+}
+
+.wx-bubble {
+  justify-self: end;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: var(--ref-color-grey-05);
+  font-size: 11px;
+}
+
+.wx-bubble.is-me {
+  justify-self: start;
+  background: var(--app-butter);
+}
+
+.wx-print {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+
+.wx-print__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.wx-print__head .wx-chips {
+  margin-left: auto;
+}
+
+.wx-wave {
+  justify-self: center;
+}
+
+.wx-wave rect {
+  fill: var(--ref-color-purple-60);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wx-breathe 1.3s ease-in-out calc(var(--i) * -0.09s) infinite alternate;
+}
+
+.wx-wave rect:nth-child(3n) {
+  fill: var(--ref-color-purple-100);
+}
+
+.wx-print__quote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ── Posts ────────────────────────────────────────────────────────────── */
+
+.wx-fan {
+  animation-name: wx-deal;
+  transform: rotate(var(--rot, 0deg));
+}
+
+.wx-post {
+  padding: 12px;
+}
+
+.wx-post.is-front {
+  box-shadow: var(--app-shadow-popover-md);
+}
+
+.wx-post__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wx-post__avatar {
+  flex-shrink: 0;
+}
+
+.wx-post__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.wx-post__who {
+  display: grid;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-post__who strong {
+  font-size: 13px;
+  color: var(--ref-color-grey-100);
+}
+
+.wx-post__text {
+  display: -webkit-box;
+  margin: 10px 0 0;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.wx-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--app-butter);
+  font-size: 11px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-tag.is-own {
+  background: var(--ref-color-purple-10);
+  color: var(--ref-color-purple-150);
+}
+
+.wx-type {
+  display: block;
+  animation: wx-type 1.1s steps(28, end) var(--d, 0s) both;
+}
+
+.wx-langcard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.wx-langcard > span:nth-child(2) {
+  display: grid;
+  font-size: 12px;
+  color: var(--ref-color-grey-80);
+}
+
+.wx-langcard strong {
+  font-size: 14px;
+  color: var(--ref-color-grey-100);
+}
+
+.wx-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--app-butter);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  animation: wx-pop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) 0.5s both;
+}
+
+.wx-lang i {
+  color: var(--app-butter-accent);
+}
+
+/* ── The ready screen: four parts, one post ───────────────────────────── */
+
+.wx-partchip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+  transition:
+    opacity 0.5s ease,
+    filter 0.5s ease;
+}
+
+.wx-corner:not(.is-lit) .wx-partchip {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.wx-draft {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.wx-draft__status {
+  margin-left: auto;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.34, 1.6, 0.64, 1);
+}
+
+.is-done .wx-draft__status {
+  opacity: 1;
+  transform: none;
+}
+
+.wx-draft__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.wx-hl {
+  border-radius: 4px;
+  background: linear-gradient(var(--part-tint), var(--part-tint)) no-repeat left / 0 100%;
+  opacity: 0.18;
+  transition:
+    opacity 0.5s ease,
+    background-size 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.2s;
+}
+
+.wx-hl.is-lit {
+  opacity: 1;
+  background-size: 100% 100%;
+}
+
+.wx-pin {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--part-tint);
+  color: var(--part-ink);
+  font-size: 10px;
+  vertical-align: -3px;
+  transform: scale(0);
+  transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.64, 1);
+}
+
+.is-lit > .wx-pin {
+  transform: none;
+}
+
+.wx-draft__img {
+  position: relative;
+  height: 112px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 72% 30%, var(--c2) 0 18%, transparent 19%),
+    radial-gradient(circle at 25% 90%, var(--c3) 0 28%, transparent 29%), linear-gradient(140deg, var(--c1), var(--c1));
+}
+
+.wx-draft__img:not(.is-lit) {
+  background: var(--ref-color-grey-10);
+}
+
+.wx-draft__img .wx-pin {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  margin: 0;
+}
+
+.wx-draft__logo {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--ref-color-white);
+}
+
+.wx-doors-row {
+  display: flex;
+  justify-content: center;
+  animation: none;
+}
+
+.wx-doors {
+  display: flex;
+  gap: 22px;
+  font-size: 13px;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.5s ease 0.3s,
+    transform 0.5s ease 0.3s;
+}
+
+.wx-doors span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.is-done .wx-doors {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Threads ──────────────────────────────────────────────────────────── */
+
+.wx-thread path {
+  fill: none;
+  stroke: var(--app-butter-accent);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: wx-draw 0.8s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards;
+}
+
+.wx-particle {
+  fill: var(--app-butter-accent);
+  stroke: var(--app-butter);
+  stroke-width: 3;
+  paint-order: stroke;
+}
+
+[data-scene-ready] .wx-thread path {
+  animation: none;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[data-scene-ready] .wx-thread.is-lit path {
+  stroke-dashoffset: 0;
+}
+
+[data-scene-ready] .wx-thread:not(.is-lit) .wx-particle {
+  display: none;
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────── */
+
+@keyframes wx-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes wx-deal {
+  from {
+    opacity: 0;
+    transform: translateY(40px) rotate(0deg) scale(0.94);
+  }
+}
+
+@keyframes wx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes wx-land {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes wx-fly {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  86% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes wx-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes wx-scan {
+  0% {
+    transform: translateY(-44px);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(200px);
+    opacity: 0;
+  }
+}
+
+@keyframes wx-breathe {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes wx-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes wx-highlight {
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-explainer *,
+  .wx-caption {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
+  }
+
+  .wx-particle,
+  .wx-scan {
+    display: none;
+  }
+}
