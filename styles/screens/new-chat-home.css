@@ -1391,6 +1391,7 @@
 }
 
 .nch-asks {
+  position: relative;
   width: 100%;
   margin: var(--ref-spacing-sm) 0 0;
   padding: 6px;
@@ -1448,6 +1449,57 @@
 .nch-ask:is(:hover, :focus-visible) .nch-ask__go {
   opacity: 1;
   transform: none;
+}
+
+/* 6 · the panel points at its chip: a notch on its top edge, under the
+   chosen chip's centre (--nch-notch-x, set by <archie-home>), sliding to the
+   next one. Requests sit on hairlines, each led by its flow's tile. */
+.nch--prompts .nch-asks {
+  margin-top: 14px;
+}
+
+.nch--prompts .nch-asks::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: calc(var(--nch-notch-x, 50%) - 6px);
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid var(--ref-color-grey-20);
+  border-left: 1px solid var(--ref-color-grey-20);
+  border-top-left-radius: 3px;
+  background: var(--ref-color-white);
+  transform: rotate(45deg);
+  transition: left var(--ref-animation-normal) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nch--prompts .nch-ask {
+  padding-left: 10px;
+}
+
+.nch--prompts .nch-asks > li + li {
+  position: relative;
+}
+
+.nch--prompts .nch-asks > li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: var(--ref-spacing-sm);
+  left: 44px;
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+
+/* A hovered line and the hairlines around it: the fill takes their place. */
+.nch--prompts .nch-asks > li:hover::before,
+.nch--prompts .nch-asks > li:hover + li::before,
+.nch--prompts .nch-asks > li:focus-within::before,
+.nch--prompts .nch-asks > li:focus-within + li::before {
+  border-color: transparent;
+}
+
+.nch-flow-chip[aria-selected="true"] .nch-tile {
+  background: var(--ref-color-white);
 }
 
 /* Choosing a chip deals its requests, one line after the other. */

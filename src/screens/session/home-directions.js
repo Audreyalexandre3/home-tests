@@ -24,19 +24,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2655";
-import { chatStarters } from "../../mocks.js?v=2655";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2655";
-import { getTopPosts } from "../../top-posts-store.js?v=2655";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2655";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2655";
-import { findTopicSource } from "../../topics-catalog.js?v=2655";
-import { getContextById } from "../../contexts-store.js?v=2655";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2655";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2655";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2655";
-import { escapeHtml } from "../../utils.js?v=2655";
-import "../../archie-pixels.js?v=2655";
+import { isFlagOn } from "../../feature-flags.js?v=2656";
+import { chatStarters } from "../../mocks.js?v=2656";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2656";
+import { getTopPosts } from "../../top-posts-store.js?v=2656";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2656";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2656";
+import { findTopicSource } from "../../topics-catalog.js?v=2656";
+import { getContextById } from "../../contexts-store.js?v=2656";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2656";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2656";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2656";
+import { escapeHtml } from "../../utils.js?v=2656";
+import "../../archie-pixels.js?v=2656";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -777,7 +777,7 @@ const voiceAsk = (ctx, voices, withIcon = false) =>
 function prompts({ composer, session }) {
   const ctx = ctxOf(session);
   const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
-  const ask = (k, text) => askRow(k, text);
+  const ask = (k, text) => askRow(k, text, { icon: flowIcon(k) });
   const tone = (f) => flowTone(f.k);
   const icon = (f) => flowIcon(f.k);
   const chip = (f, i) => `
@@ -791,7 +791,7 @@ function prompts({ composer, session }) {
     <ul class="nch-asks" id="nchFlowPane-${f.k}" role="tabpanel" aria-labelledby="nchFlow-${f.k}"
       data-nch-flow-pane="${f.k}"${i ? " hidden" : ""}>
       ${f.asks.map((t) => ask(f.k, t)).join("")}
-      ${f.k === "free" ? voiceAsk(ctx, voices) : ""}
+      ${f.k === "free" ? voiceAsk(ctx, voices, true) : ""}
     </ul>`;
   return shell(
     "prompts",
@@ -856,7 +856,12 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("play", playing, true);
     this.addEventListener("pause", playing, true);
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
-    if (this.querySelector("[data-nch-flow]")) this.setFlow(memory.flow);
+    if (this.querySelector("[data-nch-flow]")) {
+      this.setFlow(memory.flow);
+      // The chips are centred: the notch follows them when the width changes.
+      this.resized = new ResizeObserver(() => this.notch());
+      this.resized.observe(this.querySelector(".nch-flows"));
+    }
     if (this.querySelector("[data-nch-set]")) this.setSet(memory.set);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
@@ -878,6 +883,15 @@ class ArchieHome extends HTMLElement {
 
   disconnectedCallback() {
     clearInterval(this.timer);
+    this.resized?.disconnect();
+  }
+
+  // The panel's notch stands under the chosen chip (direction 6). Layout
+  // offsets, not rects: the hero's rise moves it with a transform.
+  notch() {
+    const wrap = this.querySelector(".nch-flows");
+    const chip = this.querySelector('[data-nch-flow][aria-selected="true"]');
+    if (wrap && chip) wrap.style.setProperty("--nch-notch-x", `${chip.offsetLeft + chip.offsetWidth / 2}px`);
   }
 
   // The placeholder a mode or a row sets is the box's own until the next one
@@ -932,6 +946,7 @@ class ArchieHome extends HTMLElement {
       p.hidden = p.dataset.nchFlowPane !== k;
       p.classList.toggle("is-dealt", deal && !p.hidden);
     });
+    this.notch();
   }
 
   // The example set on show (direction 7). `deal`: on « Other examples ».
