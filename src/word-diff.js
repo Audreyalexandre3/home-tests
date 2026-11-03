@@ -6,7 +6,7 @@
 // A text is a list of paragraphs. Tokens are its words plus a break between
 // paragraphs; spacing is not diffed (a post's paragraphs are plain sentences).
 
-import { escapeText } from "./utils.js?v=2654";
+import { escapeText } from "./utils.js?v=2655";
 
 const BREAK = "\n";
 

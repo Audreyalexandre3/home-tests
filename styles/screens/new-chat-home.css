@@ -1486,3 +1486,17 @@
     transform: none;
   }
 }
+
+/* ── 7 · One request per flow (flag homePromptList) ──────────────────────────
+   The panel and the lines of 6, each line led by its flow's tile. */
+.nch--prompt-list .nch-asks {
+  margin-top: var(--ref-spacing-md);
+}
+
+.nch--prompt-list .nch-ask {
+  padding-left: 10px;
+}
+
+.nch-asks__more {
+  margin-top: var(--ref-spacing-xs);
+}

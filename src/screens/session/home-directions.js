@@ -8,7 +8,8 @@
 //   homeGallery    3 · a gallery of outcomes, each tile a door (VEED)
 //   homePicks      4 · four posts I can write today, from your own material (Obvious)
 //   homeShowcase   5 · what you give on the left, the before / after on a stage (Runway)
-//   homePrompts    6 · words only: example requests under the box, one per flow (Sana)
+//   homePrompts    6 · words only: flow chips, each opening its example requests (Copilot)
+//   homePromptList 7 · words only: one example request per flow, in a list (Sana)
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -23,19 +24,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2654";
-import { chatStarters } from "../../mocks.js?v=2654";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2654";
-import { getTopPosts } from "../../top-posts-store.js?v=2654";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2654";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2654";
-import { findTopicSource } from "../../topics-catalog.js?v=2654";
-import { getContextById } from "../../contexts-store.js?v=2654";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2654";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2654";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2654";
-import { escapeHtml } from "../../utils.js?v=2654";
-import "../../archie-pixels.js?v=2654";
+import { isFlagOn } from "../../feature-flags.js?v=2655";
+import { chatStarters } from "../../mocks.js?v=2655";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2655";
+import { getTopPosts } from "../../top-posts-store.js?v=2655";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2655";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2655";
+import { findTopicSource } from "../../topics-catalog.js?v=2655";
+import { getContextById } from "../../contexts-store.js?v=2655";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2655";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2655";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2655";
+import { escapeHtml } from "../../utils.js?v=2655";
+import "../../archie-pixels.js?v=2655";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -44,6 +45,7 @@ const DIRECTIONS = [
   ["homePicks", picks],
   ["homeShowcase", showcase],
   ["homePrompts", prompts],
+  ["homePromptList", promptList],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -745,23 +747,39 @@ const FLOWS = [
   },
 ];
 
-function prompts({ composer, session }) {
-  const ctx = ctxOf(session);
-  const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
-  const STARTER = { video: "open-video-clips", top: "open-top-posts", source: "open-batch" };
-  const attrsOf = (k, text) =>
-    k === "free" ? DOORS.fill(text).attrs : k === "topic" ? `data-add-source="topic"` : starterAttrs(STARTER[k], text);
-  // `fill`: the request only lands in the box, to be rewritten before it goes.
-  const ask = (k, text, attrs = attrsOf(k, text)) => `
+// What a request does on click, its tone and its icon — shared by 6 and 7.
+const STARTER = { video: "open-video-clips", top: "open-top-posts", source: "open-batch" };
+const askAttrs = (k, text) =>
+  k === "free" ? DOORS.fill(text).attrs : k === "topic" ? `data-add-source="topic"` : starterAttrs(STARTER[k], text);
+const flowTone = (k) => (KINDS[k] ? KINDS[k].tone : "free");
+const flowIcon = (k) => (KINDS[k] ? KINDS[k].icon : "ap-icon-pen");
+
+// One request. `fill` (« Write a post ») only lands in the box, to be rewritten
+// before it goes; `icon` puts the flow's tile before the sentence (7).
+const askRow = (k, text, { attrs = askAttrs(k, text), icon = null } = {}) => `
     <li>
       <button type="button" class="nch-ask" ${attrs} data-nch-hint="${esc(text)}"
         title="${k === "free" ? "Put it in the box to edit" : "Send this request"}">
+        ${icon ? `<span class="nch-tile nch-tile--sm nch-tone--${flowTone(k)}" aria-hidden="true"><i class="${icon}"></i></span>` : ""}
         <span class="nch-ask__text">${esc(text)}</span>
         <i class="${k === "free" ? "ap-icon-pen" : "ap-icon-arrow-right"} nch-ask__go" aria-hidden="true"></i>
       </button>
     </li>`;
-  const tone = (f) => (KINDS[f.k] ? KINDS[f.k].tone : "free");
-  const icon = (f) => (KINDS[f.k] ? KINDS[f.k].icon : "ap-icon-pen");
+
+const voiceAsk = (ctx, voices, withIcon = false) =>
+  voices.length
+    ? askRow("voice", `Give ${networkLabel(voices[0])} a voice of its own`, {
+        attrs: DOORS.voice(ctx, voices[0]).attrs,
+        icon: withIcon ? networkIcon(voices[0]) : null,
+      })
+    : "";
+
+function prompts({ composer, session }) {
+  const ctx = ctxOf(session);
+  const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
+  const ask = (k, text) => askRow(k, text);
+  const tone = (f) => flowTone(f.k);
+  const icon = (f) => flowIcon(f.k);
   const chip = (f, i) => `
     <button type="button" class="nch-flow-chip" role="tab" id="nchFlow-${f.k}" aria-controls="nchFlowPane-${f.k}"
       aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-nch-flow="${f.k}"
@@ -773,7 +791,7 @@ function prompts({ composer, session }) {
     <ul class="nch-asks" id="nchFlowPane-${f.k}" role="tabpanel" aria-labelledby="nchFlow-${f.k}"
       data-nch-flow-pane="${f.k}"${i ? " hidden" : ""}>
       ${f.asks.map((t) => ask(f.k, t)).join("")}
-      ${f.k === "free" && voices.length ? ask("voice", `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0]).attrs) : ""}
+      ${f.k === "free" ? voiceAsk(ctx, voices) : ""}
     </ul>`;
   return shell(
     "prompts",
@@ -788,10 +806,38 @@ function prompts({ composer, session }) {
   );
 }
 
+// ── 7 · One request per flow ────────────────────────────────────────────────
+// The list of 6 without its chips: under the box, one request per flow in one
+// white panel, each led by its flow's tile. Same hover and click as 6.
+// « Other examples » deals the next request of each flow (four sets).
+function promptList({ composer, session }) {
+  const ctx = ctxOf(session);
+  const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
+  const sets = FLOWS[0].asks.map((_, i) => i);
+  const list = (i) => `
+    <ul class="nch-asks" data-nch-set="${i}" aria-label="Example requests"${i ? " hidden" : ""}>
+      ${FLOWS.map((f) => askRow(f.k, f.asks[i], { icon: flowIcon(f.k) })).join("")}
+      ${voiceAsk(ctx, voices, true)}
+    </ul>`;
+  return shell(
+    "prompt-list",
+    `
+    ${WORDMARK}
+    <p class="nch__sub">Say what you want to post. Or start from one of these.</p>
+    ${lead(composer)}
+    <div class="nch-flows">
+      ${sets.map(list).join("")}
+      <button type="button" class="ap-button ghost grey nch-asks__more" data-nch-shuffle>
+        <i class="ap-icon-refresh" aria-hidden="true"></i><span>Other examples</span>
+      </button>
+    </div>`,
+  );
+}
+
 // ── <archie-home>: the directions' local behaviour ──────────────────────────
 // No state outside the element but the mode / slide it shows, kept across the
 // re-renders session.js does while the chat is empty.
-const memory = { mode: "source", slide: 0, held: false, flow: null };
+const memory = { mode: "source", slide: 0, held: false, flow: null, set: 0 };
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 class ArchieHome extends HTMLElement {
@@ -811,6 +857,7 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("pause", playing, true);
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
     if (this.querySelector("[data-nch-flow]")) this.setFlow(memory.flow);
+    if (this.querySelector("[data-nch-set]")) this.setSet(memory.set);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
       this.restart();
@@ -887,6 +934,16 @@ class ArchieHome extends HTMLElement {
     });
   }
 
+  // The example set on show (direction 7). `deal`: on « Other examples ».
+  setSet(i, deal = false) {
+    const sets = this.querySelectorAll("[data-nch-set]");
+    memory.set = i % sets.length;
+    sets.forEach((l) => {
+      l.hidden = +l.dataset.nchSet !== memory.set;
+      l.classList.toggle("is-dealt", deal && !l.hidden);
+    });
+  }
+
   setSlide(i) {
     memory.slide = i;
     this.querySelectorAll("[data-nch-slide]").forEach((s) => {
@@ -919,6 +976,10 @@ class ArchieHome extends HTMLElement {
       if (to) {
         memory.held = true;
         return this.setSlide(+to.dataset.nchSlideTo);
+      }
+      if (t.closest("[data-nch-shuffle]")) {
+        this.setSet(memory.set + 1, true);
+        return this.hint(this.base);
       }
       const flow = t.closest("[data-nch-flow]");
       if (flow) return this.setFlow(flow.dataset.nchFlow, { deal: true });
