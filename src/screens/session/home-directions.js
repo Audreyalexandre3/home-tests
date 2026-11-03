@@ -10,6 +10,7 @@
 //   homeShowcase   5 · what you give on the left, the before / after on a stage (Runway)
 //   homePrompts    6 · words only: flow chips, each opening its example requests (Copilot)
 //   homePromptList 7 · words only: one example request per flow, in a list (Sana)
+//   homeDrawer     8 · the requests of 6 in a drawer tucked under the box (Notion)
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -24,19 +25,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2656";
-import { chatStarters } from "../../mocks.js?v=2656";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2656";
-import { getTopPosts } from "../../top-posts-store.js?v=2656";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2656";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2656";
-import { findTopicSource } from "../../topics-catalog.js?v=2656";
-import { getContextById } from "../../contexts-store.js?v=2656";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2656";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2656";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2656";
-import { escapeHtml } from "../../utils.js?v=2656";
-import "../../archie-pixels.js?v=2656";
+import { isFlagOn } from "../../feature-flags.js?v=2657";
+import { chatStarters } from "../../mocks.js?v=2657";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2657";
+import { getTopPosts } from "../../top-posts-store.js?v=2657";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2657";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2657";
+import { findTopicSource } from "../../topics-catalog.js?v=2657";
+import { getContextById } from "../../contexts-store.js?v=2657";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2657";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2657";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2657";
+import { escapeHtml } from "../../utils.js?v=2657";
+import "../../archie-pixels.js?v=2657";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -46,6 +47,7 @@ const DIRECTIONS = [
   ["homeShowcase", showcase],
   ["homePrompts", prompts],
   ["homePromptList", promptList],
+  ["homeDrawer", drawer],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -834,10 +836,53 @@ function promptList({ composer, session }) {
   );
 }
 
+// ── 8 · The drawer under the box ────────────────────────────────────────────
+// The requests of 6, in a drawer that slides out from under the composer card:
+// a grey tray tucked beneath it, the flows as tabs on its top edge, the chosen
+// flow's four requests below, and a lip to close it (the box stays alone) or
+// open it again. Same hover and click as 6.
+function drawer({ composer, session }) {
+  const ctx = ctxOf(session);
+  const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
+  const tab = (f, i) => `
+    <button type="button" class="nch-drawer__tab" role="tab" id="nchFlow-${f.k}" aria-controls="nchFlowPane-${f.k}"
+      aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-nch-flow="${f.k}"
+      data-nch-hint="${esc(f.hint || KINDS[f.k].hint)}">
+      <span class="nch-tile nch-tile--sm nch-tone--${flowTone(f.k)}" aria-hidden="true"><i class="${flowIcon(f.k)}"></i></span>
+      <span>${esc(f.name)}</span>
+    </button>`;
+  const pane = (f, i) => `
+    <ul class="nch-asks nch-drawer__list" id="nchFlowPane-${f.k}" role="tabpanel" aria-labelledby="nchFlow-${f.k}"
+      data-nch-flow-pane="${f.k}"${i ? " hidden" : ""}>
+      ${f.asks.map((t) => askRow(f.k, t)).join("")}
+      ${f.k === "free" ? voiceAsk(ctx, voices) : ""}
+    </ul>`;
+  const tray = `
+    <div class="nch-drawer" data-nch-drawer>
+      <div class="nch-drawer__body" id="nchDrawerBody">
+        <div class="nch-drawer__tabs" role="tablist" aria-label="Example requests by flow">${FLOWS.map(tab).join("")}</div>
+        ${FLOWS.map(pane).join("")}
+      </div>
+      <button type="button" class="nch-drawer__lip" data-nch-drawer-toggle aria-controls="nchDrawerBody" aria-expanded="true">
+        <span data-nch-drawer-label>Hide examples</span><i class="ap-icon-chevron-up" aria-hidden="true"></i>
+      </button>
+    </div>`;
+  // The tray goes right under the card, before the composer's hint row.
+  const hint = '<div class="session__composer-hint">';
+  const box = composer.includes(hint) ? composer.replace(hint, tray + hint) : composer + tray;
+  return shell(
+    "drawer",
+    `
+    ${WORDMARK}
+    <p class="nch__sub">Say what you want to post. Or start from one of these.</p>
+    ${lead(box)}`,
+  );
+}
+
 // ── <archie-home>: the directions' local behaviour ──────────────────────────
 // No state outside the element but the mode / slide it shows, kept across the
 // re-renders session.js does while the chat is empty.
-const memory = { mode: "source", slide: 0, held: false, flow: null, set: 0 };
+const memory = { mode: "source", slide: 0, held: false, flow: null, set: 0, drawerShut: false };
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 class ArchieHome extends HTMLElement {
@@ -859,10 +904,14 @@ class ArchieHome extends HTMLElement {
     if (this.querySelector("[data-nch-flow]")) {
       this.setFlow(memory.flow);
       // The chips are centred: the notch follows them when the width changes.
-      this.resized = new ResizeObserver(() => this.notch());
-      this.resized.observe(this.querySelector(".nch-flows"));
+      const flows = this.querySelector(".nch-flows");
+      if (flows) {
+        this.resized = new ResizeObserver(() => this.notch());
+        this.resized.observe(flows);
+      }
     }
     if (this.querySelector("[data-nch-set]")) this.setSet(memory.set);
+    if (this.querySelector("[data-nch-drawer]")) this.shutDrawer(memory.drawerShut);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
       this.restart();
@@ -949,6 +998,17 @@ class ArchieHome extends HTMLElement {
     this.notch();
   }
 
+  // The drawer under the box (direction 8): open, or shut down to its lip.
+  shutDrawer(shut) {
+    memory.drawerShut = shut;
+    const d = this.querySelector("[data-nch-drawer]");
+    d.classList.toggle("is-shut", shut);
+    d.querySelector("#nchDrawerBody").hidden = shut;
+    const lip = d.querySelector("[data-nch-drawer-toggle]");
+    lip.setAttribute("aria-expanded", String(!shut));
+    lip.querySelector("[data-nch-drawer-label]").textContent = shut ? "Show examples" : "Hide examples";
+  }
+
   // The example set on show (direction 7). `deal`: on « Other examples ».
   setSet(i, deal = false) {
     const sets = this.querySelectorAll("[data-nch-set]");
@@ -996,6 +1056,7 @@ class ArchieHome extends HTMLElement {
         this.setSet(memory.set + 1, true);
         return this.hint(this.base);
       }
+      if (t.closest("[data-nch-drawer-toggle]")) return this.shutDrawer(!memory.drawerShut);
       const flow = t.closest("[data-nch-flow]");
       if (flow) return this.setFlow(flow.dataset.nchFlow, { deal: true });
       const fill = t.closest("[data-nch-fill]");
@@ -1033,7 +1094,7 @@ class ArchieHome extends HTMLElement {
       }
     }
     // Hover or focus on a starting point says, in the box, what it will do.
-    const hinted = t.closest(":is(.nch-chip, .nch-ask, .nch-flow-chip)[data-nch-hint]");
+    const hinted = t.closest(":is(.nch-chip, .nch-ask, .nch-flow-chip, .nch-drawer__tab)[data-nch-hint]");
     if (e.type === "pointerover" || e.type === "focusin") {
       if (hinted) this.hint(hinted.dataset.nchHint);
       const media = t.closest("[data-nch-play]")?.querySelector("video");

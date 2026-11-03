@@ -1552,3 +1552,109 @@
 .nch-asks__more {
   margin-top: var(--ref-spacing-xs);
 }
+
+/* ── 8 · The drawer under the box (flag homeDrawer) ──────────────────────────
+   A grey tray tucked under the composer card, inset from its edges so it reads
+   as sliding out from beneath it; the card stays on top and its shadow falls
+   on the tray. The flows are tabs on the tray (the chosen one raised in
+   white), the requests are the lines of 6 without their panel. */
+.nch--drawer .session__composer-card {
+  z-index: 1;
+}
+
+.nch-drawer {
+  position: relative;
+  margin: -1px var(--ref-spacing-sm) 0;
+  padding-top: 1px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  background: var(--ref-color-grey-05);
+}
+
+.nch-drawer__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) 0;
+}
+
+.nch-drawer__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-md);
+  background: transparent;
+  color: var(--ref-color-grey-100);
+  font: inherit;
+  font-weight: var(--ref-font-weight-bold);
+  cursor: pointer;
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-standard),
+    border-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-drawer__tab:hover {
+  background: var(--ref-color-white);
+}
+
+.nch-drawer__tab[aria-selected="true"] {
+  border-color: var(--ref-color-grey-20);
+  background: var(--ref-color-white);
+}
+
+.nch-drawer__tab:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 1px;
+}
+
+.nch-asks.nch-drawer__list {
+  margin: 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.nch-drawer__list .nch-ask:is(:hover, :focus-visible) {
+  background: var(--ref-color-white);
+}
+
+.nch-drawer__lip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 32px;
+  border: 0;
+  border-radius: 0 0 16px 16px;
+  background: transparent;
+  color: var(--ref-color-grey-80);
+  font: inherit;
+  font-size: var(--sys-text-style-caption-size, 12px);
+  cursor: pointer;
+}
+
+.nch-drawer__lip:hover {
+  color: var(--ref-color-grey-100);
+}
+
+.nch-drawer__lip:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+}
+
+.nch-drawer__lip i {
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  transition: transform var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-drawer.is-shut .nch-drawer__lip i {
+  transform: rotate(180deg);
+}

@@ -354,6 +354,17 @@ export const FLAGS = Object.freeze([
       "When ON, a new chat shows the wordmark, one line, the composer and, in one white panel under it, one example request per flow (video clips, top posts, a source, a Topic, a free post), each led by its flow's coloured tile. Pointing at one writes it in the box as a ghost; a click sends it and runs that flow, except the free post, which only fills the box. « Other examples » deals the next request of each flow. Replaces the workflow rows and the Topics row.",
   },
   {
+    id: "homeDrawer",
+    group: "Chat & drafts",
+    tip: "A new chat's composer has a drawer tucked under it: the flows as tabs, four example requests each. Point at one to see it in the box, click to run it.",
+    label: "HOME-8: drawer under the box",
+    // The eighth new-chat home (2026-11-03, screens/session/home-directions.js).
+    // The first ON in the order 1 to 8 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows the wordmark, one line and the composer with a grey drawer tucked under its card: five flows as tabs (video clips, top posts, from a source, Topics, write a post), the chosen one's four example requests below, and a lip to hide or show it. Pointing at a request writes it in the box as a ghost; a click sends it and runs that flow, except « Write a post », whose requests only fill the box. Replaces the workflow rows and the Topics row.",
+  },
+  {
     id: "chatPreviewTool",
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",
