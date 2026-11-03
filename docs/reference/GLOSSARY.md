@@ -134,6 +134,10 @@ Status pipeline (mocké) :
 - `needs fixes` — Archie a flagué un problème (placeholder en proto)
 - `scheduled` — dans le queue calendrier
 
+### Mention
+
+Un **compte tagué dans un draft** (`@Notion`), qui sera lié une fois publié (flag `draftMentions`). Il appartient au draft et à son réseau. Ne pas confondre avec **Reference** : le `@` du composer et le bouton _Reference in chat_ citent une source, une idée ou un draft **dans la conversation**, ils ne taguent personne.
+
 ### Network = Channel = Social
 
 | Term               | Usage                                                                                 |

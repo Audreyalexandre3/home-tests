@@ -162,6 +162,8 @@ Deux points de méthode que ce nettoyage a fixés, et qui resserviront :
 Un post programmé **reste un draft** : la Schedule ne publie pas, elle met en file.
 Quand il faut parler des quatre à la fois, dire **« content »**, jamais « posts ».
 
+Une **mention** (`@Notion`, flag `draftMentions`) appartient au **draft** : c'est du contenu d'un post sur un réseau, résolu pour ce réseau. Ni le Playbook (une fiche d'identité, pas une liste de comptes à taguer), ni la session.
+
 > **« Brief » n'est pas un terme défini.** Le mot est générique et sert à plusieurs échelles (le résumé business d'un Playbook, la consigne d'une image dans l'Image Studio). Ne cherchez pas l'objet « Brief » : il n'existe pas. Ne construisez rien qui suppose qu'il n'y en a qu'un.
 
 ---

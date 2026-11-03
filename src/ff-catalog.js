@@ -203,6 +203,24 @@ export const FLAGS = Object.freeze([
       "the new words stay marked until Accept, a hand edit or the next rewrite.",
   },
   {
+    id: "draftMentions",
+    group: "Chat & drafts",
+    tip: "Ask Archie to mention someone in a draft (« mention Notion in the LinkedIn post »): it finds the account on each network, asks when it isn't sure, and offers to when a draft names a brand.",
+    label: "UI-Mentions in drafts",
+    // OFF: « mention X » in the chat gets the scripted reply, as before.
+    default: false,
+    hides:
+      "Mentions in drafts, from the chat. « Mention Notion in the LinkedIn post » " +
+      "or « tag Linear in all the drafts »: I find the account on each draft's " +
+      "network (LinkedIn companies and the people who follow your Page, " +
+      "Facebook Pages, X users), insert it when one account matches, and ask " +
+      "with a search when several do or none does. Instagram and TikTok have " +
+      "no search, as in prod: I ask for the exact username. YouTube has no " +
+      "mentions. The mention shows in the draft in the link colour, with the " +
+      "« what changed » card and its Undo. « Remove the mention of Notion » " +
+      "takes it out. After writing drafts that name a brand, I offer to mention it.",
+  },
+  {
     id: "newConversationStyles",
     group: "Chat & drafts",
     tip: "The thread mirrored: Archie on the left, you on the right, one avatar column per side and white object chips. Off: the thread as of Oct 5.",

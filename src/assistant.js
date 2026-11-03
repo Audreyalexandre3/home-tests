@@ -6,13 +6,14 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2612";
-import { findConnector } from "./connectors-store.js?v=2612";
-import { createSessionNotifier } from "./store-utils.js?v=2612";
-import { addPostDraft } from "./posts-store.js?v=2612";
-import { showToast } from "./components/toast.js?v=2612";
-import { isFlagOn } from "./feature-flags.js?v=2612";
-import { getSources, subscribeSources } from "./sources-stream.js?v=2612";
+import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2613";
+import { findConnector } from "./connectors-store.js?v=2613";
+import { createSessionNotifier } from "./store-utils.js?v=2613";
+import { addPostDraft } from "./posts-store.js?v=2613";
+import { showToast } from "./components/toast.js?v=2613";
+import { isFlagOn } from "./feature-flags.js?v=2613";
+import { offerMentions } from "./mention-flow.js?v=2613";
+import { getSources, subscribeSources } from "./sources-stream.js?v=2613";
 
 // How this module reads a session's ideas, injected rather than imported.
 //
@@ -816,6 +817,8 @@ export function postDraftResult(sessionId, { ideaTitle, drafts }) {
     createdAt: Date.now(),
   });
   notify(sessionId);
+  // Drafts that name a brand without mentioning it: I offer to (flag draftMentions).
+  offerMentions(sessionId, drafts);
 }
 
 // The first image's look, just set (draft-image-flow.js requireImageLook) — a
@@ -839,7 +842,8 @@ export function postImageLookSet(sessionId, { contextId, styleId, label }) {
 // "What changed" — one draft, rewritten from the chat (flag draftChanges). The
 // turn keeps its own before / after, so an old receipt never shifts when the
 // draft changes again; whether it can still be undone is read off the draft.
-export function postRevisionTurn(sessionId, { postId, network, intent, before, after }) {
+// `summary` replaces the sentence the intent would give (a mention names who).
+export function postRevisionTurn(sessionId, { postId, network, intent, before, after, summary = null }) {
   getThread(sessionId).push({
     id: newId(),
     role: "assistant",
@@ -850,6 +854,7 @@ export function postRevisionTurn(sessionId, { postId, network, intent, before, a
     intent,
     before,
     after,
+    summary,
     status: "ready",
     createdAt: Date.now(),
   });
@@ -858,7 +863,7 @@ export function postRevisionTurn(sessionId, { postId, network, intent, before, a
 
 // "What changed" for one ask that rewrote several drafts: one card, a row per
 // draft. `items` = [{ postId, network, before, after }] in the order asked.
-export function postRevisionGroupTurn(sessionId, { intent, items }) {
+export function postRevisionGroupTurn(sessionId, { intent, items, summary = null }) {
   getThread(sessionId).push({
     id: newId(),
     role: "assistant",
@@ -866,6 +871,7 @@ export function postRevisionGroupTurn(sessionId, { intent, items }) {
     meta: "Archie",
     intent,
     items,
+    summary,
     openId: items[0]?.postId || null,
     views: {},
     status: "ready",
