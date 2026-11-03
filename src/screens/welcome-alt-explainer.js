@@ -15,12 +15,12 @@
 // The ready screen paints once and moves by attributes (`is-lit`, `is-done`)
 // so its stages light the parts one by one without replaying the scene.
 
-import { escapeHtml } from "../utils.js?v=2625";
-import { isFlagOn } from "../feature-flags.js?v=2625";
-import { networkIcon, networkLabel } from "../social-profiles.js?v=2625";
-import { playbookNetworks } from "../voice-parts.js?v=2625";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2625";
-import { tint, domainOf } from "./welcome-alt-shell.js?v=2625";
+import { escapeHtml } from "../utils.js?v=2626";
+import { isFlagOn } from "../feature-flags.js?v=2626";
+import { networkIcon, networkLabel } from "../social-profiles.js?v=2626";
+import { playbookNetworks } from "../voice-parts.js?v=2626";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2626";
+import { tint, domainOf } from "./welcome-alt-shell.js?v=2626";
 
 const W = 560;
 const H = 540;

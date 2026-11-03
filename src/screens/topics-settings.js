@@ -29,22 +29,22 @@
 // now does — and a row cannot without turning the list into a form. No save bar:
 // every control commits immediately through updateFeed.
 
-import { html, raw } from "../utils.js?v=2625";
-import { navigate } from "../router.js?v=2625";
-import { parseHashParams } from "../url-state.js?v=2625";
-import { renderTopbar } from "../components/topbar.js?v=2625";
-import { renderEmptyState } from "../components/empty-state.js?v=2625";
-import { getContextById, getDefaultContext } from "../contexts-store.js?v=2625";
+import { html, raw } from "../utils.js?v=2626";
+import { navigate } from "../router.js?v=2626";
+import { parseHashParams } from "../url-state.js?v=2626";
+import { renderTopbar } from "../components/topbar.js?v=2626";
+import { renderEmptyState } from "../components/empty-state.js?v=2626";
+import { getContextById, getDefaultContext } from "../contexts-store.js?v=2626";
 import {
   getActivePlaybook,
   isWorkspaceMode,
   catalogueRoute,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=2625";
-import { editableContexts, visibleContexts, canEdit } from "../playbook-access.js?v=2625";
-import { getFeedForPlaybook, updateFeed, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=2625";
-import { TOPIC_SOURCES, CADENCES, findTopicSource, findCadence, isLiveSource } from "../topics-catalog.js?v=2625";
-import { open as openFeedback } from "../components/feedback-modal.js?v=2625";
+} from "../active-playbook.js?v=2626";
+import { editableContexts, visibleContexts, canEdit } from "../playbook-access.js?v=2626";
+import { getFeedForPlaybook, updateFeed, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=2626";
+import { TOPIC_SOURCES, CADENCES, findTopicSource, findCadence, isLiveSource } from "../topics-catalog.js?v=2626";
+import { open as openFeedback } from "../components/feedback-modal.js?v=2626";
 
 // Above this many Playbooks the picker earns a search field. Below it, a search
 // box over four rows is just noise.
