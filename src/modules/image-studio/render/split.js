@@ -13,7 +13,7 @@
 // honour the transforms and clips around it. It needs a document, which the
 // editor always has.
 
-import { SUBJECT_PART } from "./generators.js?v=2639";
+import { SUBJECT_PART } from "./generators.js?v=2640";
 
 const MARK = `[${SUBJECT_PART}]`;
 // Definitions a subject may point at: kept wherever they sit.

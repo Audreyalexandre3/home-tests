@@ -9,9 +9,9 @@
 // Facebook and X are searched; Instagram and TikTok take a typed handle;
 // YouTube has no mentions.
 
-import { MENTION_DIRECTORY } from "./mocks.js?v=2639";
-import { fold } from "./utils.js?v=2639";
-import { normalizeNetwork } from "./social-profiles.js?v=2639";
+import { MENTION_DIRECTORY } from "./mocks.js?v=2640";
+import { fold } from "./utils.js?v=2640";
+import { normalizeNetwork } from "./social-profiles.js?v=2640";
 
 const SEARCH = new Set(["linkedin", "facebook", "x"]);
 const TYPED = new Set(["instagram", "tiktok"]);
@@ -76,13 +76,11 @@ export function mentionText(account) {
 }
 
 // What the picker and the echo show for an account: a person's face; a
-// company's square logo, its initial on its colour (an SVG, no file); a typed
-// username, nothing (the avatar falls back to initials).
+// company's square logo, its initial on its own colour (the DS avatar draws
+// the initial, in Averta); a typed username, grey initials.
 export function mentionAvatar(account) {
-  if (account.photo) return { imageUrl: account.photo, square: false };
-  if (!account.tint) return { imageUrl: null, square: false };
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="${account.tint}"/><text x="16" y="21.5" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">${account.name.charAt(0).toUpperCase()}</text></svg>`;
-  return { imageUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`, square: true };
+  if (account.photo) return { imageUrl: account.photo, square: false, tint: null };
+  return { imageUrl: null, square: !!account.tint, tint: account.tint || null };
 }
 
 const slug = (name) =>

@@ -1078,3 +1078,13 @@ button.ap-link {
   font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--ref-color-grey-80);
 }
+
+/* ── Avatar: a brand's colour ─────────────────────────────────────────────
+   .ap-avatar draws initials on --comp-avatar-background-color (grey) and the
+   DS has no per-instance colour. A company's logo in the mention picker and
+   its echo (mention-flow.js) is its initial on its own colour, given as data
+   (`style="--app-avatar-brand: #5E6AD2"`), like the social accents. The
+   initials are already white. */
+.ap-avatar.app-avatar--brand {
+  background: var(--app-avatar-brand);
+}

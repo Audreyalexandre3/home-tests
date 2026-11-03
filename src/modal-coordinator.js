@@ -5,7 +5,7 @@
 // two modals (with z-index races and Esc behaviour undefined).
 //
 // Usage:
-//   import { requestOpen, notifyClose } from "./modal-coordinator.js?v=2639";
+//   import { requestOpen, notifyClose } from "./modal-coordinator.js?v=2640";
 //
 //   export function open() {
 //     requestOpen("bugReport", close);   // closes the active overlay first

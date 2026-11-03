@@ -189,7 +189,7 @@ export function renderPicker(picker) {
       // that don't need a leading glyph.
       const hasIcon = !!(it.avatar || it.imgSrc || it.icon);
       const iconBody = it.avatar
-        ? `<div class="ap-avatar size-32${it.avatar.square ? " square" : ""}" aria-hidden="true">
+        ? `<div class="ap-avatar size-32${it.avatar.square ? " square" : ""}${it.avatar.tint ? ` app-avatar--brand" style="--app-avatar-brand: ${it.avatar.tint}` : ""}" aria-hidden="true">
              ${
                it.avatar.imageUrl
                  ? `<img src="${it.avatar.imageUrl}" alt="" />`
@@ -323,7 +323,8 @@ export function renderPicker(picker) {
         </button>
       `;
       if (!it.link) return button;
-      return `<div class="analyse__option-row${hiddenClass(it)}"${searchAttr(it)}>${button}<a class="ap-link small analyse__option-link" href="${it.link.href}" target="_blank" rel="noopener">${it.link.label}<i class="ap-icon-external-link" aria-hidden="true"></i></a></div>`;
+      // The link is a quiet icon button, named by its tooltip and its label.
+      return `<div class="analyse__option-row${hiddenClass(it)}"${searchAttr(it)}>${button}<a class="ap-icon-button analyse__option-link" href="${it.link.href}" target="_blank" rel="noopener" aria-label="${it.link.ariaLabel || it.link.label}" data-tooltip="${it.link.label}"><i class="ap-icon-external-link" aria-hidden="true"></i></a></div>`;
     })
     .join("");
 
