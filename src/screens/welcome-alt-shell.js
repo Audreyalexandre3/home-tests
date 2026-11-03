@@ -9,11 +9,11 @@
 // the session id the recap already uses (`welcomeAltSessionId`), and persisted
 // on every change so a reload lands on the same step with the same answers.
 
-import "../archie-pixels.js?v=2624";
-import { html, raw, escapeHtml } from "../utils.js?v=2624";
-import { navigate } from "../router.js?v=2624";
-import { parseHashParams } from "../url-state.js?v=2624";
-import { isFlagOn } from "../feature-flags.js?v=2624";
+import "../archie-pixels.js?v=2625";
+import { html, raw, escapeHtml } from "../utils.js?v=2625";
+import { navigate } from "../router.js?v=2625";
+import { parseHashParams } from "../url-state.js?v=2625";
+import { isFlagOn } from "../feature-flags.js?v=2625";
 import {
   altSteps,
   createAltDraft,
@@ -21,9 +21,9 @@ import {
   isAnalysisReady,
   restoreDraft,
   subscribeDraft,
-} from "../context-builder.js?v=2624";
-import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2624";
-import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2624";
+} from "../context-builder.js?v=2625";
+import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2625";
+import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2625";
 import {
   readSessionId,
   isIntegrated,
@@ -33,9 +33,9 @@ import {
   LOADING_STAGES,
   FILE_LOADING_STAGES,
   INTERVIEW_LOADING_STAGES,
-} from "./welcome-alt-recap.js?v=2624";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2624";
-import { paintExplainer } from "./welcome-alt-explainer.js?v=2624";
+} from "./welcome-alt-recap.js?v=2625";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2625";
+import { paintExplainer } from "./welcome-alt-explainer.js?v=2625";
 
 const PREFILLED_URL = "https://nicesoap.com";
 const SESSION_KEY = "welcomeAltSessionId";
@@ -428,11 +428,13 @@ function renderProgress(step) {
 // `build`: /welcome-alt/ready's stages ({ at, done }), which gate the card.
 // Returns { paint, sheet, cleanup }.
 // A returning user's « Create a Playbook » (`isIntegrated()`): a plain stage,
-// no pixels — they know me already; the first-time run keeps its show. And no
-// card filling in: each step plays a scene that teaches the Playbook's parts
-// (welcome-alt-explainer.js). The reviews (`sheet`) are the same for both.
+// no pixels — they know me already; the first-time run keeps its show. Under
+// `playbookAnimations`, no card filling in either: each step plays a scene that
+// teaches the Playbook's parts (welcome-alt-explainer.js). The reviews
+// (`sheet`) are the same for both.
 export function mountShell(target, { step, sid, left, sheet = false, build }) {
   const integrated = isIntegrated();
+  const scenes = integrated && isFlagOn("playbookAnimations");
   target.innerHTML = html`
     <div class="welcome-intro welcome-flow ${sheet ? "is-review" : ""} ${integrated ? "is-integrated" : ""}">
       <section class="welcome-intro__lede" aria-labelledby="welcomeFlowTitle">
@@ -451,7 +453,7 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
           ? raw(`<div class="welcome-flow__sheet" data-flow-sheet>
               <div class="welcome-flow__sheet-body" data-flow-sheet-body></div>
             </div>`)
-          : integrated
+          : scenes
             ? raw(`<div class="welcome-explainer" data-flow-explainer></div>`)
             : raw(
                 // A labelled region, not live: what I found is readable, and

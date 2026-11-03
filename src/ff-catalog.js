@@ -357,4 +357,19 @@ export const FLAGS = Object.freeze([
       "at and edit). Scheduling opens a This is a demo dialog instead; Exit " +
       "demo in the topbar wipes it all and goes back to the real setup.",
   },
+  {
+    id: "playbookAnimations",
+    group: "Playbook",
+    tip: "Create a Playbook (returning users): each step plays a scene that teaches the Playbook's parts, instead of the card filling in.",
+    label: "Playbook animations",
+    // OFF: the integrated run keeps its card filling in. The first-time run
+    // never changes, flag or not (welcome-alt-shell.js mountShell).
+    default: false,
+    hides:
+      "When ON, a returning user's Create a Playbook shows, on each step, an " +
+      "animated scene instead of the Playbook card filling in: what you give me " +
+      "as a real object (your site, a brand book, your posts), what I do with " +
+      "it, and the part of the Playbook each piece lands in; on Ready, the four " +
+      "parts compose one post. The first-time run and the reviews are unchanged.",
+  },
 ]);
