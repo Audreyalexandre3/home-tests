@@ -1329,3 +1329,106 @@
 [data-playing] > .nch-clip__play {
   opacity: 0;
 }
+
+/* ── 6 · Example requests (flag homePrompts) ───────────────────────────────
+   Words only, under the box: one sentence per flow, a hairline between them,
+   the flow's icon in ink (no tone tile: the sentence is the subject). The
+   verb waits on the right until you point at the row; on touch it stays. */
+.nch-asks-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 740px;
+  margin-top: var(--ref-spacing-sm);
+}
+
+.nch-asks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nch-asks > li + li {
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+
+.nch-ask {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+  width: 100%;
+  min-height: 48px;
+  /* Inline = the composer card's border + its inset: the icons stand under
+     its Add button. */
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border: 0;
+  border-radius: var(--app-radius-md);
+  background: transparent;
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-ask:hover,
+.nch-ask:focus-visible {
+  outline: none;
+  background: var(--ref-color-grey-05);
+}
+
+.nch-ask:focus-visible {
+  box-shadow: 0 0 0 2px var(--ref-color-electric-blue-100);
+}
+
+.nch-ask__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-color: var(--ref-color-grey-80);
+}
+
+.nch-ask__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nch-ask .nch-verb {
+  flex: none;
+  margin-top: 0;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-ask:is(:hover, :focus-visible) .nch-verb {
+  opacity: 1;
+}
+
+.nch-ask:is(:hover, :focus-visible) .nch-verb__arrow {
+  translate: 3px 0;
+}
+
+@media (hover: none) {
+  .nch-ask .nch-verb {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .nch-ask {
+    flex-wrap: wrap;
+    row-gap: var(--ref-spacing-xxs);
+  }
+  .nch-ask .nch-verb {
+    margin-left: calc(16px + var(--ref-spacing-sm));
+  }
+}
+
+.nch-asks__more {
+  align-self: flex-end;
+  margin-top: var(--ref-spacing-xs);
+}

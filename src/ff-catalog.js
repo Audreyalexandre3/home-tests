@@ -332,6 +332,17 @@ export const FLAGS = Object.freeze([
       "When ON, a new chat splits in two: on the left the wordmark, « Give me anything. I'll turn it into posts. », four rows (a video, a doc or a link, a post that worked, a Topic) and the composer; on the right a stage that plays each before and after in turn (the podcast's clips playing), with Try it. Choosing a row holds the stage on it and sets the box.",
   },
   {
+    id: "homePrompts",
+    group: "Chat & drafts",
+    tip: "A new chat shows example requests under the box, one per thing I can do: point at one to see it in the box, click to run it.",
+    label: "HOME-6: example prompts",
+    // The sixth new-chat home (2026-11-03, screens/session/home-directions.js).
+    // The first ON in the order 1 to 6 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows the wordmark, one line, the composer and five example requests under it, one per flow (clips from a video, posts like a top post, ideas from a source, a Topic, a free post), plus a voice for a network when voicePerNetwork has one to give. Pointing at one writes it in the box as a ghost; a click sends it and runs that flow, except the free post, which only fills the box. « Other examples » swaps to a second set. Replaces the workflow rows and the Topics row.",
+  },
+  {
     id: "chatPreviewTool",
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",

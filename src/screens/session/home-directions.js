@@ -1,4 +1,4 @@
-// A new chat's home, five directions (2026-11-02), each behind its own flag so
+// A new chat's home, six directions (2026-11-02, the sixth 2026-11-03), each behind its own flag so
 // they can be compared in the running app. Asked: « la home page permette …
 // de comprendre ce qui existe dans le produit … et de rapidement commencer à
 // travailler », then five solutions from what Mobbin shows AI tools doing.
@@ -8,6 +8,7 @@
 //   homeGallery    3 · a gallery of outcomes, each tile a door (VEED)
 //   homePicks      4 · four posts I can write today, from your own material (Obvious)
 //   homeShowcase   5 · what you give on the left, the before / after on a stage (Runway)
+//   homePrompts    6 · words only: example requests under the box, one per flow (Sana)
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -22,19 +23,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2650";
-import { chatStarters } from "../../mocks.js?v=2650";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2650";
-import { getTopPosts } from "../../top-posts-store.js?v=2650";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2650";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2650";
-import { findTopicSource } from "../../topics-catalog.js?v=2650";
-import { getContextById } from "../../contexts-store.js?v=2650";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2650";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2650";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2650";
-import { escapeHtml } from "../../utils.js?v=2650";
-import "../../archie-pixels.js?v=2650";
+import { isFlagOn } from "../../feature-flags.js?v=2651";
+import { chatStarters } from "../../mocks.js?v=2651";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2651";
+import { getTopPosts } from "../../top-posts-store.js?v=2651";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2651";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2651";
+import { findTopicSource } from "../../topics-catalog.js?v=2651";
+import { getContextById } from "../../contexts-store.js?v=2651";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2651";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2651";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2651";
+import { escapeHtml } from "../../utils.js?v=2651";
+import "../../archie-pixels.js?v=2651";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -42,6 +43,7 @@ const DIRECTIONS = [
   ["homeGallery", gallery],
   ["homePicks", picks],
   ["homeShowcase", showcase],
+  ["homePrompts", prompts],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -66,10 +68,11 @@ const WORDMARK = `
   </span>`;
 
 // The hooks session.js reads to run a workflow starter, by its action.
-function starterAttrs(action) {
+// `text` replaces the starter's own prompt (an example request says it its way).
+function starterAttrs(action, text) {
   const s = chatStarters.find((x) => x.action === action);
   if (!s) return "";
-  const prompt = (s.prompt || "")
+  const prompt = (text || s.prompt || "")
     .replace(/\{\{source\}\}/g, "your source")
     .replace(/\{\{video-source\}\}/g, "your video");
   return `data-starter="${s.id}" data-starter-action="${action}" data-starter-prompt="${esc(prompt)}"`;
@@ -682,10 +685,71 @@ function showcase({ composer, session }) {
   );
 }
 
+// ── 6 · Example requests ────────────────────────────────────────────────────
+// Words only: what you can say to me, one sentence per flow, under the box.
+// Pointing at one writes it in the box as a ghost; a click sends it and runs
+// that flow (the starters' own hooks), except the free post, which only fills
+// the box: it is there to be rewritten. « Other examples » swaps the set.
+const ASKS = [
+  {
+    video: "Cut my latest podcast into short vertical clips",
+    top: "Write three posts like my best one this month",
+    source: "Turn this blog post into a week of LinkedIn posts",
+    topic: "Find a trending Topic and give me our take",
+    free: "Write a LinkedIn post about our new feature",
+  },
+  {
+    video: "Turn this webinar into clips for Reels and TikTok",
+    top: "Do more of what worked on LinkedIn lately",
+    source: "Pull five post ideas out of this PDF",
+    topic: "What should we react to this week?",
+    free: "Draft an X thread about our latest customer story",
+  },
+];
+
+function prompts({ composer, session }) {
+  const ctx = ctxOf(session);
+  const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
+  const ask = (icon, text, d) => `
+    <li>
+      <button type="button" class="nch-ask" ${d.attrs} data-nch-hint="${esc(text)}">
+        <i class="${icon} nch-ask__icon" aria-hidden="true"></i>
+        <span class="nch-ask__text">${esc(text)}</span>
+        ${verb(d)}
+      </button>
+    </li>`;
+  const run = (k, text) => ({
+    attrs:
+      k === "topic"
+        ? `data-add-source="topic"`
+        : starterAttrs({ video: "open-video-clips", top: "open-top-posts", source: "open-batch" }[k], text),
+    verb: KINDS[k].go,
+  });
+  const list = (set, i) => `
+    <ul class="nch-asks" data-nch-set="${i}" aria-label="Example requests"${i ? " hidden" : ""}>
+      ${["video", "top", "source", "topic"].map((k) => ask(KINDS[k].icon, set[k], run(k, set[k]))).join("")}
+      ${ask("ap-icon-pen", set.free, DOORS.fill(set.free))}
+      ${voices.length ? ask(networkIcon(voices[0]), `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0])) : ""}
+    </ul>`;
+  return shell(
+    "prompts",
+    `
+    ${WORDMARK}
+    <p class="nch__sub">Say what you want to post. Or start from one of these.</p>
+    ${lead(composer)}
+    <div class="nch-asks-wrap">
+      ${ASKS.map(list).join("")}
+      <button type="button" class="ap-button ghost grey nch-asks__more" data-nch-shuffle>
+        <i class="ap-icon-refresh" aria-hidden="true"></i><span>Other examples</span>
+      </button>
+    </div>`,
+  );
+}
+
 // ── <archie-home>: the directions' local behaviour ──────────────────────────
 // No state outside the element but the mode / slide it shows, kept across the
 // re-renders session.js does while the chat is empty.
-const memory = { mode: "source", slide: 0, held: false };
+const memory = { mode: "source", slide: 0, held: false, set: 0 };
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 class ArchieHome extends HTMLElement {
@@ -704,6 +768,7 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("play", playing, true);
     this.addEventListener("pause", playing, true);
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
+    if (this.querySelector("[data-nch-set]")) this.setSet(memory.set);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
       this.restart();
@@ -758,6 +823,13 @@ class ArchieHome extends HTMLElement {
     this.querySelectorAll("[data-nch-pane]").forEach((p) => (p.hidden = p.dataset.nchPane !== k));
   }
 
+  // The example requests on show (direction 6): one set at a time.
+  setSet(i) {
+    const sets = this.querySelectorAll("[data-nch-set]");
+    memory.set = i % sets.length;
+    sets.forEach((l) => (l.hidden = +l.dataset.nchSet !== memory.set));
+  }
+
   setSlide(i) {
     memory.slide = i;
     this.querySelectorAll("[data-nch-slide]").forEach((s) => {
@@ -790,6 +862,10 @@ class ArchieHome extends HTMLElement {
       if (to) {
         memory.held = true;
         return this.setSlide(+to.dataset.nchSlideTo);
+      }
+      if (t.closest("[data-nch-shuffle]")) {
+        this.setSet(memory.set + 1);
+        return this.hint(this.base);
       }
       const fill = t.closest("[data-nch-fill]");
       if (fill) {
@@ -826,7 +902,7 @@ class ArchieHome extends HTMLElement {
       }
     }
     // Hover or focus on a starting point says, in the box, what it will do.
-    const hinted = t.closest(".nch-chip[data-nch-hint]");
+    const hinted = t.closest(":is(.nch-chip, .nch-ask)[data-nch-hint]");
     if (e.type === "pointerover" || e.type === "focusin") {
       if (hinted) this.hint(hinted.dataset.nchHint);
       const media = t.closest("[data-nch-play]")?.querySelector("video");
