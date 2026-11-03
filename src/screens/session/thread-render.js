@@ -13,12 +13,12 @@ import {
   renderNotice,
   renderResultCard,
   renderFailedTurn,
-} from "./thread-turns.js?v=2623";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=2623";
-import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=2623";
-import { getTopPost } from "../../top-posts-store.js?v=2623";
-import { getTopicById } from "../../topics-store.js?v=2623";
-import { renderTopicsWidget } from "../../components/topic-card.js?v=2623";
+} from "./thread-turns.js?v=2624";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=2624";
+import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=2624";
+import { getTopPost } from "../../top-posts-store.js?v=2624";
+import { getTopicById } from "../../topics-store.js?v=2624";
+import { renderTopicsWidget } from "../../components/topic-card.js?v=2624";
 import {
   renderProfileEchoCard,
   networkLabel,
@@ -26,23 +26,23 @@ import {
   profileForNetwork,
   renderProfileTag,
   networkMeta,
-} from "../../social-profiles.js?v=2623";
-import { escapeHtml, formatTimeOfDay } from "../../utils.js?v=2623";
-import { getIdeas } from "../../library.js?v=2623";
-import { renderRefs, resolveRef } from "../../chat-refs.js?v=2623";
-import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=2623";
-import { getThread, toolName, toolDescription } from "../../assistant.js?v=2623";
-import { getPlans } from "../../post-plan-store.js?v=2623";
-import { isFlagOn } from "../../feature-flags.js?v=2623";
-import { CURRENT_USER } from "../../org.js?v=2623";
-import { getSessionById } from "../../sessions-store.js?v=2623";
-import { getContextById } from "../../contexts-store.js?v=2623";
-import { needsImageLook } from "../../modules/image-studio/index.js?v=2623";
-import { getFocusKey } from "../../components/right-panel.js?v=2623";
-import { getPosts } from "../../posts-store.js?v=2623";
-import { diffWords, diffParagraphs, changeRatio, wordCounts } from "../../word-diff.js?v=2623";
-import { revisionSummary, revisionGroupSummary, revisionState, languageOf } from "../../draft-rewrite.js?v=2623";
-import { learnedVoiceHtml, voiceAskHtml } from "../../components/voice-intro-modal.js?v=2623";
+} from "../../social-profiles.js?v=2624";
+import { escapeHtml, formatTimeOfDay } from "../../utils.js?v=2624";
+import { getIdeas } from "../../library.js?v=2624";
+import { renderRefs, resolveRef } from "../../chat-refs.js?v=2624";
+import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=2624";
+import { getThread, toolName, toolDescription } from "../../assistant.js?v=2624";
+import { getPlans } from "../../post-plan-store.js?v=2624";
+import { isFlagOn } from "../../feature-flags.js?v=2624";
+import { CURRENT_USER } from "../../org.js?v=2624";
+import { getSessionById } from "../../sessions-store.js?v=2624";
+import { getContextById } from "../../contexts-store.js?v=2624";
+import { needsImageLook } from "../../modules/image-studio/index.js?v=2624";
+import { getFocusKey } from "../../components/right-panel.js?v=2624";
+import { getPosts } from "../../posts-store.js?v=2624";
+import { diffWords, diffParagraphs, changeRatio, wordCounts } from "../../word-diff.js?v=2624";
+import { revisionSummary, revisionGroupSummary, revisionState, languageOf } from "../../draft-rewrite.js?v=2624";
+import { learnedVoiceHtml, voiceAskHtml } from "../../components/voice-intro-modal.js?v=2624";
 
 // Flag contentPanel — every result in the thread is a card that opens the side
 // panel on its own objects (data-content-card="kind:key:ids"), and stays
@@ -702,7 +702,7 @@ function renderRevisionTurn(message, sessionId) {
   const key = `revision:${id}`;
   return renderMessageBubble({
     role: "assistant",
-    text: `${escapeHtml(revisionSummary(intent, before, after))}
+    text: `${escapeHtml(message.summary || revisionSummary(intent, before, after))}
       <section class="revision-card${state.undone ? " is-undone" : ""}${fresh ? " is-fresh" : ""}" ${fresh ? `style="--sweep-elapsed: ${elapsed}ms"` : ""} aria-label="What changed">
         <div class="revision-card__head">
           ${renderProfileTag(profileForNetwork(message.network), { network: message.network })}
@@ -783,7 +783,7 @@ function renderRevisionGroupTurn(message, sessionId) {
   const fresh = !allUndone && elapsed < SWEEP_MS;
   return renderMessageBubble({
     role: "assistant",
-    text: `${escapeHtml(revisionGroupSummary(intent, items))}
+    text: `${escapeHtml(message.summary || revisionGroupSummary(intent, items))}
       <section class="revision-card revision-group${fresh ? " is-fresh" : ""}" ${fresh ? `style="--sweep-elapsed: ${elapsed}ms"` : ""} aria-label="What changed">
         ${rows.map(rowHtml).join("")}
         <div class="revision-card__foot">

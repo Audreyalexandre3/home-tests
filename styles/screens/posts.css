@@ -196,6 +196,12 @@
   cursor: pointer;
 }
 
+/* A mention (flag draftMentions): the network's link, like the hashtags. */
+.posts__card-mention {
+  color: var(--ref-color-electric-blue-100);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
 .posts__card-cta {
   margin: 0;
   font-weight: var(--sys-text-style-body-bold-weight);

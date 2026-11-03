@@ -47,6 +47,14 @@ export function raw(value) {
   return { __raw: true, value: value == null ? "" : String(value) };
 }
 
+// Lowercased, accents dropped: a search that ignores them ("lea" finds Léa).
+export function fold(text) {
+  return (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
 // A duration or a playhead as m:ss. Two readings of the same number, kept
 // apart on purpose: a DURATION rounds (a 29.6s clip is "0:30"), a PLAYHEAD
 // floors (it reads 0:29 until the 30th second has actually passed).
