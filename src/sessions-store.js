@@ -14,10 +14,10 @@
 //   togglePin(id)                → Session | null   (flips `pinned`)
 //   subscribe(fn)                → unsubscribe
 
-import { recentSessions as seed, sharedSessions } from "./mocks.js?v=2649";
-import { isFlagOn } from "./feature-flags.js?v=2649";
-import { isNewUser } from "./user-mode.js?v=2649";
-import { createNotifier } from "./store-utils.js?v=2649";
+import { recentSessions as seed, sharedSessions } from "./mocks.js?v=2650";
+import { isFlagOn } from "./feature-flags.js?v=2650";
+import { isNewUser } from "./user-mode.js?v=2650";
+import { createNotifier } from "./store-utils.js?v=2650";
 
 // First-time user starts with an empty session list (matches every other
 // store's first-run mode); returning users get the seeded conversations.
