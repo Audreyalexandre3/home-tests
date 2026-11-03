@@ -6,14 +6,14 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2644";
-import { findConnector } from "./connectors-store.js?v=2644";
-import { createSessionNotifier } from "./store-utils.js?v=2644";
-import { addPostDraft } from "./posts-store.js?v=2644";
-import { showToast } from "./components/toast.js?v=2644";
-import { isFlagOn } from "./feature-flags.js?v=2644";
-import { offerMentions } from "./mention-flow.js?v=2644";
-import { getSources, subscribeSources } from "./sources-stream.js?v=2644";
+import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2647";
+import { findConnector } from "./connectors-store.js?v=2647";
+import { createSessionNotifier } from "./store-utils.js?v=2647";
+import { addPostDraft } from "./posts-store.js?v=2647";
+import { showToast } from "./components/toast.js?v=2647";
+import { isFlagOn } from "./feature-flags.js?v=2647";
+import { offerMentions } from "./mention-flow.js?v=2647";
+import { getSources, subscribeSources } from "./sources-stream.js?v=2647";
 
 // How this module reads a session's ideas, injected rather than imported.
 //
@@ -861,7 +861,7 @@ export function postRevisionTurn(sessionId, { postId, network, intent, before, a
   notify(sessionId);
 }
 
-// "What changed" for one ask that rewrote several drafts: one card, a row per
+// "What changed" for one ask that rewrote several drafts: one recap, a row per
 // draft. `items` = [{ postId, network, before, after }] in the order asked.
 export function postRevisionGroupTurn(sessionId, { intent, items, summary = null }) {
   getThread(sessionId).push({
@@ -872,8 +872,6 @@ export function postRevisionGroupTurn(sessionId, { intent, items, summary = null
     intent,
     items,
     summary,
-    openId: items[0]?.postId || null,
-    views: {},
     status: "ready",
     createdAt: Date.now(),
   });

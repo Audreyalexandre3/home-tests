@@ -187,20 +187,20 @@ export const FLAGS = Object.freeze([
   {
     id: "draftChanges",
     group: "Chat & drafts",
-    tip: "When Archie rewrites a draft, you see what changed: a card in the chat (Changes or Side by side, Undo) and the new words marked on the draft.",
+    tip: "When Archie rewrites a draft, you see what changed on the draft itself: the new words marked, View changes for the removed ones, Undo and a close button. The chat gets a short recap with Open draft.",
     label: "UI-Draft changes: what changed",
     // ON: a rewrite keeps the version it replaced. OFF: the rewrite as before,
-    // no card, no marks, no undo.
+    // no recap, no marks, no undo.
     default: true,
     hides:
-      "What a rewrite asked in the chat changed. When ON (default), each " +
-      "rewritten draft gets a card in the thread: one sentence naming the " +
-      "change with its counts, then the text with the added words marked and " +
-      "the removed ones struck through (Changes), or Before and After side by " +
-      "side, the view it opens on when most of the words changed. Undo puts " +
-      "the version before back, Redo the rewrite. On the draft itself, a strip " +
-      "says « Your post has been updated. » with Undo and Accept, in green, and " +
-      "the new words stay marked until Accept, a hand edit or the next rewrite.",
+      "What a rewrite asked in the chat changed. When ON (default), the thread " +
+      "gets a short recap: one sentence naming the change, then a row per " +
+      "rewritten draft (its account, the words added and removed, or its " +
+      "language move) and Open draft. No diff and no Undo in the chat. On the " +
+      "draft itself, a green strip says « Your post has been updated. » with " +
+      "Undo (then Redo), View changes (the removed words struck in place, " +
+      "beside the added ones) and a close button. The new words stay marked " +
+      "until the close button, a hand edit or the next rewrite.",
   },
   {
     id: "draftMentions",

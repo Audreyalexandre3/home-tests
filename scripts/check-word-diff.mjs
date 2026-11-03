@@ -1,5 +1,5 @@
 // Self-check of the draft word diff (src/word-diff.js): no change, a prepended
-// hook, a shortening, a reordered paragraph, the confetti guard, escaping.
+// hook, a shortening, a reordered paragraph, escaping.
 // Run: npm run check:diff
 import assert from "node:assert";
 const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
@@ -10,16 +10,13 @@ const post = ["We cut the fluff and shipped in two weeks.", "Here is what change
 
 let r = D.diffWords(post, post);
 assert.equal(D.hasChanges(r), false);
-assert.equal(D.changeRatio(r), 0);
 
 r = D.diffWords(post, ["Okay, real talk:", ...post]);
 assert.equal(types(r), "add,eq");
-assert.ok(D.changeRatio(r) < 0.5);
 assert.match(D.diffParagraphs(r, "after")[0], /^<ins class="draft-diff__add">/);
 assert.equal(D.diffParagraphs(r, "before").join(" ").includes("<ins"), false);
 
 r = D.diffWords(post, ["We cut the fluff."]);
-assert.ok(D.changeRatio(r) > 0.5, "a shortening opens on side by side");
 assert.equal(D.diffParagraphs(r, "after").length, 1);
 assert.equal(D.diffParagraphs(r, "before").length, 2);
 

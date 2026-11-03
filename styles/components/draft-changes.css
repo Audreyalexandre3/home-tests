@@ -50,14 +50,15 @@
   white-space: nowrap;
 }
 
-/* ── The chat's card: my sentence, then the post with its changes marked ──
-   One quiet surface: the account it posts as, the view switch, the text, then a
-   legend whose counts wear their own mark. The unchanged
-   words sit at grey-80, what moved at grey-100 on butter, so the eye lands on
-   the change without the rest fading out of the ink range. */
+/* ── The chat's recap: my sentence, then a row per draft — its account and
+   how much moved — and Open draft. The change itself is read on the draft. ── */
+
+/* The bubble is capped by its turn, or the card's 520px runs under the open panel. */
+.chat-bubble:has(.revision-card) {
+  max-width: 100%;
+}
 
 .revision-card {
-  container-type: inline-size;
   width: var(--app-chat-card);
   max-width: 100%;
   margin-top: var(--ref-spacing-xs);
@@ -67,120 +68,44 @@
   overflow: hidden;
 }
 
-.revision-card__head {
+.revision-card__row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  /* The tabs' height, kept when a translation shows its language move instead. */
   min-height: 48px;
-  padding: 0 var(--ref-spacing-xs) 0 var(--ref-spacing-md);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
   border-bottom: 1px solid var(--ref-color-grey-20);
 }
-
-.revision-card__head .profile-tag {
+.revision-card__row:last-child {
+  border-bottom: 0;
+}
+.revision-card__row .profile-tag {
   flex: none;
   color: var(--ref-color-grey-100);
 }
 
-.revision-card__tabs .ap-tabs-nav {
-  border-bottom: 0;
-}
-
-.revision-card__text,
-.revision-card__side {
-  padding: var(--ref-spacing-md) var(--ref-spacing-md) var(--ref-spacing-sm);
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-}
-
-.revision-card__paragraph {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.revision-card__paragraph + .revision-card__paragraph {
-  margin-top: var(--ref-spacing-xs);
-}
-
-/* Before | After: the old text on the conversation's grey, the new one on the
-   card's white, so the two read as then and now; stacked when narrow. */
-.revision-card__side {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--ref-spacing-xs);
-  padding-inline: var(--ref-spacing-xs);
-}
-.revision-card__col {
-  padding: var(--ref-spacing-sm);
-  border-radius: var(--app-radius-md);
-}
-.revision-card__col.is-before {
-  background: var(--ref-color-grey-05);
-}
-.revision-card__col-label {
-  margin: 0 0 var(--ref-spacing-xxs);
-  color: var(--ref-color-grey-100);
-  font-size: var(--sys-text-style-caption-bold-size);
-  line-height: var(--sys-text-style-caption-bold-line-height);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-}
-@container (max-width: 440px) {
-  .revision-card__side {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Undone: the change is still the receipt, read as the past. */
-.revision-card.is-undone .draft-diff__add,
-.revision-card.is-undone .draft-diff__del {
-  color: inherit;
-  background: none;
-}
-
-.revision-card__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-md);
-}
-
-.revision-card__legend,
-.revision-card__state {
+.revision-card__sum {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  margin: 0;
+  margin-left: auto;
   color: var(--ref-color-grey-80);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
 }
-.revision-card__state {
-  gap: var(--ref-spacing-xxs);
+.revision-card__sum > i {
+  font-size: var(--sys-icon-css-sm);
 }
 .revision-card__count {
   white-space: nowrap;
 }
 
-.revision-card__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin-left: auto;
-}
-
-/* The stroke, as the card lands — resumed, not restarted, by a repaint. */
-.revision-card.is-fresh .draft-diff__add {
-  animation: draft-diff-sweep 700ms cubic-bezier(0.25, 0.7, 0.2, 1) both;
-  animation-delay: calc(300ms - var(--sweep-elapsed, 0ms));
-}
-@media (prefers-reduced-motion: reduce) {
-  .revision-card.is-fresh .draft-diff__add {
-    animation: none;
-  }
+.revision-card__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--ref-spacing-xs);
 }
 
 /* ── The draft in the panel: the DS green status card on top (its glue lives
@@ -188,7 +113,8 @@
 
 .posts__card-changes-actions {
   display: inline-flex;
-  gap: var(--ref-spacing-xs);
+  align-items: center;
+  gap: var(--ref-spacing-sm);
 }
 
 /* Just rewritten: the same stroke, once. */
@@ -199,99 +125,4 @@
   .posts__card.has-fresh-changes .draft-diff__add {
     animation: none;
   }
-}
-
-/* A translation: where the tabs were, the language move it made. */
-.revision-card__lang,
-.revision-group__sum {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  white-space: nowrap;
-}
-.revision-card__lang {
-  padding-right: var(--ref-spacing-xs);
-}
-.revision-card__lang > i,
-.revision-group__sum > i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-/* ── One ask, several drafts: a row per draft, one open at a time ── */
-
-.revision-group__row {
-  border-bottom: 1px solid var(--ref-color-grey-20);
-}
-
-.revision-group__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  width: 100%;
-  min-height: 48px;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm) var(--ref-spacing-xs) var(--ref-spacing-md);
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-button.revision-group__head {
-  cursor: pointer;
-}
-button.revision-group__head:hover {
-  background: var(--ref-color-grey-05);
-}
-button.revision-group__head:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: -2px;
-}
-.revision-group__head .profile-tag {
-  flex: none;
-  color: var(--ref-color-grey-100);
-}
-
-.revision-group__sum {
-  gap: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  margin-left: auto;
-}
-
-.revision-group__chevron {
-  font-size: var(--sys-icon-css-sm);
-  transition: transform 0.2s;
-}
-.revision-group__row.is-open .revision-group__chevron {
-  transform: rotate(180deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  .revision-group__chevron {
-    transition: none;
-  }
-}
-
-.revision-group__detail .revision-card__tabs {
-  padding-left: var(--ref-spacing-xs);
-  border-bottom: 1px solid var(--ref-color-grey-20);
-}
-
-.revision-group__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xxs);
-  padding: 0 var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-md);
-}
-.revision-group__actions .revision-card__legend {
-  margin-right: auto;
-}
-
-/* A row put back: its change is still the receipt, read as the past. */
-.revision-group__row.is-undone .draft-diff__add,
-.revision-group__row.is-undone .draft-diff__del {
-  color: inherit;
-  background: none;
 }

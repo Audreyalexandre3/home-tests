@@ -19,21 +19,21 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2644";
-import { isPortraitFormat } from "../clip-formats.js?v=2644";
-import { presetById } from "../clip-captions.js?v=2644";
-import { renderFeedbackControl } from "./feedback-control.js?v=2644";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2647";
+import { isPortraitFormat } from "../clip-formats.js?v=2647";
+import { presetById } from "../clip-captions.js?v=2647";
+import { renderFeedbackControl } from "./feedback-control.js?v=2647";
 import {
   networkLabel,
   normalizeNetwork,
   profileForNetwork,
   renderProfileTag,
   BRAND_INITIALS,
-} from "../social-profiles.js?v=2644";
-import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2644";
-import { REVEAL_MS } from "../archie-pixels.js?v=2644";
-import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2644";
-import { languageOf } from "../draft-rewrite.js?v=2644";
+} from "../social-profiles.js?v=2647";
+import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2647";
+import { REVEAL_MS } from "../archie-pixels.js?v=2647";
+import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2647";
+import { languageOf } from "../draft-rewrite.js?v=2647";
 
 // The media slot of a draft that has no image yet. ONE dashed slot, two tiers
 // (2026-10-07):
@@ -167,9 +167,11 @@ function renderVoiceStatus(net, opts, post) {
 
 // What my last rewrite changed (flag draftChanges, resolved by the host into
 // `opts.changes`): the DS green status card glued on top, « Your post has been
-// updated. » + Undo (then Redo) + Accept, and the new words marked in the text,
-// which still reads as it will publish. Accept puts both away (`hidden`), as do
-// a hand edit and the next rewrite; the chat's card can still undo.
+// updated. » + Undo (then Redo) + View changes + ×, and the new words marked in
+// the text, which still reads as it will publish. View changes adds the removed
+// words, struck, in place. × puts the card and the marks away (`hidden`), as do
+// a hand edit and the next rewrite. This card is the only Undo: the chat's recap
+// only opens the draft.
 function changesShown(post, opts) {
   const r = post.revision;
   return opts.changes && r && !r.hidden && post.status !== "scheduled" && !post.isRegenerating;
@@ -184,14 +186,20 @@ function updatedLine(post) {
 
 function renderChangesStatus(post, opts) {
   if (!changesShown(post, opts)) return "";
-  const undone = post.revision.undone;
+  const { undone, intent, view } = post.revision;
+  const id = escapeAttr(post.id);
+  const viewButton =
+    undone || intent === "translate"
+      ? ""
+      : `<button type="button" class="ap-link small standalone" data-post-changes-view="${id}" aria-pressed="${!!view}">${view ? "Hide changes" : "View changes"}</button>`;
   return `<div class="ap-status-card green posts__card-changes" role="status">
     <div class="upper">
       <i class="ap-icon-${undone ? "rotate-left" : "rounded-check_fill"}" aria-hidden="true"></i>
       <div class="flow"><span>${undone ? "Your post is back to the previous version." : updatedLine(post)}</span></div>
       <span class="posts__card-changes-actions">
-        <button type="button" class="ap-link small standalone" data-post-changes-undo="${escapeAttr(post.id)}"><i class="ap-icon-rotate-${undone ? "right" : "left"}" aria-hidden="true"></i>${undone ? "Redo" : "Undo"}</button>
-        <button type="button" class="ap-link small standalone" data-post-changes-accept="${escapeAttr(post.id)}"><i class="ap-icon-check" aria-hidden="true"></i>${undone ? "Done" : "Accept"}</button>
+        <button type="button" class="ap-link small standalone" data-post-changes-undo="${id}"><i class="ap-icon-rotate-${undone ? "right" : "left"}" aria-hidden="true"></i>${undone ? "Redo" : "Undo"}</button>
+        ${viewButton}
+        <button type="button" class="ap-close-button" data-post-changes-dismiss="${id}" aria-label="Close"><i class="ap-icon-close" aria-hidden="true"></i></button>
       </span>
     </div>
   </div>`;
@@ -243,19 +251,30 @@ export function renderPostCard(post, opts = {}) {
           ),
       p,
     );
-  const bodyParagraphs = (runs && hasChanges(runs) ? diffParagraphs(runs, "after") : post.text)
+  const bodyParagraphs = (
+    runs && hasChanges(runs) ? diffParagraphs(runs, changes.view ? "unified" : "after") : post.text
+  )
     .map((p, i) => `<p class="posts__card-paragraph">${i === 0 ? captionLead : ""}${withMentions(p)}</p>`)
     .join("");
 
-  const hashtags = post.hashtags.length
-    ? `<p class="posts__card-hashtags">${post.hashtags
-        .map((h) => `<a>${marked(`#${h}`, changes && !changes.before.hashtags.includes(h))}</a>`)
-        .join(" ")}</p>`
-    : "";
+  // View changes: what my rewrite took out, struck where it was.
+  const struck = (inner) =>
+    `<del class="draft-diff__del"><span class="draft-diff__sr">Removed: </span>${escapeText(inner)}</del>`;
+  const removedTags = changes?.view ? changes.before.hashtags.filter((h) => !post.hashtags.includes(h)) : [];
+  const hashtags =
+    post.hashtags.length || removedTags.length
+      ? `<p class="posts__card-hashtags">${[
+          ...post.hashtags.map((h) => `<a>${marked(`#${h}`, changes && !changes.before.hashtags.includes(h))}</a>`),
+          ...removedTags.map((h) => struck(`#${h}`)),
+        ].join(" ")}</p>`
+      : "";
 
-  const cta = post.cta
-    ? `<p class="posts__card-cta">${marked(post.cta, changes && changes.before.cta !== post.cta)}</p>`
-    : "";
+  const oldCta =
+    changes?.view && changes.before.cta && changes.before.cta !== post.cta ? struck(changes.before.cta) : "";
+  const cta =
+    post.cta || oldCta
+      ? `<p class="posts__card-cta">${oldCta}${oldCta && post.cta ? " " : ""}${post.cta ? marked(post.cta, changes && changes.before.cta !== post.cta) : ""}</p>`
+      : "";
 
   // Regenerate state (sparkles click → draft-rewrite.js). Two stages :
   //   - thinking  : show a 3-bar shimmer skeleton, hashtags + CTA hidden.

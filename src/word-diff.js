@@ -1,12 +1,12 @@
 // word-diff — what a rewrite changed in a draft, word by word (flag
-// draftChanges). One diff, three readings: the chat's revision card shows it
-// unified (added marked, removed struck) or side by side, the panel's card
-// shows the "after" reading — the post as it will publish, its new words marked.
+// draftChanges). One diff, read on the draft in the panel: "after" at rest —
+// the post as it will publish, its new words marked — and "unified" (added
+// marked, removed struck) behind View changes. The chat's recap only counts it.
 //
 // A text is a list of paragraphs. Tokens are its words plus a break between
 // paragraphs; spacing is not diffed (a post's paragraphs are plain sentences).
 
-import { escapeText } from "./utils.js?v=2644";
+import { escapeText } from "./utils.js?v=2647";
 
 const BREAK = "\n";
 
@@ -95,14 +95,6 @@ function cleanup(runs) {
 
 const words = (runs, type) =>
   runs.filter((r) => r.type === type).reduce((s, r) => s + r.tokens.filter((t) => t !== BREAK).length, 0);
-
-// Share of the words touched, 0…1. Above half, a word diff is confetti: the
-// card opens on Side by side instead.
-export function changeRatio(runs) {
-  const eq = words(runs, "eq");
-  const changed = words(runs, "add") + words(runs, "del");
-  return changed ? changed / (changed + 2 * eq) : 0;
-}
 
 // How many words a rewrite added and removed — the card's legend.
 export function wordCounts(runs) {
