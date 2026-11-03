@@ -1331,104 +1331,148 @@
 }
 
 /* ── 6 · Example requests (flag homePrompts) ───────────────────────────────
-   Words only, under the box: one sentence per flow, a hairline between them,
-   the flow's icon in ink (no tone tile: the sentence is the subject). The
-   verb waits on the right until you point at the row; on touch it stays. */
+   Each example is drawn as YOUR message before it goes: the user bubble's
+   shape (sharp top-right corner, chat.css) in white, the flow's tone on its
+   tile only. Pointing at one turns it navy, the way it lands in the thread;
+   the arrow says it will be sent, the pen that it only fills the box. */
+.nch-tone--free {
+  --nch-tone-bg: var(--ref-color-grey-05);
+  --nch-tone: var(--ref-color-grey-100);
+}
+
 .nch-asks-wrap {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
+  /* Your side of the thread: the bubbles end on the composer's right edge,
+     one per line, ragged on the left like messages you'd send. */
+  align-items: flex-end;
   width: 100%;
   max-width: 740px;
-  margin-top: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-md);
 }
 
 .nch-asks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--ref-spacing-xs);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.nch-asks > li + li {
-  border-top: 1px solid var(--ref-color-grey-20);
-}
-
 .nch-ask {
   display: flex;
   align-items: center;
-  gap: var(--ref-spacing-sm);
-  width: 100%;
-  min-height: 48px;
-  /* Inline = the composer card's border + its inset: the icons stand under
-     its Add button. */
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border: 0;
-  border-radius: var(--app-radius-md);
-  background: transparent;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px var(--ref-spacing-sm) 8px 10px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-xl);
+  border-top-right-radius: 0;
+  background: var(--ref-color-white);
   color: var(--ref-color-grey-100);
   font-family: inherit;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.nch-ask:hover,
-.nch-ask:focus-visible {
-  outline: none;
-  background: var(--ref-color-grey-05);
-}
-
-.nch-ask:focus-visible {
-  box-shadow: 0 0 0 2px var(--ref-color-electric-blue-100);
-}
-
-.nch-ask__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  background-color: var(--ref-color-grey-80);
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-standard),
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    color var(--ref-animation-short) var(--app-ease-standard);
 }
 
 .nch-ask__text {
-  flex: 1;
   min-width: 0;
 }
 
-.nch-ask .nch-verb {
+/* The send arrow (or the pen) waits folded at the end: it opens with the
+   bubble, so the row doesn't reflow under the pointer. */
+.nch-ask__go {
   flex: none;
-  margin-top: 0;
+  width: 16px;
+  height: 16px;
+  margin-left: -6px;
+  background-color: currentColor;
   opacity: 0;
-  transition: opacity var(--ref-animation-short) var(--app-ease-standard);
+  transform: translateY(3px);
+  transition:
+    opacity var(--ref-animation-short) var(--app-ease-standard),
+    transform var(--ref-animation-short) var(--app-ease-standard);
 }
 
-.nch-ask:is(:hover, :focus-visible) .nch-verb {
+.nch-ask:is(:hover, :focus-visible) {
+  outline: none;
+  border-color: var(--app-convo-navy);
+  background: var(--app-convo-navy);
+  color: var(--ref-color-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.nch-ask:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--ref-color-white),
+    0 0 0 4px var(--ref-color-electric-blue-100);
+}
+
+.nch-ask:is(:hover, :focus-visible) .nch-ask__go {
   opacity: 1;
+  transform: none;
 }
 
-.nch-ask:is(:hover, :focus-visible) .nch-verb__arrow {
-  translate: 3px 0;
+.nch-ask:active {
+  transform: scale(0.98);
+}
+
+/* « Other examples » deals the next set, one bubble after the other. */
+.nch-asks.is-dealt > li {
+  animation: nch-deal 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.nch-asks.is-dealt > li:nth-child(2) {
+  animation-delay: 40ms;
+}
+.nch-asks.is-dealt > li:nth-child(3) {
+  animation-delay: 80ms;
+}
+.nch-asks.is-dealt > li:nth-child(4) {
+  animation-delay: 120ms;
+}
+.nch-asks.is-dealt > li:nth-child(5) {
+  animation-delay: 160ms;
+}
+.nch-asks.is-dealt > li:nth-child(6) {
+  animation-delay: 200ms;
+}
+
+@keyframes nch-deal {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nch-asks.is-dealt > li {
+    animation: none;
+  }
+  .nch-ask,
+  .nch-ask__go {
+    transition: none;
+  }
 }
 
 @media (hover: none) {
-  .nch-ask .nch-verb {
+  .nch-ask__go {
     opacity: 1;
-  }
-}
-
-@media (max-width: 560px) {
-  .nch-ask {
-    flex-wrap: wrap;
-    row-gap: var(--ref-spacing-xxs);
-  }
-  .nch-ask .nch-verb {
-    margin-left: calc(16px + var(--ref-spacing-sm));
+    transform: none;
   }
 }
 
 .nch-asks__more {
-  align-self: flex-end;
-  margin-top: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-sm);
 }

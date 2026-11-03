@@ -23,19 +23,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2651";
-import { chatStarters } from "../../mocks.js?v=2651";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2651";
-import { getTopPosts } from "../../top-posts-store.js?v=2651";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2651";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2651";
-import { findTopicSource } from "../../topics-catalog.js?v=2651";
-import { getContextById } from "../../contexts-store.js?v=2651";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2651";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2651";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2651";
-import { escapeHtml } from "../../utils.js?v=2651";
-import "../../archie-pixels.js?v=2651";
+import { isFlagOn } from "../../feature-flags.js?v=2652";
+import { chatStarters } from "../../mocks.js?v=2652";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2652";
+import { getTopPosts } from "../../top-posts-store.js?v=2652";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2652";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2652";
+import { findTopicSource } from "../../topics-catalog.js?v=2652";
+import { getContextById } from "../../contexts-store.js?v=2652";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2652";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2652";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2652";
+import { escapeHtml } from "../../utils.js?v=2652";
+import "../../archie-pixels.js?v=2652";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -686,10 +686,13 @@ function showcase({ composer, session }) {
 }
 
 // ── 6 · Example requests ────────────────────────────────────────────────────
-// Words only: what you can say to me, one sentence per flow, under the box.
-// Pointing at one writes it in the box as a ghost; a click sends it and runs
-// that flow (the starters' own hooks), except the free post, which only fills
-// the box: it is there to be rewritten. « Other examples » swaps the set.
+// Words only: what you can say to me, one sentence per flow, under the box. Each
+// one is drawn as YOUR message before it is sent: the bubble with the sharp top
+// right corner, white at rest, navy when you point at it, the way it lands in
+// the thread. Pointing also writes it in the box as a ghost; a click sends it
+// and runs that flow (the starters' own hooks), except the free post, which
+// only fills the box: it is there to be rewritten. « Other examples » deals the
+// second set.
 const ASKS = [
   {
     video: "Cut my latest podcast into short vertical clips",
@@ -710,26 +713,25 @@ const ASKS = [
 function prompts({ composer, session }) {
   const ctx = ctxOf(session);
   const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
-  const ask = (icon, text, d) => `
+  // `fill`: the request only lands in the box, to be rewritten before it goes.
+  const ask = (tone, icon, text, attrs, fill = false) => `
     <li>
-      <button type="button" class="nch-ask" ${d.attrs} data-nch-hint="${esc(text)}">
-        <i class="${icon} nch-ask__icon" aria-hidden="true"></i>
+      <button type="button" class="nch-ask" ${attrs} data-nch-hint="${esc(text)}"
+        title="${fill ? "Put it in the box to edit" : "Send this request"}">
+        <span class="nch-tile nch-tile--sm nch-tone--${tone}" aria-hidden="true"><i class="${icon}"></i></span>
         <span class="nch-ask__text">${esc(text)}</span>
-        ${verb(d)}
+        <i class="${fill ? "ap-icon-pen" : "ap-icon-arrow-up"} nch-ask__go" aria-hidden="true"></i>
       </button>
     </li>`;
-  const run = (k, text) => ({
-    attrs:
-      k === "topic"
-        ? `data-add-source="topic"`
-        : starterAttrs({ video: "open-video-clips", top: "open-top-posts", source: "open-batch" }[k], text),
-    verb: KINDS[k].go,
-  });
+  const run = (k, text) =>
+    k === "topic"
+      ? `data-add-source="topic"`
+      : starterAttrs({ video: "open-video-clips", top: "open-top-posts", source: "open-batch" }[k], text);
   const list = (set, i) => `
     <ul class="nch-asks" data-nch-set="${i}" aria-label="Example requests"${i ? " hidden" : ""}>
-      ${["video", "top", "source", "topic"].map((k) => ask(KINDS[k].icon, set[k], run(k, set[k]))).join("")}
-      ${ask("ap-icon-pen", set.free, DOORS.fill(set.free))}
-      ${voices.length ? ask(networkIcon(voices[0]), `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0])) : ""}
+      ${["video", "top", "source", "topic"].map((k) => ask(KINDS[k].tone, KINDS[k].icon, set[k], run(k, set[k]))).join("")}
+      ${ask("free", "ap-icon-pen", set.free, DOORS.fill(set.free).attrs, true)}
+      ${voices.length ? ask("free", networkIcon(voices[0]), `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0]).attrs) : ""}
     </ul>`;
   return shell(
     "prompts",
@@ -824,10 +826,14 @@ class ArchieHome extends HTMLElement {
   }
 
   // The example requests on show (direction 6): one set at a time.
-  setSet(i) {
+  // `deal`: the set comes in one bubble after the other (on « Other examples »).
+  setSet(i, deal = false) {
     const sets = this.querySelectorAll("[data-nch-set]");
     memory.set = i % sets.length;
-    sets.forEach((l) => (l.hidden = +l.dataset.nchSet !== memory.set));
+    sets.forEach((l) => {
+      l.hidden = +l.dataset.nchSet !== memory.set;
+      l.classList.toggle("is-dealt", deal && !l.hidden);
+    });
   }
 
   setSlide(i) {
@@ -864,7 +870,7 @@ class ArchieHome extends HTMLElement {
         return this.setSlide(+to.dataset.nchSlideTo);
       }
       if (t.closest("[data-nch-shuffle]")) {
-        this.setSet(memory.set + 1);
+        this.setSet(memory.set + 1, true);
         return this.hint(this.base);
       }
       const fill = t.closest("[data-nch-fill]");
