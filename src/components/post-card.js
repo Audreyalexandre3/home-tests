@@ -19,21 +19,21 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2627";
-import { isPortraitFormat } from "../clip-formats.js?v=2627";
-import { presetById } from "../clip-captions.js?v=2627";
-import { renderFeedbackControl } from "./feedback-control.js?v=2627";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2631";
+import { isPortraitFormat } from "../clip-formats.js?v=2631";
+import { presetById } from "../clip-captions.js?v=2631";
+import { renderFeedbackControl } from "./feedback-control.js?v=2631";
 import {
   networkLabel,
   normalizeNetwork,
   profileForNetwork,
   renderProfileTag,
   BRAND_INITIALS,
-} from "../social-profiles.js?v=2627";
-import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2627";
-import { REVEAL_MS } from "../archie-pixels.js?v=2627";
-import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2627";
-import { languageOf } from "../draft-rewrite.js?v=2627";
+} from "../social-profiles.js?v=2631";
+import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2631";
+import { REVEAL_MS } from "../archie-pixels.js?v=2631";
+import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2631";
+import { languageOf } from "../draft-rewrite.js?v=2631";
 
 // The media slot of a draft that has no image yet. ONE dashed slot, two tiers
 // (2026-10-07):

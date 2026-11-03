@@ -11,13 +11,13 @@
 // questions come one network at a time, then every draft changes at once. Your
 // pick echoes as a chip; I answer in one sentence, no « what changed » card.
 
-import { postAssistantMessage, postUserTurn, postActivity, postSelectionEcho } from "./assistant.js?v=2627";
-import * as inlineQuestion from "./inline-question.js?v=2627";
-import { getPosts, updatePostContent } from "./posts-store.js?v=2627";
-import { isFlagOn } from "./feature-flags.js?v=2627";
-import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2627";
-import { focusInPanel } from "./components/right-panel.js?v=2627";
-import { escapeHtml } from "./utils.js?v=2627";
+import { postAssistantMessage, postUserTurn, postActivity, postSelectionEcho } from "./assistant.js?v=2631";
+import * as inlineQuestion from "./inline-question.js?v=2631";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2631";
+import { isFlagOn } from "./feature-flags.js?v=2631";
+import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2631";
+import { focusInPanel } from "./components/right-panel.js?v=2631";
+import { escapeHtml } from "./utils.js?v=2631";
 import {
   HANDLE_RE,
   mentionMode,
@@ -29,9 +29,9 @@ import {
   removeMention,
   mentionsNamedIn,
   nameForHandle,
-} from "./mentions.js?v=2627";
+} from "./mentions.js?v=2631";
 
-export { MENTION_ASK, UNMENTION_ASK, mentionNameIn } from "./mentions.js?v=2627";
+export { MENTION_ASK, UNMENTION_ASK, mentionNameIn } from "./mentions.js?v=2631";
 
 const initials = (name) =>
   name

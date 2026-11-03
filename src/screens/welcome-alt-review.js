@@ -33,12 +33,12 @@
 // is re-applied after every paint (a MutationObserver on the host) — the card
 // index lives here, not in the DOM.
 
-import { html, raw } from "../utils.js?v=2627";
-import { navigate } from "../router.js?v=2627";
-import { getDraft, patchDraft } from "../context-builder.js?v=2627";
-import { mount } from "../playbook-view.js?v=2627";
-import { parseHashParams } from "../url-state.js?v=2627";
-import { mountShell, tint } from "./welcome-alt-shell.js?v=2627";
+import { html, raw } from "../utils.js?v=2631";
+import { navigate } from "../router.js?v=2631";
+import { getDraft, patchDraft } from "../context-builder.js?v=2631";
+import { mount } from "../playbook-view.js?v=2631";
+import { parseHashParams } from "../url-state.js?v=2631";
+import { mountShell, tint } from "./welcome-alt-shell.js?v=2631";
 
 // Each part's tint (`tint`, welcome-alt-shell.js — the card's rows share it):
 // its cards' header band, its cover and its tile in the list, so the colour
@@ -46,6 +46,10 @@ import { mountShell, tint } from "./welcome-alt-shell.js?v=2627";
 const OUT_MS = 240; // the part's column leaves
 const GLIDE_MS = 720; // a card glides to the middle
 
+// `review.calm` (a returning user's Create a Playbook, 2026-11-03, asked: « trop
+// animé et compliqué … une expérience + simple »): the same column, still — no
+// tinted band, no dimming, no glide, no ↑ / ↓ capsule, no cascade.
+//
 // `review`: { step, title, sub, parts (a list, or a function for parts that
 // come and go; a part's `open()` opens its tab in edit itself, its `badge` says
 // what's left to do, its `group` / `groupHint` head a run of parts —
@@ -55,6 +59,7 @@ const GLIDE_MS = 720; // a card glides to the middle
 // `refresh()` repaints the part with what it changed.
 export function renderReview(target, sid, config, review) {
   const parts = () => (typeof review.parts === "function" ? review.parts() : review.parts);
+  const calm = !!review.calm;
   const reviewed = () => new Set(getDraft(sid)?.reviewedParts || []);
   // The part on screen: the URL's tab when it names one (a reload), else the first.
   let currentId = parts().find((t) => t.id === parseHashParams().get("tab"))?.id || parts()[0].id;
@@ -96,7 +101,7 @@ export function renderReview(target, sid, config, review) {
               : "";
           const mark = done.has(t.id)
             ? `<span class="welcome-review__check${t.id === justChecked ? " is-new" : ""}" title="Done"><i class="ap-icon-check" aria-hidden="true"></i></span>`
-            : here && count > 1
+            : here && count > 1 && !calm
               ? `<span class="welcome-review__count">${index + 1} of ${count}</span>`
               : "";
           // A part that adds rather than reviews (`action`: the voice review's
@@ -144,16 +149,21 @@ export function renderReview(target, sid, config, review) {
           <i class="ap-icon-arrow-left"></i><span>Back</span>
         </button>
         <!-- Secondary: the screen's one primary is the part's confirm, at the
-             bottom of the stage (ui-polish OB-08). -->
-        <button type="button" class="ap-button secondary blue" data-review-start>
-          <span>${review.next.label}</span><i class="ap-icon-arrow-right"></i>
-        </button>
+             bottom of the stage (ui-polish OB-08). Calm: that one alone. -->
+        ${calm
+          ? ""
+          : raw(
+              html`<button type="button" class="ap-button secondary blue" data-review-start>
+                <span>${review.next.label}</span><i class="ap-icon-arrow-right"></i>
+              </button>`,
+            )}
       </div>
     `;
   };
 
   const shell = mountShell(target, { step: review.step, sid, left, sheet: true });
   shell.sheet.classList.add("is-scroll");
+  shell.sheet.classList.toggle("is-calm", calm);
   const body = shell.sheet.querySelector("[data-flow-sheet-body]");
   // The part's tool strip (the voice's « Rewrite it from a source »), pinned
   // over the column: the view renders it, the stage shows a copy, a click on
@@ -288,10 +298,10 @@ export function renderReview(target, sid, config, review) {
     list.forEach((el, i) => {
       el.classList.add("welcome-review__card");
       el.classList.toggle("is-active", i === index);
-      if (!el.querySelector(":scope > .welcome-review__kicker")) el.insertAdjacentHTML("afterbegin", kicker());
+      if (!calm && !el.querySelector(":scope > .welcome-review__kicker")) el.insertAdjacentHTML("afterbegin", kicker());
       if (!el.style.getPropertyValue("--focus")) el.style.setProperty("--focus", i === index ? "1" : "0");
     });
-    navEl.innerHTML = count ? nav(list) : "";
+    navEl.innerHTML = count && !calm ? nav(list) : "";
     const part = partOf(current());
     barEl.innerHTML = html`
       <button type="button" class="ap-button primary blue" data-review-confirm="${part.id}">
@@ -324,6 +334,7 @@ export function renderReview(target, sid, config, review) {
     if (partOf(id).open) partOf(id).open();
     else body.querySelector("[data-recap-edit-card]")?.click();
     index = fromEnd ? Number.MAX_SAFE_INTEGER : 0;
+    if (calm) body.scrollTop = 0;
     applyColumn();
     centre({ instant: true });
   };
@@ -337,6 +348,7 @@ export function renderReview(target, sid, config, review) {
   let gliding = false;
   let glideFrame = 0;
   const centre = ({ instant = false } = {}) => {
+    if (calm) return; // still: the scroll is the reader's (a part opens at its top, openPart)
     const el = cards()[index];
     if (!el) return;
     const box = body.getBoundingClientRect();
@@ -345,7 +357,7 @@ export function renderReview(target, sid, config, review) {
     const max = body.scrollHeight - body.clientHeight;
     const to = Math.max(0, Math.min(max, body.scrollTop + r.top - box.top - Math.max(24, room - r.height / 2)));
     window.cancelAnimationFrame(glideFrame);
-    if (instant || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (instant || calm || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gliding = false;
       body.scrollTop = to;
       return focus();
@@ -374,6 +386,7 @@ export function renderReview(target, sid, config, review) {
     return d;
   };
   const focus = () => {
+    if (calm) return;
     const line = body.getBoundingClientRect().top + body.clientHeight * 0.5;
     let best = index;
     let dist = Infinity;
@@ -407,6 +420,7 @@ export function renderReview(target, sid, config, review) {
   // Changing part: the column leaves, the new one cascades in.
   let moving = false;
   const switchPart = (id, opts = {}) => {
+    if (calm) return openPart(id, opts);
     if (moving) return;
     moving = true;
     shell.sheet.classList.add("is-part-out");
@@ -472,6 +486,7 @@ export function renderReview(target, sid, config, review) {
   target.addEventListener("click", onClick);
   // The keyboard's ↑ / ↓ browse too — unless you're typing in a field.
   const onKey = (e) => {
+    if (calm) return;
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
     // Arrows inside a widget (a card's action menu, a radio group) belong to it.
@@ -493,5 +508,103 @@ export function renderReview(target, sid, config, review) {
     shell.cleanup();
     target.removeEventListener("click", onClick);
     document.removeEventListener("keydown", onKey);
+  };
+}
+
+// A returning user's Create a Playbook (isIntegrated()), the Playbook's review
+// as ONE page (2026-11-03, asked: « voir facilement ce que Archie a trouvé, et
+// éditer ce qui manque sans cliquer dans tous les sens »): every part one
+// under the other, already in edit (playbook-view's `stack`), chip fields
+// showing only what's kept. The list on the left is a table of contents — a
+// click scrolls to its part, a part with its essentials missing says
+// « To fill in ». One button at the bottom goes on. The first-time run keeps
+// renderReview.
+const missing = {
+  goals: (d) => !d.businessSummary || !(d.audience || []).length,
+  brand: (d) => !d.brandLogo,
+};
+
+export function renderPageReview(target, sid, config, review) {
+  const left = () => {
+    const d = getDraft(sid) || {};
+    return html`
+      <h1 class="welcome-flow__title" id="welcomeFlowTitle">${review.title}</h1>
+      <p class="welcome-intro__sub">${review.sub}</p>
+      <ul class="welcome-flow__options">
+        ${review.parts.map(
+          (t) => html`
+            <li>
+              <button type="button" class="welcome-flow__option" data-review-jump="${t.id}">
+                <span class="welcome-flow__glyph is-icon is-tinted" style="${tint(t.tint || t.id)}"
+                  ><i class="${t.icon}" aria-hidden="true"></i
+                ></span>
+                <span class="welcome-flow__option-text">
+                  <span class="welcome-flow__option-title">${t.title}</span>
+                  <span class="welcome-flow__option-desc">${t.lead}</span>
+                </span>
+                ${missing[t.id]?.(d) ? raw(`<span class="ap-status orange">To fill in</span>`) : ""}
+              </button>
+            </li>
+          `,
+        )}
+      </ul>
+      <div class="welcome-flow__actions">
+        <button type="button" class="ap-button ghost grey" data-flow-back>
+          <i class="ap-icon-arrow-left"></i><span>Back</span>
+        </button>
+      </div>
+    `;
+  };
+
+  const shell = mountShell(target, { step: review.step, sid, left, sheet: true });
+  shell.sheet.classList.add("is-scroll", "is-calm", "is-page");
+  const body = shell.sheet.querySelector("[data-flow-sheet-body]");
+  const barEl = document.createElement("div");
+  barEl.className = "welcome-review__bar";
+  barEl.innerHTML = html`
+    <button type="button" class="ap-button primary blue" data-review-done>
+      <i class="ap-icon-check"></i><span>${review.lastLabel}</span>
+    </button>
+  `;
+  shell.sheet.append(barEl);
+  const unmount = mount(body, {
+    ...config,
+    showTop: false,
+    headerActions: () => null,
+    audienceList: true,
+    chipCloud: true,
+    rosterPicker: true,
+    stack: review.parts.map((t) => t.id),
+  });
+
+  // Each block a card of the column (the review's card look), and the list's
+  // « To fill in » kept true — after every repaint of the view.
+  const dress = () => {
+    body
+      .querySelectorAll(".pb2-stack__part .pb2-grid > .pb2-block, .pb2-stack__part > .recap__panel")
+      .forEach((el) => el.classList.add("welcome-review__card"));
+    shell.paint();
+  };
+  const observer = new MutationObserver(dress);
+  observer.observe(body, { childList: true });
+  dress();
+
+  const onClick = (e) => {
+    const jump = e.target.closest("[data-review-jump]")?.dataset.reviewJump;
+    if (jump) {
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      body.querySelector(`#pb2-part-${jump}`)?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+      return;
+    }
+    if (e.target.closest("[data-review-done]")) return review.next.go();
+    if (e.target.closest("[data-flow-back]")) return navigate(review.back);
+  };
+  target.addEventListener("click", onClick);
+
+  return () => {
+    observer.disconnect();
+    unmount?.();
+    shell.cleanup();
+    target.removeEventListener("click", onClick);
   };
 }
