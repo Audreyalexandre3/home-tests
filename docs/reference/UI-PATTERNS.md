@@ -37,6 +37,7 @@ Seul endroit légitime pour toucher `.ap-*`. Charte du fichier : _« the only le
 Retirés le 2026-09-30 : `.ap-button.danger` (une confirmation destructive est l'orange primaire portant le verbe, pattern Decided du skill), `.ap-divider` (le port n'existait plus), les patches `X[hidden] { display: none }` (remplacés par une seule règle `[hidden]` dans `base.css`), `.ap-infobox.feature-lock` (le DS 22 le livre).
 
 | `.ap-icon-sparkles-mermaid` (hors bouton) | Le DS livre le glyphe en masque peint en `currentColor` : « mermaid » sort gris. Hors d'un `.ap-button`, peint avec `--ref-color-mermaid-gradient-background` ; dans un bouton, l'encre du bouton gagne. 1er usage : le titre du bloc Generate an image. |
+| `.ap-avatar.app-avatar--brand` | `.ap-avatar` peint ses initiales sur `--comp-avatar-background-color` (gris) sans couleur par instance. Le logo d'une entreprise dans le picker des mentions et son écho = l'initiale (blanche, Averta, déjà celle du DS) sur la couleur de la marque, donnée en JS (`style="--app-avatar-brand: #…"`), comme les accents tiers. |
 
 Règle : **jamais** redéclarer une `.ap-*` hors ce fichier (ça flippe la cascade silencieusement).
 
@@ -193,7 +194,7 @@ DS `.ap-status` + `blue|green|grey|mermaid` (mermaid patché). Les états de tra
 
 Le « pick one of N » réutilisable. État dans [`inline-question.js`](../../src/inline-question.js), rendu par `renderPicker()` dans [`_analyse-common.js`](../../src/screens/_analyse-common.js) sous le chrome `session__assistant--wizard`. Modes : rows numérotées, `variant:"cards"`, `multi`, `single`, `stepper`, free-text, file. **Le CTA submit est bleu** (pas l'orange AI) — mémoire _quickpicker-primary-is-blue_ + _quickpicker-secondary-button-tiers_. Contrôles = vrai radio DS, fade-to-bg gris — mémoire _ds-controls-and-fade-bg_.
 
-**Une ligne qui mène ailleurs** (`items[].link = { href, label }`, 2026-11-03, mentions) : la ligne devient `.analyse__option-row`, qui porte le filet et le filtre de recherche, avec son `<button>` puis un `<a class="ap-link small">` + `ap-icon-external-link` à côté — jamais un lien dans le bouton. Avec : `items[].avatar.square` (`.ap-avatar.square`, le logo d'une entreprise), `emptyText` (ce que dit une recherche vide), `submitCountLabel(n)` en multi (le bouton compte les coches, `data-count-label`), `searchQuery` (la recherche de départ).
+**Une ligne qui mène ailleurs** (`items[].link = { href, label }`, 2026-11-03, mentions) : la ligne devient `.analyse__option-row`, qui porte le filet et le filtre de recherche, dont le `<button>` couvre toute la ligne (une seule surface pour le survol et la sélection) et garde à droite la place d'un `<a class="ap-icon-button">` + `ap-icon-external-link` posé par-dessus, nommé par son tooltip (`data-tooltip`) et son `aria-label` — jamais un lien dans le bouton ; la coche de la ligne vient juste avant. Avec : `items[].avatar.square` (`.ap-avatar.square`, le logo d'une entreprise), `items[].avatar.tint` (`.ap-avatar.app-avatar--brand`, ds-patches : l'initiale sur la couleur de la marque), `emptyText` (ce que dit une recherche vide), `submitCountLabel(n)` en multi (le bouton compte les coches, `data-count-label`), `searchQuery` (la recherche de départ).
 
 ### Références inline dans les messages d'Archie
 

@@ -51,8 +51,10 @@
 //   emptyText         string  — what a searchable picker says when nothing matches
 //   submitCountLabel  fn(n)   — multi: the submit's label for n rows ticked, kept live
 //                               (in stepper mode: for the summed total, as below)
-//   items[].link      object  — { href, label }: a link beside the row (e.g. check a profile)
+//   items[].link      object  — { href, label, ariaLabel? }: an icon link beside the row
+//                               (e.g. check a profile), `label` as its tooltip
 //   items[].avatar.square bool — a square avatar (a company's logo)
+//   items[].avatar.tint string — the avatar's colour behind its initials (a brand's)
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   single            bool    — single-select-with-confirm: rows highlight (one
 //                               at a time) instead of advancing; the CALLER owns
@@ -85,8 +87,8 @@
 //   skipDisabled      bool    — Skip shown disabled (its label says when it unlocks); Esc → Back
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=2634";
-import { createSessionNotifier } from "./store-utils.js?v=2634";
+import { chatTurn } from "./screens/_analyse-common.js?v=2636";
+import { createSessionNotifier } from "./store-utils.js?v=2636";
 
 const states = new Map(); // sessionId → opts
 const sessionNotifier = createSessionNotifier("inline-question");

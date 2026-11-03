@@ -269,45 +269,40 @@
   display: none;
 }
 
-/* A row with a way out (`link`: check a profile on its network): the row's
-   button and the link side by side, the row carrying the divider. */
+/* A row with a way out (`link`: check a profile on its network). The row's
+   button still spans the whole row — one surface for hover and selection, no
+   seam — and the link sits on top of it at the far right, a column of its
+   own, in room the button keeps free (36px, the DS icon button); the row's
+   check comes just before it. */
 .analyse__option-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding-right: var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--app-border);
+  position: relative;
 }
 
-.analyse__option-row:last-child {
-  border-bottom: 0;
+.analyse__option-row + .analyse__option-row {
+  border-top: 1px solid var(--app-border);
 }
 
 .analyse__option-row.is-hidden {
   display: none;
 }
 
-/* The row's states span the link too, so a ticked row reads as one row. */
-.analyse__option-row:hover {
-  background: var(--app-surface-subtle);
-}
-
-.analyse__option-row:has(> .analyse__option.is-selected) {
-  background: var(--ref-color-electric-blue-05);
-}
-
 .analyse__option-row > .analyse__option {
-  flex: 1 1 auto;
-  min-width: 0;
   border-bottom: 0;
+  padding-right: calc(var(--ref-spacing-xs) + 36px + var(--ref-spacing-xs));
 }
 
 .analyse__option-link {
+  position: absolute;
+  top: 50%;
+  right: var(--ref-spacing-xs);
+  transform: translateY(-50%);
   display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  flex: 0 0 auto;
-  white-space: nowrap;
+  color: var(--ref-color-grey-80);
+}
+
+.analyse__option-link:hover,
+.analyse__option-link:focus-visible {
+  color: var(--ref-color-electric-blue-100);
 }
 
 .analyse__options-empty {

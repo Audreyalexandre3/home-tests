@@ -12,13 +12,13 @@
 // draft changes at once. Your pick echoes as a chip; I answer in one sentence,
 // no « what changed » card.
 
-import { postAssistantMessage, postUserTurn, postActivity, postUserProfilesTurn } from "./assistant.js?v=2634";
-import * as inlineQuestion from "./inline-question.js?v=2634";
-import { getPosts, updatePostContent } from "./posts-store.js?v=2634";
-import { isFlagOn } from "./feature-flags.js?v=2634";
-import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2634";
-import { focusInPanel } from "./components/right-panel.js?v=2634";
-import { escapeHtml } from "./utils.js?v=2634";
+import { postAssistantMessage, postUserTurn, postActivity, postUserProfilesTurn } from "./assistant.js?v=2636";
+import * as inlineQuestion from "./inline-question.js?v=2636";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2636";
+import { isFlagOn } from "./feature-flags.js?v=2636";
+import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2636";
+import { focusInPanel } from "./components/right-panel.js?v=2636";
+import { escapeHtml } from "./utils.js?v=2636";
 import {
   HANDLE_RE,
   joinList,
@@ -33,9 +33,9 @@ import {
   removeMentions,
   mentionsNamedIn,
   nameForHandle,
-} from "./mentions.js?v=2634";
+} from "./mentions.js?v=2636";
 
-export { MENTION_ASK, UNMENTION_ASK, mentionNamesIn } from "./mentions.js?v=2634";
+export { MENTION_ASK, UNMENTION_ASK, mentionNamesIn } from "./mentions.js?v=2636";
 
 const initials = (name) =>
   name
@@ -105,6 +105,7 @@ function askAccounts(sessionId, network, said, step, done, again = false) {
           handle: typed ? label : mentionCaption(a),
           photo: avatar.imageUrl,
           square: avatar.square,
+          tint: avatar.tint,
           initials: initials(a.name),
         };
       }),
@@ -191,10 +192,11 @@ function askAccounts(sessionId, network, said, step, done, again = false) {
         avatar: {
           imageUrl: avatar.imageUrl,
           square: avatar.square,
+          tint: avatar.tint,
           initials: initials(a.name),
           networkIcon: networkIcon(network),
         },
-        link: { href: mentionUrl(a), label: `View on ${label}` },
+        link: { href: mentionUrl(a), label: `View on ${label}`, ariaLabel: `View ${a.name} on ${label}` },
       };
     }),
     ...skip,

@@ -203,6 +203,37 @@
   pointer-events: none;
 }
 
+/* A row with a link (analyse.css .analyse__option-row): the same inset
+   separator as its siblings, drawn above it, and no full-width rule. */
+.session__assistant-wizard-bar .analyse__option-row + .analyse__option-row {
+  border-top: 0;
+}
+
+.session__assistant-wizard-bar .analyse__option-row > .analyse__option::before {
+  display: none;
+}
+
+.session__assistant-wizard-bar .analyse__option-row + .analyse__option-row > .analyse__option::after {
+  content: "";
+  position: absolute;
+  left: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+  top: 0;
+  height: 1px;
+  background: var(--ref-color-grey-10);
+  pointer-events: none;
+}
+
+.session__assistant-wizard-bar .analyse__option-row:hover > .analyse__option::after,
+.session__assistant-wizard-bar .analyse__option-row:has(> .analyse__option.is-selected) > .analyse__option::after,
+.session__assistant-wizard-bar .analyse__option-row:hover + .analyse__option-row > .analyse__option::after,
+.session__assistant-wizard-bar
+  .analyse__option-row:has(> .analyse__option.is-selected)
+  + .analyse__option-row
+  > .analyse__option::after {
+  display: none;
+}
+
 /* Hide the separator on the focused row (and the row immediately above
    it) so the pill reads as a clean filled card, no line cutting it. */
 .session__assistant-wizard-bar .analyse__option:focus-visible::before,
@@ -288,6 +319,12 @@
   color: var(--ref-color-grey-100);
   font-family: inherit;
   line-height: 1;
+}
+
+/* Multi-select: Enter submits the whole pick and the row carries its check on
+   the right, so no ↵ on a row (it landed on the check). */
+.session__assistant-wizard-bar [data-multi] .analyse__option:focus-visible::after {
+  content: none;
 }
 
 /* Skip footer — tight compact row inside the picker frame. Just enough

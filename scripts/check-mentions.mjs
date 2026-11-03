@@ -84,7 +84,7 @@ assert.deepEqual(M.removeMention(withIt, "notion").text, ["No name here."], "my 
 // and where to check the account.
 assert.equal(M.mentionAvatar(jordanLi).square, false);
 assert.match(M.mentionAvatar(jordanLi).imageUrl, /^https:\/\/images\.unsplash\.com\//);
-assert.ok(M.mentionAvatar(notionLi).square && M.mentionAvatar(notionLi).imageUrl.startsWith("data:image/svg+xml,"));
+assert.ok(M.mentionAvatar(notionLi).square && M.mentionAvatar(notionLi).tint === "#191919");
 assert.equal(M.mentionAvatar(ig).imageUrl, null);
 assert.equal(M.mentionUrl(notionLi), "https://www.linkedin.com/company/notion");
 assert.equal(M.mentionUrl(jordanLi), "https://www.linkedin.com/in/jordan-lee");
