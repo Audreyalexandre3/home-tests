@@ -17,15 +17,15 @@
 // The ready screen paints once and moves by attributes (`is-lit`, `is-done`)
 // so its stages light the parts one by one without replaying the scene.
 
-import { escapeHtml } from "../utils.js?v=2635";
-import { isFlagOn } from "../feature-flags.js?v=2635";
-import { networkIcon, networkLabel } from "../social-profiles.js?v=2635";
-import { playbookNetworks } from "../voice-parts.js?v=2635";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2635";
-import { tint, domainOf } from "./welcome-alt-shell.js?v=2635";
-import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2635";
-import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2635";
-import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2635";
+import { escapeHtml } from "../utils.js?v=2639";
+import { isFlagOn } from "../feature-flags.js?v=2639";
+import { networkIcon, networkLabel } from "../social-profiles.js?v=2639";
+import { playbookNetworks } from "../voice-parts.js?v=2639";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2639";
+import { tint, domainOf } from "./welcome-alt-shell.js?v=2639";
+import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2639";
+import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2639";
+import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2639";
 
 const W = 560;
 const H = 540;
@@ -148,15 +148,26 @@ const post = (b, net, text, { tag = "", cls = "" } = {}) => `
     ${tag}
   </article>`;
 
-// `h`: the scene's own height on the canvas, so a short one isn't framed by empty space.
-const stage = (caption, body, svg, attrs = "", h = H) => `
+// A scene's rows: the y's where a new row starts. Spare height on a tall stage
+// goes BETWEEN rows (`gap` each, set by measure()), never inside an object, so
+// every y of a scene goes through Y(): an object keeps its size, a thread
+// between two rows stretches with them.
+const rowsOf = (breaks, gap) => {
+  const Y = (y) => y + gap * breaks.filter((b) => b <= y).length;
+  Y.rows = breaks.length;
+  return Y;
+};
+
+// `h`: the scene's own height before any air, so a short one isn't framed by empty space.
+const stage = (caption, body, svg, { attrs = "", h = H, Y }) => `
+  <div class="wx-bg" aria-hidden="true"><i></i><i></i></div>
   <div class="wx-caption">
     <h3 class="wx-caption__title">${e(caption.title)}</h3>
     <p class="wx-caption__text">${e(caption.text)}</p>
   </div>
-  <div class="wx-fit" data-h="${h}" style="--h:${h}px">
+  <div class="wx-fit" data-h="${h}" data-rows="${Y.rows}" style="--h:${Y(h)}px">
     <div class="wx-canvas" aria-hidden="true" ${attrs}>
-      <svg class="wx-threads" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}">${svg}</svg>
+      <svg class="wx-threads" viewBox="0 0 ${W} ${Y(h)}" width="${W}" height="${Y(h)}">${svg}</svg>
       ${body}
     </div>
   </div>`;
@@ -191,8 +202,9 @@ const fanThreads = (y1, y2, d) =>
 // ── The scenes ─────────────────────────────────────────────────────────────
 
 // Website: I read your site, and every piece of it goes to one of four parts.
-function brandScene(d) {
+function brandScene(d, gap = 0) {
   const b = brandOf(d);
+  const Y = rowsOf([216, 262, 424], gap);
   const site = `
     <div class="wx-browser">
       <div class="wx-browser__bar"><span class="wx-browser__dots"><i></i><i></i><i></i></span>
@@ -215,28 +227,28 @@ function brandScene(d) {
     {
       id: "goals",
       x: 16,
-      y: 300,
+      y: Y(300),
       meaning: "Who you write for, and why",
       body: bind(`<span class="wx-slot__text">${e(b.audience)}</span>`),
     },
     {
       id: "voice",
       x: 288,
-      y: 300,
+      y: Y(300),
       meaning: "How you sound",
       body: bind(`<span class="wx-chips">${chips(b.traits)}</span>`),
     },
     {
       id: "brand",
       x: 16,
-      y: 424,
+      y: Y(424),
       meaning: "Your colors, logo and type",
       body: bind(`${swatches(b.colors)}<span class="wx-font"><b>Aa</b>${e(b.font)}</span>`),
     },
     {
       id: "competitors",
       x: 288,
-      y: 424,
+      y: Y(424),
       meaning: "Who you're up against",
       body: bind(
         b.competitors.length
@@ -251,13 +263,13 @@ function brandScene(d) {
       190,
       128,
       144,
-      372,
+      Y(372),
       2.0,
       `<span class="wx-chip is-fly"><i class="ap-icon-multiple-users"></i>Your audience</span>`,
     ],
-    [190, 96, 416, 372, 2.25, `<span class="wx-chip is-fly"><i class="ap-icon-quote"></i>Your words</span>`],
-    [400, 120, 144, 496, 2.5, swatches(b.colors.slice(0, 3), "is-fly")],
-    [300, 16, 416, 496, 2.75, `<span class="wx-chip is-fly"><i class="ap-icon-search"></i>Brands like yours</span>`],
+    [190, 96, 416, Y(372), 2.25, `<span class="wx-chip is-fly"><i class="ap-icon-quote"></i>Your words</span>`],
+    [400, 120, 144, Y(496), 2.5, swatches(b.colors.slice(0, 3), "is-fly")],
+    [300, 16, 416, Y(496), 2.75, `<span class="wx-chip is-fly"><i class="ap-icon-search"></i>Brands like yours</span>`],
   ];
   return stage(
     {
@@ -265,10 +277,10 @@ function brandScene(d) {
       text: "I read your site and sort what I find into four parts. Every draft I write starts there.",
     },
     at(80, 0, 400, site, { cls: "wx-hero" }) +
-      seam(216, "I sort it into your Playbook", 1.2) +
+      seam(Y(216), "I sort it into your Playbook", 1.2) +
       at(
         0,
-        262,
+        Y(262),
         W,
         `<div class="wx-pbhead">${brandMark(b, 22)}<strong>Your Playbook</strong><span>${e(b.domain)}</span></div>`,
         { cls: "wx-pbhead-row", d: 1.4 },
@@ -277,13 +289,15 @@ function brandScene(d) {
         .map((c, i) => at(c.x, c.y, 256, partCard(c.id, c.meaning, c.body, 2.9 + i * 0.25), { d: 1.5 + i * 0.1 }))
         .join("") +
       flights.map((f) => fly(...f)).join(""),
-    thread(280, 206, 280, 262, 1),
+    thread(280, 206, 280, Y(262), 1),
+    { Y },
   );
 }
 
 // Language: one Playbook, every post in its language.
-function languageScene(d) {
+function languageScene(d, gap = 0) {
   const b = brandOf(d);
+  const Y = rowsOf([160, 250], gap);
   const lang = b.lang;
   const lines = [
     "Spring is here, and so is our new range.",
@@ -303,20 +317,20 @@ function languageScene(d) {
         <span class="wx-lang"><i class="ap-icon-translate" aria-hidden="true"></i>${e(lang)}</span></div>`,
       { cls: "wx-hero" },
     ) +
-      seam(160, `I write in ${lang}`, 0.6) +
+      seam(Y(160), `I write in ${lang}`, 0.6) +
       fanPosts(b, (i) => `<span class="wx-type" style="--d:${(1.6 + i * 0.35).toFixed(2)}s">${e(lines[i])}</span>`, {
-        y: 250,
+        y: Y(250),
         d: 1.1,
       }),
-    thread(280, 106, 280, 206, 0.4) + fanThreads(206, 250, 0.9),
-    "",
-    410,
+    thread(280, 106, 280, Y(206), 0.4) + fanThreads(Y(206), Y(250), 0.9),
+    { h: 410, Y },
   );
 }
 
 // Documents: your brand book sharpens the voice and the look.
-function documentsScene(d) {
+function documentsScene(d, gap = 0) {
   const b = brandOf(d);
+  const Y = rowsOf([262, 340], gap);
   const book = `
     <div class="wx-book">
       <div class="wx-book__page">
@@ -339,10 +353,10 @@ function documentsScene(d) {
       text: "The words you use go to your Voice profile. Your colors and type go to Branding.",
     },
     at(40, 0, 480, book, { cls: "wx-hero" }) +
-      seam(262, "I keep your words and your look", 1.1) +
+      seam(Y(262), "I keep your words and your look", 1.1) +
       at(
         24,
-        340,
+        Y(340),
         240,
         partCard("voice", "How you sound", `<span class="wx-slot__text">Warm, never pushy</span>`, 2.6),
         {
@@ -351,7 +365,7 @@ function documentsScene(d) {
       ) +
       at(
         296,
-        340,
+        Y(340),
         240,
         partCard(
           "brand",
@@ -365,20 +379,20 @@ function documentsScene(d) {
         150,
         104,
         144,
-        400,
+        Y(400),
         1.9,
         `<span class="wx-chip is-fly"><i class="ap-icon-quote"></i>Warm, never pushy</span>`,
       ) +
-      fly(400, 76, 416, 400, 2.2, swatches(b.colors.slice(0, 3), "is-fly")),
-    thread(280, 216, 280, 302, 0.9) + thread(280, 302, 144, 340, 1.2) + thread(280, 302, 416, 340, 1.2),
-    "",
-    460,
+      fly(400, 76, 416, Y(400), 2.2, swatches(b.colors.slice(0, 3), "is-fly")),
+    thread(280, 216, 280, Y(302), 0.9) + thread(280, Y(302), 144, Y(340), 1.2) + thread(280, Y(302), 416, Y(340), 1.2),
+    { h: 460, Y },
   );
 }
 
 // Voice source: learned once from what you give me, then every post sounds like you.
-function voiceScene(d) {
+function voiceScene(d, gap = 0) {
   const b = brandOf(d);
+  const Y = rowsOf([108, 150, 372], gap);
   const perNetwork = isFlagOn("voicePerNetwork");
   const sources = [
     {
@@ -426,10 +440,10 @@ function voiceScene(d) {
         ),
       )
       .join("") +
-      seam(108, "I learn how you sound", 0.7) +
+      seam(Y(108), "I learn how you sound", 0.7) +
       at(
         100,
-        150,
+        Y(150),
         360,
         `<div class="wx-print" style="${tint("voice")}">
           <div class="wx-print__head">${glyph("voice")}<span><strong>Voice profile</strong><span>How you sound</span></span></div>
@@ -446,7 +460,7 @@ function voiceScene(d) {
         { cls: "wx-hero", d: 1.1 },
       ) +
       fanPosts(b, (i) => e(lines[i]), {
-        y: 372,
+        y: Y(372),
         d: 2.2,
         tagOf: (i) =>
           !perNetwork
@@ -455,14 +469,16 @@ function voiceScene(d) {
               ? `<span class="wx-tag is-own">${e(networkLabel(b.networks[2] || b.networks[0]))} voice</span>`
               : `<span class="wx-tag"><i class="ap-icon-quote"></i>Default voice</span>`,
       }),
-    [92, 280, 468].map((x) => thread(x, 92, 280, 150, 0.4)).join("") + fanThreads(352, 372, 2),
+    [92, 280, 468].map((x) => thread(x, 92, 280, Y(150), 0.4)).join("") + fanThreads(Y(352), Y(372), 2),
+    { Y },
   );
 }
 
 // Building, then ready: four parts, one post. Each stage lights a part, its
 // thread draws, and its share of the post is marked on the post itself.
-function readyScene(d) {
+function readyScene(d, gap = 0) {
   const b = brandOf(d);
+  const Y = rowsOf([124, 482], gap);
   const net = b.networks[0];
   const pin = (id) => `<span class="wx-pin" style="${tint(id)}"><i class="${part(id).icon}"></i></span>`;
   const mark = (id, text) => `<span class="wx-hl" data-part="${id}" style="${tint(id)}">${pin(id)}${text}</span>`;
@@ -505,19 +521,19 @@ function readyScene(d) {
   </div>`;
   // Where each part's thread lands on the post.
   const ends = [
-    [170, 124],
-    [250, 124],
-    [330, 124],
-    [410, 124],
+    [170, Y(124)],
+    [250, Y(124)],
+    [330, Y(124)],
+    [410, Y(124)],
   ];
   return stage(
     {
       title: "Four parts, one draft",
       text: "Each part shapes the same draft, so it sounds and looks like you.",
     },
-    chipsRow + at(100, 124, 360, draft, { cls: "wx-hero" }) + at(0, 482, W, doors, { cls: "wx-doors-row" }),
+    chipsRow + at(100, Y(124), 360, draft, { cls: "wx-hero" }) + at(0, Y(482), W, doors, { cls: "wx-doors-row" }),
     PART_IDS.map((id, i) => thread(67 + i * 142, 52, ...ends[i], 0, `data-part="${id}"`)).join(""),
-    `data-scene-ready`,
+    { attrs: `data-scene-ready`, Y },
   );
 }
 
@@ -529,38 +545,84 @@ const SCENES = {
   recap: readyScene,
 };
 
-// Zoom the canvas to the stage: as wide as it allows, never taller than it.
-function fit(el) {
+// How the scene sits on the stage. Air first: every row gets AIR px more
+// before the scale is chosen (`s`, as wide as the stage allows, never taller);
+// what height is left over still goes between the rows (`gap`, at most 40px a
+// row, in 4px steps so a resize doesn't redraw for every pixel).
+const AIR = 24;
+function measure(el) {
   const stageEl = el.parentElement;
   const fitEl = el.querySelector(".wx-fit");
-  if (!stageEl || !fitEl) return;
+  if (!stageEl || !fitEl) return null;
   const caption = el.querySelector(".wx-caption")?.offsetHeight || 0;
   const h = Number(fitEl.dataset.h) || H;
-  const s = Math.min(1.2, (stageEl.clientWidth - 40) / W, (stageEl.clientHeight - caption - 80) / h);
-  fitEl.style.setProperty("--s", String(Math.max(0.5, s)));
+  const rows = Number(fitEl.dataset.rows) || 0;
+  const room = stageEl.clientHeight - caption - 80;
+  const sw = Math.min(1.2, (stageEl.clientWidth - 40) / W);
+  const s = Math.max(0.5, Math.min(sw, room / (h + rows * AIR)));
+  const spare = rows ? room / s - h : 0;
+  const gap = Math.max(0, Math.min(40, Math.floor(spare / rows / 4) * 4));
+  return { s, gap };
+}
+
+const draw = (el) => (SCENES[el._wx.step] || brandScene)(el._wx.d, el._wx.gap);
+
+// Draw at the air the stage gives: once without, to measure, then again with
+// it, in the same task (nothing is painted in between, nothing replays).
+function layout(el) {
+  el.innerHTML = draw(el);
+  const m = measure(el);
+  if (m && m.gap !== el._wx.gap) {
+    el._wx.gap = m.gap;
+    el.innerHTML = draw(el);
+  }
+  el._wxScene = draw(el);
+  const fitEl = el.querySelector(".wx-fit");
+  if (m && fitEl) fitEl.style.setProperty("--s", String(measure(el)?.s ?? m.s));
 }
 
 // Paint `el` for `step`: the scene once, then (ready screen) its lit parts.
 // Same step, newer draft: swap only the bound pieces, the scene keeps playing.
+// A resize that changes the air redraws (and replays) the scene; one that
+// doesn't only rescales it.
 export function paintExplainer(el, step, d, build) {
-  const scene = (SCENES[step] || brandScene)(d);
-  if (el.dataset.step !== step) {
+  const fresh = el.dataset.step !== step;
+  el._wx = { ...(el._wx || {}), step, d, build, gap: fresh ? 0 : el._wx?.gap || 0 };
+  if (fresh) {
     el.dataset.step = step;
-    el.innerHTML = scene;
+    layout(el);
     if (!el._wxFit) {
-      el._wxFit = new ResizeObserver(() => fit(el));
+      el._wxFit = new ResizeObserver(() => {
+        const m = measure(el);
+        if (!m) return;
+        if (m.gap !== el._wx.gap) {
+          el._wx.gap = m.gap;
+          el.innerHTML = draw(el);
+          el._wxScene = draw(el);
+          light(el);
+        }
+        el.querySelector(".wx-fit")?.style.setProperty("--s", String(measure(el)?.s ?? m.s));
+      });
       el._wxFit.observe(el.parentElement);
     }
-    fit(el);
-  } else if (el._wxScene !== scene) {
-    const next = document.createElement("template");
-    next.innerHTML = scene;
-    const fresh = next.content.querySelectorAll("[data-wx-bind]");
-    el.querySelectorAll("[data-wx-bind]").forEach((node, i) => {
-      if (fresh[i] && node.innerHTML !== fresh[i].innerHTML) node.innerHTML = fresh[i].innerHTML;
-    });
+  } else {
+    const scene = draw(el);
+    if (el._wxScene !== scene) {
+      const next = document.createElement("template");
+      next.innerHTML = scene;
+      const bound = next.content.querySelectorAll("[data-wx-bind]");
+      el.querySelectorAll("[data-wx-bind]").forEach((node, i) => {
+        if (bound[i] && node.innerHTML !== bound[i].innerHTML) node.innerHTML = bound[i].innerHTML;
+      });
+      el._wxScene = scene;
+    }
   }
-  el._wxScene = scene;
+  light(el);
+}
+
+// The ready screen: its stages light the parts, by attribute.
+function light(el) {
+  const build = el._wx?.build;
   const ready = el.querySelector("[data-scene-ready]");
   if (!ready) return;
   const stages = build?.stages?.length || 1;
