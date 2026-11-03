@@ -47,6 +47,7 @@
 //                               per-row 1–9 shortcut badges (meaningless once
 //                               the list is filtered).
 //   searchPlaceholder string  — placeholder for the search box (default "Search…")
+//   searchQuery       string  — the search box's starting query (rows already filtered by it)
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   single            bool    — single-select-with-confirm: rows highlight (one
 //                               at a time) instead of advancing; the CALLER owns
@@ -79,8 +80,8 @@
 //   skipDisabled      bool    — Skip shown disabled (its label says when it unlocks); Esc → Back
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=2626";
-import { createSessionNotifier } from "./store-utils.js?v=2626";
+import { chatTurn } from "./screens/_analyse-common.js?v=2627";
+import { createSessionNotifier } from "./store-utils.js?v=2627";
 
 const states = new Map(); // sessionId → opts
 const sessionNotifier = createSessionNotifier("inline-question");
@@ -90,6 +91,7 @@ function notify(sessionId) {
 }
 
 export function ask(sessionId, opts) {
+  if (opts.searchQuery) opts._search = opts.searchQuery;
   // Stepper mode — each item carries an adjustable count and the user picks
   // ONE item, then submits with its count (e.g. "Generate N drafts" from a
   // chosen angle). Seed the mutable per-item counts + the initial selection.

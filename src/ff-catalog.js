@@ -205,20 +205,21 @@ export const FLAGS = Object.freeze([
   {
     id: "draftMentions",
     group: "Chat & drafts",
-    tip: "Ask Archie to mention someone in a draft (« mention Notion in the LinkedIn post »): it finds the account on each network, asks when it isn't sure, and offers to when a draft names a brand.",
+    tip: "Ask Archie to mention someone in a draft (« mention Notion in the LinkedIn post »): it opens a search on each draft's network, you pick the account, and it offers to when a draft names a brand.",
     label: "UI-Mentions in drafts",
     // OFF: « mention X » in the chat gets the scripted reply, as before.
     default: false,
     hides:
       "Mentions in drafts, from the chat. « Mention Notion in the LinkedIn post » " +
-      "or « tag Linear in all the drafts »: I find the account on each draft's " +
-      "network (LinkedIn companies and the people who follow your Page, " +
-      "Facebook Pages, X users), insert it when one account matches, and ask " +
-      "with a search when several do or none does. Instagram and TikTok have " +
-      "no search, as in prod: I ask for the exact username. YouTube has no " +
-      "mentions. The mention shows in the draft in the link colour, with the " +
-      "« what changed » card and its Undo. « Remove the mention of Notion » " +
-      "takes it out. After writing drafts that name a brand, I offer to mention it.",
+      "or « tag Linear in all the drafts »: for each draft's network I open a " +
+      "search on the name (LinkedIn companies and the people who follow your " +
+      "Page, Facebook Pages, X users) and you pick the account, even when one " +
+      "matches. Instagram and TikTok have no search, as in prod: I ask for the " +
+      "exact username. YouTube has no mentions. Your pick echoes as a chip and I " +
+      "answer in one sentence, no « what changed » card. A name the draft " +
+      "already writes becomes the mention; otherwise I bring it in with a short " +
+      "sentence. « Remove the mention of Notion » takes it out. After writing " +
+      "drafts that name a brand, I offer to mention it.",
   },
   {
     id: "newConversationStyles",

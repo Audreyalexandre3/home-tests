@@ -9,9 +9,9 @@
 // Facebook and X are searched; Instagram and TikTok take a typed handle;
 // YouTube has no mentions.
 
-import { MENTION_DIRECTORY } from "./mocks.js?v=2626";
-import { fold } from "./utils.js?v=2626";
-import { normalizeNetwork } from "./social-profiles.js?v=2626";
+import { MENTION_DIRECTORY } from "./mocks.js?v=2627";
+import { fold } from "./utils.js?v=2627";
+import { normalizeNetwork } from "./social-profiles.js?v=2627";
 
 const SEARCH = new Set(["linkedin", "facebook", "x"]);
 const TYPED = new Set(["instagram", "tiktok"]);
@@ -33,6 +33,8 @@ export function mentionAccounts(network) {
     id: `${e.id}:${n}`,
     entity: e.name,
     network: n,
+    // A person or a company everywhere, as LinkedIn says (X and Facebook don't).
+    kind: e.accounts.linkedin?.kind,
     ...e.accounts[n],
   }));
 }
@@ -101,25 +103,35 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // The name as a word, not already behind an @.
 const nameRe = (name) => new RegExp(`(^|[^@\\w])(${escapeRe(name)})(?!\\w)`, "i");
 
+// The sentence I write to bring a mention in when the draft doesn't name it.
+// ponytail: one line per kind; the product would have the model place it.
+function mentionSentence(account, key) {
+  if (account.kind === "person") return `Thanks to ${key} for sharing this.`;
+  if (account.kind === "company" || account.network === "facebook") return `Shout-out to the team at ${key}.`;
+  return `Shout-out to ${key}.`;
+}
+
 // The draft with the mention in: where the text already names it, the name
-// becomes the mention; else it goes at the end. null when it's already there.
+// becomes the mention; else a sentence of mine brings it in at the end. null
+// when it's already there.
 export function applyMention(post, account) {
   const key = mentionText(account);
   const text = [...(post.text || [])];
   if (text.some((p) => p.includes(key))) return null;
   const re = nameRe(account.entity);
   const i = text.findIndex((p) => re.test(p));
+  const added = i < 0 ? mentionSentence(account, key) : null;
   if (i >= 0) text[i] = text[i].replace(re, (_, lead) => `${lead}${key}`);
-  else if (text.length) text[text.length - 1] = `${text[text.length - 1]} ${key}`;
-  else text.push(key);
-  // `added`: not in the text before, so taking it out removes it whole.
-  const mentions = { ...(post.mentions || {}), [key]: { ...account, added: i < 0 } };
+  else if (text.length) text[text.length - 1] = `${text[text.length - 1]} ${added}`;
+  else text.push(added);
+  // `added`: my sentence, so taking the mention out takes it out whole.
+  const mentions = { ...(post.mentions || {}), [key]: { ...account, added } };
   return { text, mentions };
 }
 
 // The draft without a mention: back to the plain name ("@NotionHQ" → "Notion")
-// where the text named it, gone where I added it. `query` is what was said
-// ("Notion", "@NotionHQ"); null when the draft has none.
+// where the text named it, my sentence gone where I added one. `query` is what
+// was said ("Notion", "@NotionHQ"); null when the draft has none.
 export function removeMention(post, query) {
   const q = fold(String(query || "").replace(/^@/, ""));
   const key = Object.keys(post.mentions || {}).find((k) => {
@@ -129,8 +141,10 @@ export function removeMention(post, query) {
   if (!key) return null;
   const { [key]: gone, ...mentions } = post.mentions;
   const text = post.text
-    .map((p) => (gone.added ? p.split(` ${key}`).join("").split(key).join("") : p.split(key).join(gone.entity)))
-    .filter((p, i) => p || post.text[i] !== key);
+    .map((p) =>
+      gone.added ? p.split(` ${gone.added}`).join("").split(gone.added).join("") : p.split(key).join(gone.entity),
+    )
+    .filter((p, i) => p || post.text[i] !== gone.added);
   return { text, mentions, entity: gone.entity };
 }
 

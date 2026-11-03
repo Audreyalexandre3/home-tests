@@ -25,7 +25,12 @@ assert.equal(M.applyMention({ ...post, ...r }, notionLi), null, "already there")
 assert.equal(M.applyMention(post, notionX).text[0], "We moved our docs to @NotionHQ last year.", "X takes the handle");
 
 r = M.applyMention({ network: "linkedin", text: ["No name here."] }, notionLi);
-assert.equal(r.text[0], "No name here. @Notion", "added at the end");
+assert.equal(r.text[0], "No name here. Shout-out to the team at @Notion.", "brought in by a sentence");
+const jordanX = M.searchMentions("x", "jordan")[0];
+assert.equal(
+  M.applyMention({ network: "x", text: ["Ship weekly."] }, jordanX).text[0],
+  "Ship weekly. Thanks to @jordanwrites for sharing this.",
+);
 
 const ig = M.typedAccount("instagram", "@notionhq", "Notion");
 assert.equal(M.mentionText(ig), "@notionhq");
@@ -52,5 +57,5 @@ assert.ok(!M.UNMENTION_ASK.test("delete all the drafts"));
 assert.equal(M.nameForHandle("@notionhq".slice(1)), "Notion");
 const appended = { network: "linkedin", text: ["No name here."] };
 const withIt = { ...appended, ...M.applyMention(appended, notionLi) };
-assert.deepEqual(M.removeMention(withIt, "notion").text, ["No name here."], "an added mention leaves nothing behind");
+assert.deepEqual(M.removeMention(withIt, "notion").text, ["No name here."], "my sentence leaves with the mention");
 console.log("mentions: ok");
