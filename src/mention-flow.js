@@ -16,13 +16,13 @@ import {
   postActivity,
   postRevisionTurn,
   postRevisionGroupTurn,
-} from "./assistant.js?v=2624";
-import * as inlineQuestion from "./inline-question.js?v=2624";
-import { getPosts, updatePostContent } from "./posts-store.js?v=2624";
-import { isFlagOn } from "./feature-flags.js?v=2624";
-import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2624";
-import { focusInPanel } from "./components/right-panel.js?v=2624";
-import { escapeHtml } from "./utils.js?v=2624";
+} from "./assistant.js?v=2629";
+import * as inlineQuestion from "./inline-question.js?v=2629";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2629";
+import { isFlagOn } from "./feature-flags.js?v=2629";
+import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2629";
+import { focusInPanel } from "./components/right-panel.js?v=2629";
+import { escapeHtml } from "./utils.js?v=2629";
 import {
   HANDLE_RE,
   mentionMode,
@@ -34,9 +34,9 @@ import {
   removeMention,
   mentionsNamedIn,
   nameForHandle,
-} from "./mentions.js?v=2624";
+} from "./mentions.js?v=2629";
 
-export { MENTION_ASK, UNMENTION_ASK, mentionNameIn } from "./mentions.js?v=2624";
+export { MENTION_ASK, UNMENTION_ASK, mentionNameIn } from "./mentions.js?v=2629";
 
 const initials = (name) =>
   name
