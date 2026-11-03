@@ -265,19 +265,20 @@
   color: var(--ref-color-grey-100);
 }
 
-/* My stitch on the thread. */
+/* My stitch on the thread: a white capsule, lifted, my olive sparkle in it.
+   White, not butter: it sits on grey and on the butter disc alike (butter on
+   butter disappeared, 2026-11-03). */
 .wx-seam {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: var(--app-butter);
+  background: var(--ref-color-white);
   font-size: 13px;
   font-weight: var(--sys-text-style-body-bold-weight);
   white-space: nowrap;
-  /* An olive edge, so it still reads where it sits on the butter disc. */
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-butter-accent) 35%, transparent);
+  box-shadow: var(--app-shadow-subtle), var(--app-shadow-popover-md);
 }
 
 .wx-seam i,
