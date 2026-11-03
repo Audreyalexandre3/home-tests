@@ -335,13 +335,13 @@ export const FLAGS = Object.freeze([
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",
     label: "Admin: preview in chat",
-    // OFF: a prototype tool doesn't sit in the new chat's hero for everyone
-    // (UI polish 2026-10-30, To decide CH-17). ON: the link, as before.
-    default: false,
+    // ON again (2026-11-03, asked: « remets le mode admin sous le composer »);
+    // it was OFF from the UI polish of 2026-10-30 (CH-17). OFF hides the link.
+    default: true,
     hides:
       "When ON, the composer's hint row carries « Admin: preview in chat », the " +
       "prototype's catalogue of chat elements and triggers (chat-gallery.js). " +
-      "OFF by default: it is a tool for whoever demos the prototype, not part of the product.",
+      "ON by default (it was OFF from 2026-10-30 to 2026-11-03): turn it off to see the hero without it.",
   },
   {
     id: "demoMode",
