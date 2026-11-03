@@ -216,7 +216,7 @@ Ajouté = **butter** (`--app-butter`) souligné olive (`--app-butter-accent`) : 
 
 **Sur le draft, et seulement là** (2026-11-03) : au-dessus, la status card verte du DS (`.posts__card-changes`) — « Your post has been updated. » + Undo ↔ Redo (`.ap-link` avec flèche) · View changes ↔ Hide changes (`.ap-link`, `aria-pressed`) · × (`.ap-close-button`, `ap-icon-close`). Au repos, le texte tel qu'il sera publié, ajouts marqués ; View changes passe le corps en lecture `unified` (`diffParagraphs`) et ajoute les hashtags retirés et l'ancien CTA, barrés. Le surligneur se trace à l'arrivée (`draft-diff-sweep`, deux fonds dont on anime `background-size`), rien sous `prefers-reduced-motion`.
 
-**Dans le chat, un récap** (`.revision-card`, `renderRevisionCard`, un draft = un groupe d'un) : une ligne `.revision-card__row` par draft — le compte (`renderProfileTag`) à gauche, à droite les comptes nommés en mots portés par leur marque (« <ins>1 word</ins> added », « <del>16 words</del> removed », `wordCounts`), ou « English → French », ou « Back to the version before » ; filet grey-20 entre les lignes ; pied : Open draft (secondary blue) à droite. Pas de diff ni d'Undo : un seul Undo, celui du draft.
+**Dans le chat, rien que ma phrase** : pas de carte, ni diff ni récap (les deux ont été essayés et retirés le 2026-11-03). Un seul Undo, celui du draft.
 
 ### Toasts
 

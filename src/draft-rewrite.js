@@ -18,10 +18,10 @@
 // the stream is handled by re-looking up the target selector each tick
 // — when it disappears the stream stops and the content commits at once.
 
-import { getPosts, updatePostContent } from "./posts-store.js?v=2647";
-import { isFlagOn } from "./feature-flags.js?v=2647";
-import { escapeText } from "./utils.js?v=2647";
-import { DRAFT_TRANSLATIONS, DRAFT_TRANSLATION_FALLBACK } from "./mocks.js?v=2647";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2648";
+import { isFlagOn } from "./feature-flags.js?v=2648";
+import { escapeText } from "./utils.js?v=2648";
+import { DRAFT_TRANSLATIONS, DRAFT_TRANSLATION_FALLBACK } from "./mocks.js?v=2648";
 
 const inFlight = new Map(); // postId → AbortController
 
@@ -430,16 +430,4 @@ export function revisionGroupSummary(intent, items) {
     if (Math.abs(delta) >= 10) lead += `, ${Math.abs(delta)} ${delta < 0 ? "fewer" : "more"} characters in all`;
   }
   return `${lead}.`;
-}
-
-// Whether a "what changed" receipt still holds for its draft: the draft reads
-// as the receipt's after (or, undone, as its before). Changed since, it can't
-// be undone from the receipt.
-export function revisionState(post, before, after) {
-  const same = (a, b) =>
-    a &&
-    b &&
-    JSON.stringify([a.text, a.hashtags || [], a.cta || ""]) === JSON.stringify([b.text, b.hashtags || [], b.cta || ""]);
-  const undone = !!(post && post.revision?.undone && same(post, before));
-  return { undone, live: !!post && (undone || same(post, after)) };
 }

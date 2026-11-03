@@ -19,21 +19,21 @@
 // id used to apply the focus pulse animation when navigating in via
 // `?focusPost=<id>`.
 
-import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2647";
-import { isPortraitFormat } from "../clip-formats.js?v=2647";
-import { presetById } from "../clip-captions.js?v=2647";
-import { renderFeedbackControl } from "./feedback-control.js?v=2647";
+import { html, raw, formatClock, escapeText, escapeAttr } from "../utils.js?v=2648";
+import { isPortraitFormat } from "../clip-formats.js?v=2648";
+import { presetById } from "../clip-captions.js?v=2648";
+import { renderFeedbackControl } from "./feedback-control.js?v=2648";
 import {
   networkLabel,
   normalizeNetwork,
   profileForNetwork,
   renderProfileTag,
   BRAND_INITIALS,
-} from "../social-profiles.js?v=2647";
-import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2647";
-import { REVEAL_MS } from "../archie-pixels.js?v=2647";
-import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2647";
-import { languageOf } from "../draft-rewrite.js?v=2647";
+} from "../social-profiles.js?v=2648";
+import { validatePost, usedCharacters, youtubeTitle } from "../post-validation.js?v=2648";
+import { REVEAL_MS } from "../archie-pixels.js?v=2648";
+import { diffWords, diffParagraphs, hasChanges } from "../word-diff.js?v=2648";
+import { languageOf } from "../draft-rewrite.js?v=2648";
 
 // The media slot of a draft that has no image yet. ONE dashed slot, two tiers
 // (2026-10-07):
@@ -170,8 +170,8 @@ function renderVoiceStatus(net, opts, post) {
 // updated. » + Undo (then Redo) + View changes + ×, and the new words marked in
 // the text, which still reads as it will publish. View changes adds the removed
 // words, struck, in place. × puts the card and the marks away (`hidden`), as do
-// a hand edit and the next rewrite. This card is the only Undo: the chat's recap
-// only opens the draft.
+// a hand edit and the next rewrite. The only place a rewrite is read and undone:
+// the chat just says it in a sentence.
 function changesShown(post, opts) {
   const r = post.revision;
   return opts.changes && r && !r.hidden && post.status !== "scheduled" && !post.isRegenerating;

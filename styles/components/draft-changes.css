@@ -1,5 +1,5 @@
 /* What a rewrite changed in a draft (flag draftChanges, src/word-diff.js).
-   One vocabulary on both surfaces: what I added sits on butter (Archie's
+   Read on the draft, in the panel, and only there: what I added sits on butter (Archie's
    colour) with an olive underline; what I removed is struck through in the
    DS error red, its ink kept at grey-80 so it stays readable. */
 
@@ -18,8 +18,7 @@
   -webkit-box-decoration-break: clone;
 }
 
-/* The stroke, drawn left to right. Both surfaces (the chat's card, the draft in
-   the panel) play it once, as the change lands. */
+/* The stroke, drawn left to right, once, as the change lands. */
 @keyframes draft-diff-sweep {
   from {
     background-size:
@@ -50,64 +49,6 @@
   white-space: nowrap;
 }
 
-/* ── The chat's recap: my sentence, then a row per draft — its account and
-   how much moved — and Open draft. The change itself is read on the draft. ── */
-
-/* The bubble is capped by its turn, or the card's 520px runs under the open panel. */
-.chat-bubble:has(.revision-card) {
-  max-width: 100%;
-}
-
-.revision-card {
-  width: var(--app-chat-card);
-  max-width: 100%;
-  margin-top: var(--ref-spacing-xs);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
-  overflow: hidden;
-}
-
-.revision-card__row {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-sm);
-  min-height: 48px;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-md);
-  border-bottom: 1px solid var(--ref-color-grey-20);
-}
-.revision-card__row:last-child {
-  border-bottom: 0;
-}
-.revision-card__row .profile-tag {
-  flex: none;
-  color: var(--ref-color-grey-100);
-}
-
-.revision-card__sum {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xxs) var(--ref-spacing-md);
-  margin-left: auto;
-  color: var(--ref-color-grey-80);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-}
-.revision-card__sum > i {
-  font-size: var(--sys-icon-css-sm);
-}
-.revision-card__count {
-  white-space: nowrap;
-}
-
-.revision-card__foot {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--ref-spacing-xs);
-}
-
 /* ── The draft in the panel: the DS green status card on top (its glue lives
    with the other status cards in posts.css), the new words marked ──────── */
 
@@ -117,7 +58,7 @@
   gap: var(--ref-spacing-sm);
 }
 
-/* Just rewritten: the same stroke, once. */
+/* Just rewritten: the stroke, once. */
 .posts__card.has-fresh-changes .draft-diff__add {
   animation: draft-diff-sweep 700ms cubic-bezier(0.25, 0.7, 0.2, 1) 200ms both;
 }

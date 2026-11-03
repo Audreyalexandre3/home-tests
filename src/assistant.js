@@ -6,14 +6,14 @@
 //
 // Subscribers re-render the thread DOM on any change — no global store.
 
-import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2647";
-import { findConnector } from "./connectors-store.js?v=2647";
-import { createSessionNotifier } from "./store-utils.js?v=2647";
-import { addPostDraft } from "./posts-store.js?v=2647";
-import { showToast } from "./components/toast.js?v=2647";
-import { isFlagOn } from "./feature-flags.js?v=2647";
-import { offerMentions } from "./mention-flow.js?v=2647";
-import { getSources, subscribeSources } from "./sources-stream.js?v=2647";
+import { threadsBySession as seedThreadsBySession, connectorDocs } from "./mocks.js?v=2648";
+import { findConnector } from "./connectors-store.js?v=2648";
+import { createSessionNotifier } from "./store-utils.js?v=2648";
+import { addPostDraft } from "./posts-store.js?v=2648";
+import { showToast } from "./components/toast.js?v=2648";
+import { isFlagOn } from "./feature-flags.js?v=2648";
+import { offerMentions } from "./mention-flow.js?v=2648";
+import { getSources, subscribeSources } from "./sources-stream.js?v=2648";
 
 // How this module reads a session's ideas, injected rather than imported.
 //
@@ -839,9 +839,9 @@ export function postImageLookSet(sessionId, { contextId, styleId, label }) {
   notify(sessionId);
 }
 
-// "What changed" — one draft, rewritten from the chat (flag draftChanges). The
-// turn keeps its own before / after, so an old receipt never shifts when the
-// draft changes again; whether it can still be undone is read off the draft.
+// "What changed" — one draft, rewritten from the chat (flag draftChanges): my
+// sentence, read from the turn's own before / after (« I made it shorter: … »);
+// the change itself is read and undone on the draft.
 // `summary` replaces the sentence the intent would give (a mention names who).
 export function postRevisionTurn(sessionId, { postId, network, intent, before, after, summary = null }) {
   getThread(sessionId).push({
@@ -861,8 +861,7 @@ export function postRevisionTurn(sessionId, { postId, network, intent, before, a
   notify(sessionId);
 }
 
-// "What changed" for one ask that rewrote several drafts: one recap, a row per
-// draft. `items` = [{ postId, network, before, after }] in the order asked.
+// "What changed" for one ask that rewrote several drafts: one sentence for all. `items` = [{ postId, network, before, after }] in the order asked.
 export function postRevisionGroupTurn(sessionId, { intent, items, summary = null }) {
   getThread(sessionId).push({
     id: newId(),
