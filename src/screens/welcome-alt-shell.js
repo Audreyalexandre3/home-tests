@@ -9,11 +9,11 @@
 // the session id the recap already uses (`welcomeAltSessionId`), and persisted
 // on every change so a reload lands on the same step with the same answers.
 
-import "../archie-pixels.js?v=2612";
-import { html, raw, escapeHtml } from "../utils.js?v=2612";
-import { navigate } from "../router.js?v=2612";
-import { parseHashParams } from "../url-state.js?v=2612";
-import { isFlagOn } from "../feature-flags.js?v=2612";
+import "../archie-pixels.js?v=2617";
+import { html, raw, escapeHtml } from "../utils.js?v=2617";
+import { navigate } from "../router.js?v=2617";
+import { parseHashParams } from "../url-state.js?v=2617";
+import { isFlagOn } from "../feature-flags.js?v=2617";
 import {
   altSteps,
   createAltDraft,
@@ -21,9 +21,9 @@ import {
   isAnalysisReady,
   restoreDraft,
   subscribeDraft,
-} from "../context-builder.js?v=2612";
-import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2612";
-import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2612";
+} from "../context-builder.js?v=2617";
+import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2617";
+import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2617";
 import {
   readSessionId,
   isIntegrated,
@@ -33,8 +33,9 @@ import {
   LOADING_STAGES,
   FILE_LOADING_STAGES,
   INTERVIEW_LOADING_STAGES,
-} from "./welcome-alt-recap.js?v=2612";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2612";
+} from "./welcome-alt-recap.js?v=2617";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2617";
+import { paintExplainer } from "./welcome-alt-explainer.js?v=2617";
 
 const PREFILLED_URL = "https://nicesoap.com";
 const SESSION_KEY = "welcomeAltSessionId";
@@ -253,7 +254,7 @@ function voiceTraits(d) {
 
 const landed = new Set(); // `${sid}:${row}` already shown filled — it lands once, not on every step
 
-const domainOf = (url) =>
+export const domainOf = (url) =>
   String(url || "")
     .replace(/^https?:\/\//, "")
     .replace(/^www\./, "")
@@ -427,7 +428,9 @@ function renderProgress(step) {
 // `build`: /welcome-alt/ready's stages ({ at, done }), which gate the card.
 // Returns { paint, sheet, cleanup }.
 // A returning user's « Create a Playbook » (`isIntegrated()`): a plain stage,
-// no pixels — they know me already; the first-time run keeps its show.
+// no pixels — they know me already; the first-time run keeps its show. And no
+// card filling in: each step plays a scene that teaches the Playbook's parts
+// (welcome-alt-explainer.js). The reviews (`sheet`) are the same for both.
 export function mountShell(target, { step, sid, left, sheet = false, build }) {
   const integrated = isIntegrated();
   target.innerHTML = html`
@@ -448,18 +451,22 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
           ? raw(`<div class="welcome-flow__sheet" data-flow-sheet>
               <div class="welcome-flow__sheet-body" data-flow-sheet-body></div>
             </div>`)
-          : raw(
-              // A labelled region, not live: what I found is readable, and
-              // nothing is announced as each line lands.
-              `<div class="welcome-intro__card welcome-flow__card" data-flow-card role="region" aria-label="Your Playbook"></div>`,
-            )}
+          : integrated
+            ? raw(`<div class="welcome-explainer" data-flow-explainer></div>`)
+            : raw(
+                // A labelled region, not live: what I found is readable, and
+                // nothing is announced as each line lands.
+                `<div class="welcome-intro__card welcome-flow__card" data-flow-card role="region" aria-label="Your Playbook"></div>`,
+              )}
       </div>
     </div>
   `;
   const leftEl = target.querySelector("[data-flow-left]");
   const cardEl = target.querySelector("[data-flow-card]");
+  const sceneEl = target.querySelector("[data-flow-explainer]");
   const paintCard = () => {
     if (cardEl) cardEl.innerHTML = renderCard(sid, build?.());
+    if (sceneEl) paintExplainer(sceneEl, step, getDraft(sid), build?.());
   };
   const paint = () => {
     leftEl.innerHTML = left();

@@ -21,12 +21,12 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=2612";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=2612";
-import { getContexts } from "../contexts-store.js?v=2612";
-import { getActivePlaybookId } from "../active-playbook.js?v=2612";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=2612";
-import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=2612";
+import { escapeHtml as esc } from "../utils.js?v=2617";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=2617";
+import { getContexts } from "../contexts-store.js?v=2617";
+import { getActivePlaybookId } from "../active-playbook.js?v=2617";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=2617";
+import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=2617";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopedBaselineFor,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=2612";
+} from "../objective-measures.js?v=2617";
 
 const MODAL_ID = "objectiveModal";
 

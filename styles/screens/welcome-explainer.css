@@ -1,0 +1,537 @@
+/* A returning user's « Create a Playbook »: the teaching scenes that replace
+   the filling card on the stage (welcome-alt-explainer.js). One 560 × 440
+   drawing: nodes placed in %, one SVG layer of olive threads. Text scales with
+   the stage (cqw), so the drawing holds its shape from ~360px up.
+   Motion: one play (entrance, threads drawing), then only a glint travels the
+   threads. Reduced motion: the last frame, still. */
+
+.welcome-explainer {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--ref-spacing-lg);
+  width: min(640px, calc(100% - 2 * var(--ref-spacing-lg)));
+  container-type: inline-size;
+}
+
+.wx-caption {
+  max-width: 44ch;
+  text-align: center;
+  animation: wx-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.wx-caption__title {
+  margin: 0;
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--ref-color-grey-100);
+  text-wrap: balance;
+}
+
+.wx-caption__text {
+  margin: var(--ref-spacing-xxs) 0 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+  text-wrap: pretty;
+}
+
+.wx-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 560 / 440;
+  font-size: clamp(9px, 2.3cqw, 14px);
+}
+
+.wx-threads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ── Nodes ─────────────────────────────────────────────────────────────── */
+
+.wx-node {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+}
+
+.wx-pop {
+  animation: wx-pop 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) var(--d, 0s) both;
+}
+
+.wx-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.75em 0.9em;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-white);
+  color: var(--ref-color-grey-100);
+}
+
+.wx-glyph.welcome-flow__glyph {
+  width: 2.3em;
+  height: 2.3em;
+  border-radius: var(--ref-border-radius-md);
+  font-size: 1em;
+}
+
+.wx-part {
+  width: calc(180 / 560 * 100cqw);
+}
+
+.wx-part__text {
+  display: grid;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.wx-part__name {
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: 1.25;
+}
+
+.wx-part__meaning {
+  font-size: 0.92em;
+  line-height: 1.3;
+  color: var(--ref-color-grey-80);
+}
+
+/* The Playbook: the hub every thread goes through. */
+.wx-playbook {
+  width: calc(134 / 560 * 100cqw);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6em;
+}
+
+.wx-playbook__mark {
+  display: grid;
+  place-items: center;
+  width: 2.6em;
+  height: 2.6em;
+  border-radius: var(--ref-border-radius-md);
+  background: var(--ref-color-grey-05);
+  font-size: 1.1em;
+}
+
+.is-hub .wx-pop > .wx-card,
+.is-hub .wx-pop > .wx-playbook {
+  border-color: var(--ref-color-grey-20);
+}
+
+/* My stitch: the butter pill between what's given and what comes out. */
+.wx-seam {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.75em;
+  border-radius: 999px;
+  background: var(--app-butter);
+  color: var(--ref-color-grey-100);
+  font-size: 0.92em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  white-space: nowrap;
+}
+
+.wx-seam i {
+  color: var(--app-butter-accent);
+}
+
+/* A website, sketched. */
+.wx-site {
+  width: calc(134 / 560 * 100cqw);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  padding: 0.6em;
+}
+
+.wx-site__bar {
+  display: flex;
+  gap: 0.25em;
+}
+
+.wx-site__bar i {
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 50%;
+  background: var(--ref-color-grey-20);
+}
+
+.wx-site__url {
+  font-size: 0.85em;
+  color: var(--ref-color-grey-80);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wx-site__hero {
+  height: 3.2em;
+  border-radius: var(--ref-border-radius-sm);
+  background: linear-gradient(135deg, var(--ref-color-menthol-20), var(--ref-color-yellow-20));
+}
+
+.wx-site__line,
+.wx-doc__line {
+  height: 0.45em;
+  border-radius: 999px;
+  background: var(--ref-color-grey-10);
+}
+
+.wx-site__line.is-short,
+.wx-doc__line.is-short {
+  width: 60%;
+}
+
+/* A brand book: a phrase picked out in butter, the colours it holds. */
+.wx-doc {
+  width: calc(157 / 560 * 100cqw);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55em;
+}
+
+.wx-doc__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-doc__mark {
+  justify-self: start;
+  padding: 0.1em 0.3em;
+  border-radius: 0.3em;
+  font-size: 0.92em;
+  background: linear-gradient(var(--app-butter), var(--app-butter)) no-repeat left / 0 100%;
+  animation: wx-highlight 0.6s ease-out 0.9s forwards;
+}
+
+.wx-doc__swatches,
+.wx-swatches {
+  display: flex;
+  gap: 0.3em;
+}
+
+.wx-doc__swatches i,
+.wx-swatches i {
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+
+.wx-swatches {
+  margin-top: 0.25em;
+}
+
+.wx-swatches i {
+  animation: wx-pop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) var(--d, 0s) both;
+}
+
+/* A language, and the posts that come out in it. */
+.wx-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  margin-top: 0.6em;
+  padding: 0.25em 0.65em;
+  border-radius: 999px;
+  background: var(--app-butter);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  animation: wx-pop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) 0.5s both;
+}
+
+.wx-lang i {
+  color: var(--app-butter-accent);
+}
+
+.wx-post {
+  width: calc(157 / 560 * 100cqw);
+  flex-wrap: wrap;
+  gap: 0.5em;
+  padding: 0.6em 0.75em;
+}
+
+.wx-post.is-line {
+  width: calc(224 / 560 * 100cqw);
+}
+
+.wx-post__net {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 1.15em;
+}
+
+.wx-post__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.92em;
+  line-height: 1.3;
+}
+
+.wx-type {
+  animation: wx-type 1s steps(24, end) var(--d, 0s) both;
+}
+
+.wx-post__own {
+  flex-basis: 100%;
+  font-size: 0.85em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--ref-color-purple-150);
+}
+
+/* Where a voice is learned from. */
+.wx-source {
+  width: calc(123 / 560 * 100cqw);
+  gap: 0.5em;
+  padding: 0.55em 0.7em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin-top: 0.35em;
+}
+
+.wx-trait {
+  padding: 0.1em 0.55em;
+  border-radius: 999px;
+  background: var(--part-tint);
+  color: var(--part-ink);
+  font-size: 0.85em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  animation: wx-pop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) var(--d, 0s) both;
+}
+
+.is-hub .wx-part {
+  width: calc(168 / 560 * 100cqw);
+  align-items: flex-start;
+}
+
+/* ── The ready screen: four parts, one post ───────────────────────────── */
+
+.wx-corner .wx-part {
+  width: calc(168 / 560 * 100cqw);
+  transition: opacity 0.5s ease;
+}
+
+.wx-corner:not(.is-lit) .wx-part {
+  opacity: 0.45;
+}
+
+.wx-draft {
+  width: calc(168 / 560 * 100cqw);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  padding: 0.8em;
+}
+
+.wx-draft__head {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+}
+
+.wx-draft__avatar {
+  display: grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 50%;
+  background: var(--ref-color-grey-10);
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-draft__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wx-draft__row,
+.wx-draft__img {
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.wx-draft__row {
+  font-size: 0.92em;
+  line-height: 1.3;
+}
+
+.wx-draft__row.is-angle {
+  font-weight: var(--sys-text-style-body-bold-weight);
+}
+
+.wx-draft__img {
+  height: 4.5em;
+  border-radius: var(--ref-border-radius-sm);
+  background:
+    radial-gradient(circle at 75% 35%, var(--c2) 0 22%, transparent 23%), linear-gradient(135deg, var(--c1), var(--c3));
+}
+
+.wx-draft [data-part]:not(.is-lit) {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+.wx-draft__status {
+  align-self: flex-start;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.is-done .wx-draft__status {
+  opacity: 1;
+}
+
+.wx-doors {
+  display: flex;
+  gap: 1.1em;
+  white-space: nowrap;
+  color: var(--ref-color-grey-100);
+  font-size: 0.92em;
+  font-weight: var(--sys-text-style-body-bold-weight);
+  opacity: 0;
+  transform: translateY(0.4em);
+  transition:
+    opacity 0.5s ease 0.3s,
+    transform 0.5s ease 0.3s;
+}
+
+.wx-doors span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.wx-doors i {
+  color: var(--app-butter-accent);
+}
+
+.is-done .wx-doors {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Threads ──────────────────────────────────────────────────────────── */
+
+.wx-thread path {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.wx-thread__line {
+  stroke: var(--app-butter-accent);
+  stroke-opacity: 0.45;
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: wx-draw 0.7s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards;
+}
+
+.wx-thread__glint {
+  stroke: var(--app-butter-accent);
+  stroke-width: 2.5;
+  stroke-dasharray: 0.08 0.92;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: wx-glint 2.8s ease-in-out calc(var(--d, 0s) + 0.8s) infinite;
+}
+
+/* The ready screen draws its threads as the parts light, not on arrival. */
+[data-scene-ready] .wx-thread__line {
+  animation: none;
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[data-scene-ready] .wx-thread.is-lit .wx-thread__line {
+  stroke-dashoffset: 0;
+}
+
+[data-scene-ready] .wx-thread:not(.is-lit) .wx-thread__glint {
+  animation: none;
+}
+
+@keyframes wx-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(0.5em);
+  }
+}
+
+@keyframes wx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+  }
+}
+
+@keyframes wx-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes wx-glint {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0.08;
+    opacity: 0;
+  }
+}
+
+@keyframes wx-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes wx-highlight {
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-explainer *,
+  .wx-caption {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
+  }
+
+  .wx-thread__glint {
+    display: none;
+  }
+}

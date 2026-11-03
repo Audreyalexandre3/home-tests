@@ -9,13 +9,13 @@
 // A Playbook filled by hand has nothing to build: straight to the reveal, and
 // its way out is filling it in.
 
-import { html, raw } from "../utils.js?v=2612";
-import { navigate } from "../router.js?v=2612";
-import { getDraft, isAnalysisReady, patchDraft, readAltWebsite } from "../context-builder.js?v=2612";
-import { finishLabel, finishRun, isIntegrated } from "./welcome-alt-recap.js?v=2612";
-import { ensureFlowDraft, goBack, mountShell, stagesFor } from "./welcome-alt-shell.js?v=2612";
-import { onlyNetwork, networkVoiceOn } from "../voice-parts.js?v=2612";
-import { networkLabel } from "../social-profiles.js?v=2612";
+import { html, raw } from "../utils.js?v=2617";
+import { navigate } from "../router.js?v=2617";
+import { getDraft, isAnalysisReady, patchDraft, readAltWebsite } from "../context-builder.js?v=2617";
+import { finishLabel, finishRun, isIntegrated } from "./welcome-alt-recap.js?v=2617";
+import { ensureFlowDraft, goBack, mountShell, stagesFor } from "./welcome-alt-shell.js?v=2617";
+import { onlyNetwork, networkVoiceOn } from "../voice-parts.js?v=2617";
+import { networkLabel } from "../social-profiles.js?v=2617";
 
 // Where the default voice was read from, said on the reveal.
 const READ_FROM = { website: "your site", documents: "your files", interview: "your answers" };
@@ -163,7 +163,7 @@ export function renderWelcomeAltReady(_params, target) {
   const card = target.querySelector("[data-flow-card]");
   // The reveal: the card says it's ready, and takes a breath.
   const reveal = (done) => {
-    card.classList.toggle("is-revealed", done);
+    card?.classList.toggle("is-revealed", done);
     if (done && !getDraft(sid)?.revealed) patchDraft(sid, { revealed: true });
   };
   // Repaint only when the state the left shows changes.
