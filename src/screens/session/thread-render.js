@@ -13,27 +13,27 @@ import {
   renderNotice,
   renderResultCard,
   renderFailedTurn,
-} from "./thread-turns.js?v=2648";
-import { getSources as getStreamSources } from "../../sources-stream.js?v=2648";
-import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=2648";
-import { getTopPost } from "../../top-posts-store.js?v=2648";
-import { getTopicById } from "../../topics-store.js?v=2648";
-import { renderTopicsWidget } from "../../components/topic-card.js?v=2648";
-import { renderProfileEchoCard, networkLabel, networkIcon } from "../../social-profiles.js?v=2648";
-import { escapeHtml, formatTimeOfDay } from "../../utils.js?v=2648";
-import { getIdeas } from "../../library.js?v=2648";
-import { renderRefs, resolveRef } from "../../chat-refs.js?v=2648";
-import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=2648";
-import { getThread, toolName, toolDescription } from "../../assistant.js?v=2648";
-import { getPlans } from "../../post-plan-store.js?v=2648";
-import { isFlagOn } from "../../feature-flags.js?v=2648";
-import { CURRENT_USER } from "../../org.js?v=2648";
-import { getSessionById } from "../../sessions-store.js?v=2648";
-import { getContextById } from "../../contexts-store.js?v=2648";
-import { needsImageLook } from "../../modules/image-studio/index.js?v=2648";
-import { getFocusKey } from "../../components/right-panel.js?v=2648";
-import { revisionSummary, revisionGroupSummary } from "../../draft-rewrite.js?v=2648";
-import { learnedVoiceHtml, voiceAskHtml } from "../../components/voice-intro-modal.js?v=2648";
+} from "./thread-turns.js?v=2649";
+import { getSources as getStreamSources } from "../../sources-stream.js?v=2649";
+import { renderTopPostEcho, renderTopPostsWidget } from "../../components/top-post-card.js?v=2649";
+import { getTopPost } from "../../top-posts-store.js?v=2649";
+import { getTopicById } from "../../topics-store.js?v=2649";
+import { renderTopicsWidget } from "../../components/topic-card.js?v=2649";
+import { renderProfileEchoCard, networkLabel, networkIcon } from "../../social-profiles.js?v=2649";
+import { escapeHtml, formatTimeOfDay } from "../../utils.js?v=2649";
+import { getIdeas } from "../../library.js?v=2649";
+import { renderRefs, resolveRef } from "../../chat-refs.js?v=2649";
+import { renderCompactIdeaCard } from "../../components/idea-card-compact.js?v=2649";
+import { getThread, toolName, toolDescription } from "../../assistant.js?v=2649";
+import { getPlans } from "../../post-plan-store.js?v=2649";
+import { isFlagOn } from "../../feature-flags.js?v=2649";
+import { CURRENT_USER } from "../../org.js?v=2649";
+import { getSessionById } from "../../sessions-store.js?v=2649";
+import { getContextById } from "../../contexts-store.js?v=2649";
+import { needsImageLook } from "../../modules/image-studio/index.js?v=2649";
+import { getFocusKey } from "../../components/right-panel.js?v=2649";
+import { revisionSummary, revisionGroupSummary } from "../../draft-rewrite.js?v=2649";
+import { learnedVoiceHtml, voiceAskHtml } from "../../components/voice-intro-modal.js?v=2649";
 
 // Flag contentPanel — every result in the thread is a card that opens the side
 // panel on its own objects (data-content-card="kind:key:ids"), and stays
@@ -211,11 +211,11 @@ function renderTurn(message, sessionId) {
   }
 
   if (message.role === "assistant" && message.variant === "revision") {
-    return renderRevisionTurn(message);
+    return renderRevisionTurn(message, sessionId);
   }
 
   if (message.role === "assistant" && message.variant === "revision-group") {
-    return renderRevisionGroupTurn(message);
+    return renderRevisionGroupTurn(message, sessionId);
   }
 
   if (message.role === "assistant" && message.variant === "image-look-set") {
@@ -597,20 +597,26 @@ function renderDraftsCardTurn(message) {
 }
 
 // "What changed" (flag draftChanges): my sentence naming the change, and only
-// that. The change itself is read, undone and closed on the draft, in the
-// panel; the activity above already links each draft. A diff card, then a recap
-// card, were tried in the thread and removed (2026-11-03).
-function renderRevisionTurn(message) {
+// that, its subject a link to what I rewrote — the draft (a chat-ref) or « your
+// N drafts » — that opens the panel on it and scrolls there. The change itself
+// is read, undone and closed on the draft. A diff card, then a recap card, were
+// tried in the thread and removed (2026-11-03).
+const SUBJECT = "\u0001"; // survives escapeHtml, swapped for the link after
+
+function renderRevisionTurn(message, sessionId) {
+  const link = renderRefs(`[[post:${message.postId}]]`, sessionId);
   return renderMessageBubble({
     role: "assistant",
-    text: escapeHtml(message.summary || revisionSummary(message.intent, message.before, message.after)),
+    text: escapeHtml(revisionSummary(message.intent, message.before, message.after, SUBJECT)).replace(SUBJECT, link),
   });
 }
 
-function renderRevisionGroupTurn(message) {
+function renderRevisionGroupTurn(message, sessionId) {
+  const ids = message.items.map((i) => i.postId);
+  const link = `<button type="button" class="chat-ref" data-content-card="post" data-content-ids="${escapeHtml(ids.join(","))}">your ${ids.length} drafts</button>`;
   return renderMessageBubble({
     role: "assistant",
-    text: escapeHtml(message.summary || revisionGroupSummary(message.intent, message.items)),
+    text: escapeHtml(revisionGroupSummary(message.intent, message.items, SUBJECT)).replace(SUBJECT, link),
   });
 }
 

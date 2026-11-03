@@ -18,10 +18,10 @@
 // the stream is handled by re-looking up the target selector each tick
 // — when it disappears the stream stops and the content commits at once.
 
-import { getPosts, updatePostContent } from "./posts-store.js?v=2648";
-import { isFlagOn } from "./feature-flags.js?v=2648";
-import { escapeText } from "./utils.js?v=2648";
-import { DRAFT_TRANSLATIONS, DRAFT_TRANSLATION_FALLBACK } from "./mocks.js?v=2648";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2649";
+import { isFlagOn } from "./feature-flags.js?v=2649";
+import { escapeText } from "./utils.js?v=2649";
+import { DRAFT_TRANSLATIONS, DRAFT_TRANSLATION_FALLBACK } from "./mocks.js?v=2649";
 
 const inFlight = new Map(); // postId → AbortController
 
@@ -230,23 +230,23 @@ const CTAS = {
   facebook: ["Share this with your team.", "Tell us in the comments."],
 };
 
-// What I did, said in the first person by the chat's "what changed" card and
-// the draft's own strip. Counts are named in text, never an icon beside a number.
+// What I did, said in the first person in the chat. `s` is what I rewrote — the
+// draft's link, or « your 3 drafts » — so the sentence leads to it.
 const LEADS = {
-  shorter: "I made it shorter",
-  longer: "I made it longer",
-  warmer: "I made it warmer",
-  formal: "I made it more formal",
-  fresh: "I gave it a fresh take",
-  voice: "I rewrote it with your new rules",
-  punchier: "I tightened the hook",
-  emoji: "I added emojis",
-  cta: "I added a call to action",
+  shorter: (s) => `I made ${s} shorter`,
+  longer: (s) => `I made ${s} longer`,
+  warmer: (s) => `I made ${s} warmer`,
+  formal: (s) => `I made ${s} more formal`,
+  fresh: (s) => `I gave ${s} a fresh take`,
+  voice: (s) => `I rewrote ${s} with your new rules`,
+  punchier: (s) => `I tightened the hook of ${s}`,
+  emoji: (s) => `I added emojis to ${s}`,
+  cta: (s) => `I added a call to action to ${s}`,
 };
 
-function revisionLead(intent, before) {
-  if (intent === "cta" && before?.cta) return "I changed the call to action";
-  return LEADS[intent] || "I rewrote it";
+function revisionLead(intent, before, s) {
+  if (intent === "cta" && before?.cta) return `I changed the call to action of ${s}`;
+  return (LEADS[intent] || ((x) => `I rewrote ${x}`))(s);
 }
 
 // A translation's target, named in English in the chat ("into French"), kept on
@@ -263,17 +263,17 @@ export function languageOf(post) {
 const chars = (v) => [...v.text, v.cta || "", ...(v.hashtags || []).map((h) => `#${h}`)].join(" ").length;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-// "I made it shorter: 2 paragraphs → 1, 140 fewer characters."
-export function revisionSummary(intent, before, after) {
+// "I made <the draft> shorter: 2 paragraphs → 1, 140 fewer characters."
+export function revisionSummary(intent, before, after, subject) {
   if (intent === "translate")
-    return `I rewrote it in ${languageOf(after)}.${before.hashtags?.length ? " I kept your hashtags." : ""}`;
+    return `I rewrote ${subject} in ${languageOf(after)}.${before.hashtags?.length ? " I kept your hashtags." : ""}`;
   const details = [];
   const pb = before.text.length;
   const pa = after.text.length;
   if (pb !== pa) details.push(`${plural(pb, "paragraph")} → ${pa}`);
   const delta = chars(after) - chars(before);
   if (Math.abs(delta) >= 10) details.push(`${Math.abs(delta)} ${delta < 0 ? "fewer" : "more"} characters`);
-  return `${revisionLead(intent, before)}${details.length ? `: ${details.join(", ")}` : ""}.`;
+  return `${revisionLead(intent, before, subject)}${details.length ? `: ${details.join(", ")}` : ""}.`;
 }
 
 const WARMER_HOOKS = [
@@ -406,25 +406,13 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// One ask that rewrote several drafts: "I made your 3 drafts shorter, 203
+// One ask that rewrote several drafts: "I made <your 3 drafts> shorter, 203
 // fewer characters in all."
-const GROUP_LEADS = {
-  shorter: (n) => `I made ${n} shorter`,
-  longer: (n) => `I made ${n} longer`,
-  warmer: (n) => `I made ${n} warmer`,
-  formal: (n) => `I made ${n} more formal`,
-  fresh: (n) => `I gave ${n} a fresh take`,
-  punchier: (n) => `I tightened the hook of ${n}`,
-  emoji: (n) => `I added emojis to ${n}`,
-  cta: (n) => `I added a call to action to ${n}`,
-};
-
-export function revisionGroupSummary(intent, items) {
-  const n = `your ${items.length} drafts`;
+export function revisionGroupSummary(intent, items, subject) {
   let lead =
     intent === "translate"
-      ? `I rewrote ${n} in ${languageOf(items[0].after)}`
-      : (GROUP_LEADS[intent] || ((x) => `I rewrote ${x}`))(n);
+      ? `I rewrote ${subject} in ${languageOf(items[0].after)}`
+      : revisionLead(intent, null, subject);
   if (intent === "shorter" || intent === "longer") {
     const delta = items.reduce((sum, i) => sum + chars(i.after) - chars(i.before), 0);
     if (Math.abs(delta) >= 10) lead += `, ${Math.abs(delta)} ${delta < 0 ? "fewer" : "more"} characters in all`;
