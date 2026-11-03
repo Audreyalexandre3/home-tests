@@ -574,8 +574,22 @@ body:not(.onboarding) .welcome-intro__wordmark {
   margin: 0 0 var(--ref-spacing-md) calc(-1 * var(--ref-spacing-xxs));
 }
 
-.welcome-flow__progress .ap-stepper-item:not(.active) .welcome-flow__step-label {
+.welcome-flow__progress:not(.is-all) .ap-stepper-item:not(.active) .welcome-flow__step-label {
   display: none;
+}
+
+/* A returning user's run: the stepper in the topbar, after the title and a
+   grey-20 rule, every step named (welcome-alt-shell.js mountShell). */
+.app-topbar .welcome-flow__progress {
+  margin: 0;
+}
+
+.welcome-flow__topbar-rule {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--ref-spacing-xs);
+  background: var(--ref-color-grey-20);
 }
 
 /* The step's title: a size under the intro's display, the same voice. */

@@ -9,11 +9,11 @@
 // the session id the recap already uses (`welcomeAltSessionId`), and persisted
 // on every change so a reload lands on the same step with the same answers.
 
-import "../archie-pixels.js?v=2640";
-import { html, raw, escapeHtml } from "../utils.js?v=2640";
-import { navigate } from "../router.js?v=2640";
-import { parseHashParams } from "../url-state.js?v=2640";
-import { isFlagOn } from "../feature-flags.js?v=2640";
+import "../archie-pixels.js?v=2641";
+import { html, raw, escapeHtml } from "../utils.js?v=2641";
+import { getPath, navigate } from "../router.js?v=2641";
+import { parseHashParams } from "../url-state.js?v=2641";
+import { isFlagOn } from "../feature-flags.js?v=2641";
 import {
   altSteps,
   createAltDraft,
@@ -21,9 +21,9 @@ import {
   isAnalysisReady,
   restoreDraft,
   subscribeDraft,
-} from "../context-builder.js?v=2640";
-import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2640";
-import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2640";
+} from "../context-builder.js?v=2641";
+import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2641";
+import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2641";
 import {
   readSessionId,
   isIntegrated,
@@ -33,9 +33,10 @@ import {
   LOADING_STAGES,
   FILE_LOADING_STAGES,
   INTERVIEW_LOADING_STAGES,
-} from "./welcome-alt-recap.js?v=2640";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2640";
-import { paintExplainer } from "./welcome-alt-explainer.js?v=2640";
+} from "./welcome-alt-recap.js?v=2641";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2641";
+import { paintExplainer } from "./welcome-alt-explainer.js?v=2641";
+import { setTopbarActions } from "../components/topbar.js?v=2641";
 
 const PREFILLED_URL = "https://nicesoap.com";
 const SESSION_KEY = "welcomeAltSessionId";
@@ -395,13 +396,17 @@ function renderCard(sid, build) {
   });
 }
 
-function renderProgress(step) {
+function renderProgress(step, { all = false } = {}) {
   const steps = flowSteps();
   const at = steps.indexOf(step);
   // The DS stepper: done = completed + check, the current one active, the rest
-  // pending. Only the current step shows its name: the column is too narrow for all.
+  // pending. In the column only the current step shows its name (too narrow for
+  // all); in the topbar (`all`) every step does.
   return html`
-    <nav class="ap-stepper welcome-flow__progress" aria-label="Step ${at + 1} of ${steps.length}">
+    <nav
+      class="ap-stepper welcome-flow__progress ${all ? "is-all" : ""}"
+      aria-label="Step ${at + 1} of ${steps.length}"
+    >
       ${raw(
         steps
           .map((id, i) => {
@@ -440,7 +445,7 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
       <section class="welcome-intro__lede" aria-labelledby="welcomeFlowTitle">
         <img class="welcome-intro__wordmark" src="assets/logos/archie-wordmark.svg" alt="Archie" />
         <div class="welcome-intro__copy welcome-flow__copy">
-          ${raw(renderProgress(step))}
+          ${integrated ? "" : raw(renderProgress(step))}
           <div data-flow-left></div>
           <!-- One status node that outlives the left column's repaints: a live
                region rebuilt with its text already in it is not announced. -->
@@ -463,6 +468,13 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
       </div>
     </div>
   `;
+  // A returning user's run sits in the app's chrome: the stepper goes to the
+  // topbar, after the title, where every step can be named (2026-11-03).
+  if (integrated) {
+    setTopbarActions(getPath(), "", {
+      left: `<h1 class="app-topbar__title">New Playbook</h1><span class="welcome-flow__topbar-rule" aria-hidden="true"></span>${renderProgress(step, { all: true })}`,
+    });
+  }
   const leftEl = target.querySelector("[data-flow-left]");
   const cardEl = target.querySelector("[data-flow-card]");
   const sceneEl = target.querySelector("[data-flow-explainer]");
@@ -484,6 +496,7 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
     sheet: target.querySelector("[data-flow-sheet]"),
     cleanup: () => {
       offDraft();
+      if (integrated) setTopbarActions(null);
     },
   };
 }
