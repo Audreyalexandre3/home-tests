@@ -1449,6 +1449,65 @@ body:not(.onboarding) .welcome-intro__wordmark {
   }
 }
 
+/* A returning user's Create a Playbook (welcome-alt-review.js `calm` and the
+   one-page review): the column, still. Every card in full from the top, no
+   dimming, no lift, no cascade; a card is a bordered surface, no shadow. */
+.welcome-flow__sheet.is-calm .welcome-flow__sheet-body {
+  padding-block: var(--ref-spacing-lg) 128px; /* room under the last card for the bar */
+  mask-image: linear-gradient(180deg, #000 calc(100% - 160px), transparent calc(100% - 64px));
+}
+
+.welcome-flow__sheet.is-calm .pb2-grid {
+  padding-block: 0;
+}
+
+.welcome-flow__sheet.is-scroll.is-calm .welcome-review__card {
+  opacity: 1;
+  transform: none;
+  cursor: auto;
+  animation: none;
+  border: 1px solid var(--ref-color-grey-20);
+  box-shadow: none;
+}
+
+/* The one-page review: each part under its name, a section apart. */
+.pb2-stack__part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  scroll-margin-top: var(--ref-spacing-lg);
+}
+
+.pb2-stack__part + .pb2-stack__part {
+  margin-top: var(--ref-spacing-xl);
+}
+
+.pb2-stack__title {
+  margin: 0;
+  font-family: var(--sys-text-style-h2-font-family);
+  font-size: var(--sys-text-style-h2-size);
+  line-height: var(--sys-text-style-h2-line-height);
+  font-weight: var(--sys-text-style-h2-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.pb2-stack__lead {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* A chip field's Add menu opens under it, from its left edge. */
+.recap__chip-menu .recap__panel-menu-pop {
+  left: 0;
+  right: auto;
+}
+
+.recap__chip-menu-field {
+  padding: var(--ref-spacing-xxs);
+}
+
 /* The part's confirm: one button at the bottom of the stage, over the scroll. */
 .welcome-review__bar {
   position: absolute;

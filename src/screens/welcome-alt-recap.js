@@ -4,8 +4,8 @@
 // staged loader, reload-rehydration, and the "Enter Archie" finish. The
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
-import { navigate } from "../router.js?v=2629";
-import { catalogueRoute } from "../active-playbook.js?v=2629";
+import { navigate } from "../router.js?v=2635";
+import { catalogueRoute } from "../active-playbook.js?v=2635";
 import {
   getDraft,
   isAnalysisReady,
@@ -13,11 +13,11 @@ import {
   patchDraft,
   restoreDraft,
   sectionPatchFromAnalysis,
-} from "../context-builder.js?v=2629";
-import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled } from "../playbook-view.js?v=2629";
-import { renderReview } from "./welcome-alt-review.js?v=2629";
-import { open as openRenameModal } from "../components/rename-modal.js?v=2629";
-import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2629";
+} from "../context-builder.js?v=2635";
+import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled } from "../playbook-view.js?v=2635";
+import { renderPageReview, renderReview } from "./welcome-alt-review.js?v=2635";
+import { open as openRenameModal } from "../components/rename-modal.js?v=2635";
+import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2635";
 import {
   brandVoiceAsIs,
   canLearnFrom,
@@ -27,15 +27,15 @@ import {
   playbookNetworks,
   voiceNetworks,
   onlyNetwork,
-} from "../voice-parts.js?v=2629";
-import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2629";
-import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2629";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2629";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2629";
-import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2629";
-import { openVoiceInterview, openVoiceProposal } from "../components/voice-proposal-modal.js?v=2629";
-import { showToast } from "../components/toast.js?v=2629";
-import { open as openConfirm } from "../components/confirm-modal.js?v=2629";
+} from "../voice-parts.js?v=2635";
+import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2635";
+import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2635";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2635";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2635";
+import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2635";
+import { openVoiceInterview, openVoiceProposal } from "../components/voice-proposal-modal.js?v=2635";
+import { showToast } from "../components/toast.js?v=2635";
+import { open as openConfirm } from "../components/confirm-modal.js?v=2635";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
@@ -87,8 +87,10 @@ export const INTERVIEW_LOADING_STAGES = [
 
 let introDoneSid = null; // sid whose intro loader has already played
 
+// A returning user's Create a Playbook: the same review, as one page.
 export function renderWelcomeAltRecap(_params, target) {
-  return renderDraftView((sid, config) => renderReview(target, sid, config, playbookReview()));
+  const review = isIntegrated() ? renderPageReview : renderReview;
+  return renderDraftView((sid, config) => review(target, sid, config, playbookReview()));
 }
 
 // /welcome-alt/voice: the Voice's own review, after the
@@ -96,7 +98,9 @@ export function renderWelcomeAltRecap(_params, target) {
 export function renderWelcomeAltVoice(_params, target) {
   return renderDraftView((sid, config) => {
     startVoiceRules(sid);
-    return renderReview(target, sid, { ...config, networkPicker: true }, voiceReview(sid));
+    // A returning user's Create a Playbook: the column, still, and it ends on Save.
+    const calm = isIntegrated() ? { calm: true, lastLabel: finishLabel() } : {};
+    return renderReview(target, sid, { ...config, networkPicker: true }, voiceReview(sid, calm));
   });
 }
 

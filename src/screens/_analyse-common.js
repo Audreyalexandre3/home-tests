@@ -136,6 +136,11 @@ export function renderPicker(picker) {
     searchable = false,
     searchPlaceholder = "Search…",
     searchQuery = "",
+    // The line a searchable picker shows when nothing matches (default below).
+    emptyText = "No matches — try a different search.",
+    // Multi: the submit's label for N rows ticked, kept live as rows toggle
+    // (session.js reads data-count-label). A function of n.
+    submitCountLabel = null,
   } = picker;
   // Shortcut offset for the option rows when the free-text row leads.
   const lead = customFirst && customPlaceholder ? 1 : 0;
@@ -184,7 +189,7 @@ export function renderPicker(picker) {
       // that don't need a leading glyph.
       const hasIcon = !!(it.avatar || it.imgSrc || it.icon);
       const iconBody = it.avatar
-        ? `<div class="ap-avatar size-32" aria-hidden="true">
+        ? `<div class="ap-avatar size-32${it.avatar.square ? " square" : ""}" aria-hidden="true">
              ${
                it.avatar.imageUrl
                  ? `<img src="${it.avatar.imageUrl}" alt="" />`
@@ -297,11 +302,14 @@ export function renderPicker(picker) {
         : isDisabled
           ? ""
           : trailingIcon;
-      return `
+      // A row may carry `link` ({ href, label }): a way out to the thing the
+      // row stands for (a profile to check), beside the row's button, never in
+      // it. The row then wraps both, and the search filters the wrap.
+      const button = `
         <button
           type="button"
           class="analyse__option${isPreset ? " is-selected" : ""}${isDisabled ? " analyse__option--disabled" : ""}${hiddenClass(it)}"
-          data-${handler}="${it.value}"${searchAttr(it)}
+          data-${handler}="${it.value}"${it.link ? "" : searchAttr(it)}
           ${isDisabled ? `disabled aria-disabled="true"` : ""}
           ${selectable ? `aria-pressed="${isPreset ? "true" : "false"}"` : ""}
         >
@@ -314,6 +322,8 @@ export function renderPicker(picker) {
           ${trailing}
         </button>
       `;
+      if (!it.link) return button;
+      return `<div class="analyse__option-row${hiddenClass(it)}"${searchAttr(it)}>${button}<a class="ap-link small analyse__option-link" href="${it.link.href}" target="_blank" rel="noopener">${it.link.label}<i class="ap-icon-external-link" aria-hidden="true"></i></a></div>`;
     })
     .join("");
 
@@ -430,7 +440,7 @@ export function renderPicker(picker) {
   // electric-blue selection/focus language. Both disable themselves when
   // there's nothing to submit — session.js keeps the multi button in sync.
   const primaryBtn = multi
-    ? `<button type="button" class="ap-button primary ${submitTone}" data-${handler}-submit ${preset.size === 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
+    ? `<button type="button" class="ap-button primary ${submitTone}" data-${handler}-submit${submitCountLabel ? ` data-count-label="${submitCountLabel("{n}")}"` : ""} ${preset.size === 0 ? "disabled" : ""}><span>${submitCountLabel ? submitCountLabel(preset.size) : submitLabel}</span></button>`
     : stepper
       ? `<button type="button" class="ap-button primary ${submitTone}" data-${handler}-generate ${stepTotal <= 0 ? "disabled" : ""}><span>${submitLabel}</span></button>`
       : hasCounterSubmit
@@ -537,7 +547,7 @@ export function renderPicker(picker) {
   // should keep showing it; the live delegate toggles it while typing).
   const noMatches = searchable && !!searchNeedle && !items.some((it) => !rowHidden(it));
   const rowsBlock = searchable
-    ? `<div class="analyse__options-list">${rows}<div class="analyse__options-empty muted"${noMatches ? "" : " hidden"}>No matches — try a different search.</div></div>`
+    ? `<div class="analyse__options-list">${rows}<div class="analyse__options-empty muted"${noMatches ? "" : " hidden"}>${emptyText}</div></div>`
     : rows;
 
   return `<div class="analyse__options${selectable ? " analyse__options--multi" : ""}${stepper ? " analyse__options--stepper" : ""}${searchable ? " analyse__options--searchable" : ""}" ${multi ? "data-multi" : ""}${single ? " data-single" : ""}${stepper ? " data-stepper" : ""}>${header}${searchBox}${customFirst ? customRow + rowsBlock : rowsBlock + customRow}${fileRow}${footer}</div>`;
@@ -588,6 +598,9 @@ document.addEventListener("input", (event) => {
   for (const row of container.querySelectorAll("[data-search]")) {
     const match = !q || row.dataset.search.includes(q);
     row.classList.toggle("is-hidden", !match);
+    // A wrapped row (one with a link): its button too, so the keyboard skips it.
+    if (row.matches(".analyse__option-row"))
+      row.querySelector(".analyse__option")?.classList.toggle("is-hidden", !match);
     if (match) visible += 1;
   }
   const empty = container.querySelector(".analyse__options-empty");

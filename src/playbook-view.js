@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2629";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2629";
-import { conceptHint } from "./concepts.js?v=2629";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2635";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2635";
+import { conceptHint } from "./concepts.js?v=2635";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2629";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2629";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2629";
-import { isFlagOn } from "./feature-flags.js?v=2629";
-import { clipLookOf } from "./videos-store.js?v=2629";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2629";
-import { parseHashParams } from "./url-state.js?v=2629";
+} from "./playbook-brand-kit.js?v=2635";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2635";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2635";
+import { isFlagOn } from "./feature-flags.js?v=2635";
+import { clipLookOf } from "./videos-store.js?v=2635";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2635";
+import { parseHashParams } from "./url-state.js?v=2635";
 import {
   isListPart,
   voiceParts,
@@ -56,13 +56,13 @@ import {
   canLearnFrom,
   ADAPTED_FROM,
   voiceHasRules,
-} from "./voice-parts.js?v=2629";
-import { showToast } from "./components/toast.js?v=2629";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2629";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2629";
-import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2629";
-import { consumeHandoff } from "./handoff.js?v=2629";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2629";
+} from "./voice-parts.js?v=2635";
+import { showToast } from "./components/toast.js?v=2635";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2635";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2635";
+import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2635";
+import { consumeHandoff } from "./handoff.js?v=2635";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2635";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -71,7 +71,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2629";
+} from "./social-profiles.js?v=2635";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -204,6 +204,11 @@ let phase = "ready"; // "loading" | "ready"
 let activeTab = "goals"; // Playbook 2.0: the tab on screen
 let voiceNet = null; // Voice profile, flag voicePerNetwork: the network whose voice is on screen (null = the default network's, the Playbook's own parts)
 
+// `cfg.stack`: every tab it lists at once, all in edit — the edit scope is
+// then this, not one section.
+const STACK = "stack";
+const inEdit = (scope) => editScope === scope || (editScope === STACK && cfg.stack.includes(scope));
+
 // ── Public API ───────────────────────────────────────────────────────────
 
 // cfg: {
@@ -228,6 +233,8 @@ let voiceNet = null; // Voice profile, flag voicePerNetwork: the network whose v
 //   audienceList: boolean,             // the audience as a list of rows, not a dropdown
 //   chipCloud: boolean,                // chip fields as a cloud of toggles (found + common)
 //   rosterPicker: boolean,             // competitors / influencers as one list to tick
+//   stack: string[] | null,            // these tabs on one page, all in edit (a returning
+//                                      // user's Create a Playbook review); edits apply live
 //   onEditName(): void,                // header name pencil (rename)
 //   onAnalyzeVoice(): void,            // Voice profile → analyze social profiles
 //   onFooter(event): boolean,          // catch-all click handler (header actions)
@@ -245,6 +252,12 @@ export function mount(target, config) {
   rosterScanning = null;
   rosterFoundNone = null;
   infAdd = null;
+  if (cfg.stack) {
+    const d = cfg.getData();
+    if (cfg.stack.includes("brand")) ensureBrand(d);
+    cfg.stack.forEach((id) => ROSTERS[id] && rosterList(d, ROSTERS[id]));
+    editScope = STACK;
+  }
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -282,6 +295,13 @@ export function mount(target, config) {
   // doesn't bubble, so this listener has to run in the CAPTURE phase — that's
   // what lets us keep the repo's "delegated handlers, no inline on*" rule.
   target.addEventListener("error", onErrorH, true);
+  // A chip field's Add menu opens on its own field, ready to type (`toggle`
+  // doesn't bubble: captured).
+  const onToggleH = (e) => {
+    if (e.target.open && e.target.matches?.(".recap__chip-menu"))
+      e.target.querySelector("[data-recap-chip-input]")?.focus();
+  };
+  target.addEventListener("toggle", onToggleH, true);
   // A reload can't save (nothing persists across it), so it's the one exit
   // that still has to ask — only while there is something to lose.
   const onBeforeUnloadH = (e) => {
@@ -303,6 +323,7 @@ export function mount(target, config) {
     target.removeEventListener("change", onChangeH);
     target.removeEventListener("keydown", onKeydownH);
     target.removeEventListener("error", onErrorH, true);
+    target.removeEventListener("toggle", onToggleH, true);
     if (refModalHost) {
       refModalHost.remove();
       refModalHost = null;
@@ -597,7 +618,8 @@ function renderBrandLogo(data, edit) {
 // ── Edit-mode field renderers ──────────────────────────────────────────
 
 function renderEditChips(field, values, placeholder) {
-  if (cfg?.chipCloud && CHIP_SUGGESTIONS[field]) return renderChipCloud(field, values, placeholder);
+  const suggestions = cfg?.chipCloud && CHIP_SUGGESTIONS[field];
+  if (suggestions && !cfg.stack) return renderChipCloud(field, values, placeholder);
   const list = Array.isArray(values) ? values : [];
   const chips = list
     .map(
@@ -611,6 +633,8 @@ function renderEditChips(field, values, placeholder) {
     `,
     )
     .join("");
+  if (suggestions)
+    return `<div class="recap__chips recap__chips--edit">${chips}${renderChipMenu(field, list, placeholder)}</div>`;
   return `
     <div class="recap__chips recap__chips--edit">
       ${chips}
@@ -774,6 +798,31 @@ const CHIP_SUGGESTIONS = {
   ],
 };
 
+// `stack` (the one-page review): only the values kept show; Add opens a menu —
+// a field for your own, then the common ones not kept yet.
+function renderChipMenu(field, picked, placeholder) {
+  const low = new Set(picked.map((v) => v.toLowerCase()));
+  const rest = CHIP_SUGGESTIONS[field].filter((v) => !low.has(v.toLowerCase()));
+  return `
+    <details class="recap__panel-menu recap__chip-menu">
+      <summary class="ap-button ghost blue"><i class="ap-icon-plus" aria-hidden="true"></i><span>Add</span></summary>
+      <div class="ap-action-dropdown recap__panel-menu-pop" role="menu" aria-label="${esc(placeholder)}">
+        <div class="ap-input-group recap__chip-menu-field">
+          <input type="text" data-recap-chip-input="${field}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" />
+        </div>
+        ${rest
+          .map(
+            (
+              v,
+            ) => `<button type="button" class="ap-action-dropdown-item" role="menuitem" data-recap-chip-toggle="${field}" data-recap-chip-value="${esc(v)}">
+              <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">${esc(v)}</span></div></div>
+            </button>`,
+          )
+          .join("")}
+      </div>
+    </details>`;
+}
+
 function renderChipCloud(field, values, placeholder) {
   const picked = Array.isArray(values) ? values : [];
   const low = new Set(picked.map((v) => v.toLowerCase()));
@@ -934,7 +983,7 @@ function renderRefModal(data) {
   const img = imgs[refModalIndex];
   if (!img) return "";
   const i = refModalIndex;
-  const edit = editScope === "brand"; // editable only while the Brand section is
+  const edit = inEdit("brand"); // editable only while the Brand section is
   const tags = refTags(img);
   const colors = refColors(img);
 
@@ -1581,7 +1630,7 @@ function renderRosterModal(data) {
   const c = list[rosterModal.index];
   if (!c) return "";
   const i = rosterModal.index;
-  const edit = editScope === r.scope;
+  const edit = inEdit(r.scope);
   const domain = rosterDomain(c);
 
   const nameBlock = edit
@@ -2313,6 +2362,7 @@ function pb2TabHead(
   extra = "",
   { editing = false, noEdit = false, lead = SECTION_LEADS[scope], title = "", icon = "" } = {},
 ) {
+  if (cfg?.stack) return ""; // the stack heads each part itself (renderStack)
   const edit =
     canEditView() && !noEdit
       ? `<button type="button" class="ap-button stroked blue" data-recap-edit-card="${scope}"><i class="ap-icon-pen" aria-hidden="true"></i><span>Edit</span></button>`
@@ -3244,7 +3294,31 @@ function renderImagesPanel(data) {
   ].join("")}</div>`;
 }
 
+// `cfg.stack`: the listed tabs one under the other, each in edit under its
+// name and what it's for.
+const STACK_EDITORS = {
+  goals: renderGoalsEdit2,
+  brand: renderBrandEdit2,
+  competitors: (d) => renderRosterPanel(d, ROSTERS.competitors, true),
+  influencers: (d) => renderInfluencersPanel(d, true),
+};
+function renderStack(data) {
+  return cfg.stack
+    .map(
+      (id) => `
+    <section class="pb2-stack__part" id="pb2-part-${id}" aria-labelledby="pb2-part-${id}-title">
+      <header class="pb2-stack__head">
+        <h2 class="pb2-stack__title" id="pb2-part-${id}-title">${esc(TABS.find((t) => t.id === id).title)}</h2>
+        <p class="pb2-stack__lead">${esc(SECTION_LEADS[id])}</p>
+      </header>
+      ${STACK_EDITORS[id](data)}
+    </section>`,
+    )
+    .join("");
+}
+
 function renderActivePanel(data) {
+  if (cfg.stack) return renderStack(data);
   const scope = editScope;
   // Editing opens the section's own form; reading gets the tab's spread.
   if (activeTab === "voice") {

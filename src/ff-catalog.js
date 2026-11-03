@@ -205,20 +205,23 @@ export const FLAGS = Object.freeze([
   {
     id: "draftMentions",
     group: "Chat & drafts",
-    tip: "Ask Archie to mention someone in a draft (« mention Notion in the LinkedIn post »): it finds the account on each network, asks when it isn't sure, and offers to when a draft names a brand.",
+    tip: "Ask Archie to mention people in a draft (« mention Notion and Jordan Lee in the LinkedIn post »): it opens a search on each draft's network, you tick the accounts, and it offers to when a draft names a brand.",
     label: "UI-Mentions in drafts",
     // OFF: « mention X » in the chat gets the scripted reply, as before.
     default: false,
     hides:
-      "Mentions in drafts, from the chat. « Mention Notion in the LinkedIn post » " +
-      "or « tag Linear in all the drafts »: I find the account on each draft's " +
-      "network (LinkedIn companies and the people who follow your Page, " +
-      "Facebook Pages, X users), insert it when one account matches, and ask " +
-      "with a search when several do or none does. Instagram and TikTok have " +
-      "no search, as in prod: I ask for the exact username. YouTube has no " +
-      "mentions. The mention shows in the draft in the link colour, with the " +
-      "« what changed » card and its Undo. « Remove the mention of Notion » " +
-      "takes it out. After writing drafts that name a brand, I offer to mention it.",
+      "Mentions in drafts, from the chat. « Mention Notion, Figma and Jordan Lee " +
+      "in the LinkedIn post » or « tag Linear in all the drafts »: for each " +
+      "draft's network I open a search (LinkedIn companies and the people who " +
+      "follow your Page, Facebook Pages, X users) where you tick one account or " +
+      "several, each name's only match already ticked; the picker says what " +
+      "to do, shows faces and logos, and links each profile to check it. Instagram and TikTok " +
+      "have no search, as in prod: I ask for the exact usernames. YouTube has no " +
+      "mentions. Your pick echoes as a chip and I answer in one sentence, no " +
+      "« what changed » card. A name the draft already writes becomes the " +
+      "mention; the others come in together in one short sentence. « Remove the " +
+      "mention of Notion » takes it out. After writing drafts that name a brand, " +
+      "I offer to mention it.",
   },
   {
     id: "newConversationStyles",
@@ -335,13 +338,13 @@ export const FLAGS = Object.freeze([
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",
     label: "Admin: preview in chat",
-    // OFF: a prototype tool doesn't sit in the new chat's hero for everyone
-    // (UI polish 2026-10-30, To decide CH-17). ON: the link, as before.
-    default: false,
+    // ON again (2026-11-03, asked: « remets le mode admin sous le composer »);
+    // it was OFF from the UI polish of 2026-10-30 (CH-17). OFF hides the link.
+    default: true,
     hides:
       "When ON, the composer's hint row carries « Admin: preview in chat », the " +
       "prototype's catalogue of chat elements and triggers (chat-gallery.js). " +
-      "OFF by default: it is a tool for whoever demos the prototype, not part of the product.",
+      "ON by default (it was OFF from 2026-10-30 to 2026-11-03): turn it off to see the hero without it.",
   },
   {
     id: "demoMode",

@@ -14,8 +14,8 @@
 // ponytail: the catalogue is a hand-kept list — a new turn variant or route has
 // to be added here too, or it won't show in the menu.
 
-import { escapeHtml } from "../../utils.js?v=2629";
-import { isFlagOn } from "../../feature-flags.js?v=2629";
+import { escapeHtml, fold } from "../../utils.js?v=2635";
+import { isFlagOn } from "../../feature-flags.js?v=2635";
 import {
   postAssistantMessage,
   postUserTurn,
@@ -34,20 +34,20 @@ import {
   GENERIC_FAILURE,
   getThread,
   refreshThread,
-} from "../../assistant.js?v=2629";
-import { getSources, getIdeas } from "../../library.js?v=2629";
-import { getPosts } from "../../posts-store.js?v=2629";
-import { getTopPosts } from "../../top-posts-store.js?v=2629";
-import { getConnectedProfiles } from "../../social-profiles.js?v=2629";
-import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=2629";
-import { getConnectedConnectors } from "../../connectors-store.js?v=2629";
-import { detectUrlService } from "../../url-services.js?v=2629";
-import * as inlineQuestion from "../../inline-question.js?v=2629";
-import { startTopPostsInline } from "../../top-posts-flow.js?v=2629";
-import { startTopicPickerInline } from "../../topic-flow.js?v=2629";
-import { askConnector } from "../../connector-ask.js?v=2629";
-import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=2629";
-import { startIdeaDraft, askSourceUse } from "./draft-questions.js?v=2629";
+} from "../../assistant.js?v=2635";
+import { getSources, getIdeas } from "../../library.js?v=2635";
+import { getPosts } from "../../posts-store.js?v=2635";
+import { getTopPosts } from "../../top-posts-store.js?v=2635";
+import { getConnectedProfiles } from "../../social-profiles.js?v=2635";
+import { extractClipsForSource, updateSourceClips } from "../../sources-stream.js?v=2635";
+import { getConnectedConnectors } from "../../connectors-store.js?v=2635";
+import { detectUrlService } from "../../url-services.js?v=2635";
+import * as inlineQuestion from "../../inline-question.js?v=2635";
+import { startTopPostsInline } from "../../top-posts-flow.js?v=2635";
+import { startTopicPickerInline } from "../../topic-flow.js?v=2635";
+import { askConnector } from "../../connector-ask.js?v=2635";
+import { requireConnectedProfiles } from "../../connect-profiles-flow.js?v=2635";
+import { startIdeaDraft, askSourceUse } from "./draft-questions.js?v=2635";
 
 // The intake sample plays the real lifecycle — loading, then ready — under a
 // sample id no source owns, so intake-lifecycle leaves it alone.
@@ -393,6 +393,35 @@ const EDITS = [
   },
 ].map((p) => ({ ...p, when: needsDrafts }));
 
+// Mentions in drafts (flag draftMentions, mention-flow.js): each case the flow
+// answers differently. The account directory is src/mocks/mentions.js.
+const MENTIONS = [
+  {
+    id: "m-one",
+    label: "Mention someone",
+    prompt: "Mention Notion in post 1",
+    hint: "A search opens on the name; you tick the account",
+  },
+  {
+    id: "m-several",
+    label: "Mention several people",
+    prompt: "Mention Notion, Figma and Jordan Lee in post 1",
+    hint: "One search, each name's match already ticked",
+  },
+  {
+    id: "m-all",
+    label: "Mention in every draft",
+    prompt: "Mention Notion in all my drafts",
+    hint: "One search per network; Instagram asks for the username",
+  },
+  {
+    id: "m-remove",
+    label: "Remove a mention",
+    prompt: "Remove the mention of Notion",
+    hint: "Back to the plain name",
+  },
+].map((p) => ({ ...p, when: (sid) => flagOff("draftMentions") || needsDrafts(sid) }));
+
 const asPrompt = (p) => ({ ...p, icon: "ap-icon-single-chat-bubble", run: (sid, session, send) => send(p.prompt) });
 
 const FLOWS = [
@@ -449,6 +478,7 @@ const GROUPS = [
   { title: "Components", items: COMPONENTS },
   { title: "Typed asks", items: PROMPTS.map(asPrompt) },
   { title: "Edit a draft", items: EDITS.map((p) => ({ ...asPrompt(p), icon: "ap-icon-pen" })) },
+  { title: "Mention someone", items: MENTIONS.map((p) => ({ ...asPrompt(p), icon: "ap-icon-at" })) },
   { title: "Flows", items: FLOWS },
 ];
 const ALL = GROUPS.flatMap((g) => g.items);
@@ -466,10 +496,12 @@ export function renderChatGallery() {
   `;
 }
 
-function renderItem(item, session) {
+// `group`: its title, so searching a group's name finds all its entries.
+function renderItem(item, session, group = "") {
   const reason = item.when?.(session.id, session) || null;
+  const search = escapeHtml(fold(`${group} ${item.label} ${item.hint} ${item.prompt || ""}`));
   return `
-    <button type="button" class="ap-action-dropdown-item has-description" role="menuitem" data-chat-gallery-item="${item.id}" ${reason ? "disabled" : ""}>
+    <button type="button" class="ap-action-dropdown-item has-description" role="menuitem" data-chat-gallery-item="${item.id}" data-chat-gallery-search="${search}" ${reason ? "disabled" : ""}>
       <i class="${item.icon}" aria-hidden="true"></i>
       <div class="ap-action-dropdown-item-text">
         <div class="ap-action-dropdown-item-label-container">
@@ -496,13 +528,22 @@ export function onChatGalleryClick(event, root, session, send) {
     const menu = root.querySelector("[data-chat-gallery-menu]");
     const open = menu.hidden;
     if (open) {
-      menu.innerHTML = GROUPS.map(
-        (g) =>
-          `<div class="chat-gallery__group">${g.title}</div>${g.items.map((i) => renderItem(i, session)).join("")}`,
-      ).join(`<div class="ap-action-dropdown-divider" role="separator"></div>`);
+      // The search filters the entries in place; a group with none left hides.
+      menu.innerHTML = `
+        <div class="ap-select-search chat-gallery__search">
+          <i class="ap-icon-search ap-select-search-icon" aria-hidden="true"></i>
+          <input type="search" class="ap-select-search-input" placeholder="Search elements and triggers…" aria-label="Search elements and triggers" data-chat-gallery-search-input />
+        </div>
+        ${GROUPS.map(
+          (g, i) =>
+            `<div data-chat-gallery-section>${i ? `<div class="ap-action-dropdown-divider" role="separator"></div>` : ""}<div class="chat-gallery__group">${g.title}</div>${g.items.map((it) => renderItem(it, session, g.title)).join("")}</div>`,
+        ).join("")}
+        <p class="chat-gallery__empty" data-chat-gallery-empty hidden>No match. Try another word.</p>`;
+      menu.oninput = (e) => filterChatGallery(menu, e.target.value);
     }
     menu.hidden = !open;
     toggle.setAttribute("aria-expanded", String(open));
+    if (open) menu.querySelector("[data-chat-gallery-search-input]")?.focus();
     return true;
   }
   const btn = event.target.closest("[data-chat-gallery-item]");
@@ -513,4 +554,22 @@ export function onChatGalleryClick(event, root, session, send) {
   }
   if (!event.target.closest("[data-chat-gallery-menu]")) closeChatGallery(root);
   return false;
+}
+
+function filterChatGallery(menu, query) {
+  const q = fold(query.trim());
+  let shown = 0;
+  menu.querySelectorAll("[data-chat-gallery-section]").forEach((section) => {
+    let inSection = 0;
+    section.querySelectorAll("[data-chat-gallery-item]").forEach((item) => {
+      item.hidden = !!q && !item.dataset.chatGallerySearch.includes(q);
+      if (!item.hidden) inSection++;
+    });
+    section.hidden = !inSection;
+    // Filtered, the groups stack without their dividers.
+    const divider = section.querySelector(".ap-action-dropdown-divider");
+    if (divider) divider.hidden = !!q;
+    shown += inSection;
+  });
+  menu.querySelector("[data-chat-gallery-empty]").hidden = shown > 0;
 }
