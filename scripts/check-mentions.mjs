@@ -80,4 +80,14 @@ assert.equal(M.nameForHandle("@notionhq".slice(1)), "Notion");
 const appended = { network: "linkedin", text: ["No name here."] };
 const withIt = { ...appended, ...M.applyMention(appended, notionLi) };
 assert.deepEqual(M.removeMention(withIt, "notion").text, ["No name here."], "my sentence leaves with the mention");
+// What the picker shows: a face for a person, a square logo for a company,
+// and where to check the account.
+assert.equal(M.mentionAvatar(jordanLi).square, false);
+assert.match(M.mentionAvatar(jordanLi).imageUrl, /^https:\/\/images\.unsplash\.com\//);
+assert.ok(M.mentionAvatar(notionLi).square && M.mentionAvatar(notionLi).imageUrl.startsWith("data:image/svg+xml,"));
+assert.equal(M.mentionAvatar(ig).imageUrl, null);
+assert.equal(M.mentionUrl(notionLi), "https://www.linkedin.com/company/notion");
+assert.equal(M.mentionUrl(jordanLi), "https://www.linkedin.com/in/jordan-lee");
+assert.equal(M.mentionUrl(notionX), "https://x.com/NotionHQ");
+assert.equal(M.mentionUrl(ig), "https://www.instagram.com/notionhq/");
 console.log("mentions: ok");

@@ -7,9 +7,9 @@
 // as the muted caption, and a DS avatar carrying the brand photo plus a
 // corner network badge.
 
-import { socialAccounts, demoManyProfiles, DEMO_ACCOUNTS } from "./mocks.js?v=2632";
-import { escapeHtml } from "./utils.js?v=2632";
-import { createNotifier } from "./store-utils.js?v=2632";
+import { socialAccounts, demoManyProfiles, DEMO_ACCOUNTS } from "./mocks.js?v=2634";
+import { escapeHtml } from "./utils.js?v=2634";
+import { createNotifier } from "./store-utils.js?v=2634";
 
 // THE network table — every surface that names, badges, counts or colours a
 // network reads it, so a network is spelled one way everywhere. It replaced
@@ -161,7 +161,7 @@ export function renderProfileEchoCard(account, { network } = {}) {
   return `
     <div class="selection-echo selection-echo--profile" title="${escapeHtml(name)}">
       <span class="selection-echo__icon selection-echo__icon--avatar">
-        <span class="ap-avatar size-32" aria-hidden="true">${avatarInner}${badge}</span>
+        <span class="ap-avatar size-32${account?.square ? " square" : ""}" aria-hidden="true">${avatarInner}${badge}</span>
       </span>
       <span class="selection-echo__body">
         <span class="selection-echo__title">${escapeHtml(name)}</span>

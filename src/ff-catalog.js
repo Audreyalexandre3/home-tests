@@ -214,7 +214,8 @@ export const FLAGS = Object.freeze([
       "in the LinkedIn post » or « tag Linear in all the drafts »: for each " +
       "draft's network I open a search (LinkedIn companies and the people who " +
       "follow your Page, Facebook Pages, X users) where you tick one account or " +
-      "several, each name's only match already ticked. Instagram and TikTok " +
+      "several, each name's only match already ticked; the picker says what " +
+      "to do, shows faces and logos, and links each profile to check it. Instagram and TikTok " +
       "have no search, as in prod: I ask for the exact usernames. YouTube has no " +
       "mentions. Your pick echoes as a chip and I answer in one sentence, no " +
       "« what changed » card. A name the draft already writes becomes the " +

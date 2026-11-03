@@ -48,6 +48,11 @@
 //                               the list is filtered).
 //   searchPlaceholder string  — placeholder for the search box (default "Search…")
 //   searchQuery       string  — the search box's starting query (rows already filtered by it)
+//   emptyText         string  — what a searchable picker says when nothing matches
+//   submitCountLabel  fn(n)   — multi: the submit's label for n rows ticked, kept live
+//                               (in stepper mode: for the summed total, as below)
+//   items[].link      object  — { href, label }: a link beside the row (e.g. check a profile)
+//   items[].avatar.square bool — a square avatar (a company's logo)
 //   multi             bool    — when true, render multi-select toggles + Continue button
 //   single            bool    — single-select-with-confirm: rows highlight (one
 //                               at a time) instead of advancing; the CALLER owns
@@ -80,8 +85,8 @@
 //   skipDisabled      bool    — Skip shown disabled (its label says when it unlocks); Esc → Back
 //   onBack()          fn      — called when ← Back is clicked; if omitted, no back btn
 
-import { chatTurn } from "./screens/_analyse-common.js?v=2632";
-import { createSessionNotifier } from "./store-utils.js?v=2632";
+import { chatTurn } from "./screens/_analyse-common.js?v=2634";
+import { createSessionNotifier } from "./store-utils.js?v=2634";
 
 const states = new Map(); // sessionId → opts
 const sessionNotifier = createSessionNotifier("inline-question");
@@ -293,6 +298,8 @@ export function renderChrome(sessionId) {
     searchable: s.searchable === true,
     searchPlaceholder: s.searchPlaceholder || "Search…",
     searchQuery: s._search || "",
+    emptyText: s.emptyText || undefined,
+    submitCountLabel: s.multi && s.submitCountLabel ? s.submitCountLabel : null,
     // Card-grid variant — visual cards instead of numbered rows (clip
     // aspect-ratio + subtitle-style steps). Single-select advance.
     variant: s.variant || null,

@@ -269,6 +269,47 @@
   display: none;
 }
 
+/* A row with a way out (`link`: check a profile on its network): the row's
+   button and the link side by side, the row carrying the divider. */
+.analyse__option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding-right: var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.analyse__option-row:last-child {
+  border-bottom: 0;
+}
+
+.analyse__option-row.is-hidden {
+  display: none;
+}
+
+/* The row's states span the link too, so a ticked row reads as one row. */
+.analyse__option-row:hover {
+  background: var(--app-surface-subtle);
+}
+
+.analyse__option-row:has(> .analyse__option.is-selected) {
+  background: var(--ref-color-electric-blue-05);
+}
+
+.analyse__option-row > .analyse__option {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.analyse__option-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .analyse__options-empty {
   padding: var(--ref-spacing-sm);
   text-align: center;

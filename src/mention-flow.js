@@ -12,13 +12,13 @@
 // draft changes at once. Your pick echoes as a chip; I answer in one sentence,
 // no « what changed » card.
 
-import { postAssistantMessage, postUserTurn, postActivity, postSelectionEcho } from "./assistant.js?v=2632";
-import * as inlineQuestion from "./inline-question.js?v=2632";
-import { getPosts, updatePostContent } from "./posts-store.js?v=2632";
-import { isFlagOn } from "./feature-flags.js?v=2632";
-import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2632";
-import { focusInPanel } from "./components/right-panel.js?v=2632";
-import { escapeHtml } from "./utils.js?v=2632";
+import { postAssistantMessage, postUserTurn, postActivity, postUserProfilesTurn } from "./assistant.js?v=2634";
+import * as inlineQuestion from "./inline-question.js?v=2634";
+import { getPosts, updatePostContent } from "./posts-store.js?v=2634";
+import { isFlagOn } from "./feature-flags.js?v=2634";
+import { networkLabel, networkIcon, normalizeNetwork } from "./social-profiles.js?v=2634";
+import { focusInPanel } from "./components/right-panel.js?v=2634";
+import { escapeHtml } from "./utils.js?v=2634";
 import {
   HANDLE_RE,
   joinList,
@@ -27,13 +27,15 @@ import {
   mentionAccounts,
   typedAccount,
   mentionCaption,
+  mentionAvatar,
+  mentionUrl,
   applyMentions,
   removeMentions,
   mentionsNamedIn,
   nameForHandle,
-} from "./mentions.js?v=2632";
+} from "./mentions.js?v=2634";
 
-export { MENTION_ASK, UNMENTION_ASK, mentionNamesIn } from "./mentions.js?v=2632";
+export { MENTION_ASK, UNMENTION_ASK, mentionNamesIn } from "./mentions.js?v=2634";
 
 const initials = (name) =>
   name
@@ -76,30 +78,46 @@ export function mentionInDrafts(sessionId, drafts, said = []) {
   next();
 }
 
+// What each searchable network finds (prod's mention search), said in the
+// picker so you know what you can look for.
+const FINDS = {
+  linkedin: "LinkedIn finds companies, and people who follow your Page.",
+  facebook: "Facebook finds Pages only, not people.",
+  x: "X finds any account, by name or @handle.",
+};
+
 // One network's question: the search (LinkedIn, Facebook, X), or the usernames
 // (Instagram, TikTok). Skipping leaves that network's drafts without them.
 // `again`: usernames just refused — the refusal already asked once more.
 function askAccounts(sessionId, network, said, step, done, again = false) {
   const label = networkLabel(network);
   const skip = { skipLabel: `Not on ${label}`, onSkip: () => done([]) };
+  // Your pick, as profile cards: face or logo, name, then what tells it apart.
   const echo = (accounts) =>
-    postSelectionEcho(sessionId, {
-      icon: networkIcon(network),
-      title: joinList(accounts.map((a) => (mentionMode(network) === "typed" ? `@${a.handle}` : a.name))),
-      meta: accounts.length === 1 && mentionMode(network) === "search" ? mentionCaption(accounts[0]) : label,
-    });
+    postUserProfilesTurn(
+      sessionId,
+      accounts.map((a) => {
+        const avatar = mentionAvatar(a);
+        const typed = mentionMode(network) === "typed";
+        return {
+          platform: network,
+          name: typed ? `@${a.handle}` : a.name,
+          handle: typed ? label : mentionCaption(a),
+          photo: avatar.imageUrl,
+          square: avatar.square,
+          initials: initials(a.name),
+        };
+      }),
+    );
   if (mentionMode(network) === "typed") {
     if (!again)
       postAssistantMessage(
         sessionId,
-        `${label} has no search for mentions. ${
-          said.length === 1
-            ? `What's ${names(said)}'s ${label} username?`
-            : `Which ${label} usernames should I mention? Separate them with commas.`
-        }`,
+        said.length === 1 ? `I need ${names(said)}'s ${label} username.` : `I need the ${label} usernames.`,
       );
     inlineQuestion.ask(sessionId, {
-      title: null,
+      title: said.length === 1 ? `What's the exact ${label} username?` : `What are the exact ${label} usernames?`,
+      subtitle: `${label} has no search for mentions: type ${said.length === 1 ? "it" : "them, separated by commas"}, and I'll link ${said.length === 1 ? "it" : "each one"} so you can check.`,
       stepLabel: step,
       items: [],
       customPlaceholder: said.length === 1 ? "@username" : "@username, @username",
@@ -116,7 +134,7 @@ function askAccounts(sessionId, network, said, step, done, again = false) {
           postUserTurn(sessionId, value.trim());
           postAssistantMessage(
             sessionId,
-            `${wrong.length ? `${joinList(wrong.map((h) => `@${escapeHtml(h)}`))} ${wrong.length === 1 ? "isn't a valid" : "aren't valid"} ${label} username${wrong.length === 1 ? "" : "s"}` : "I need a username"}: letters, numbers, periods and underscores, up to 30. What are the exact ones?`,
+            `${wrong.length ? `${joinList(wrong.map((h) => `@${escapeHtml(h)}`))} ${wrong.length === 1 ? "isn't a valid" : "aren't valid"} ${label} username${wrong.length === 1 ? "" : "s"}` : "I need a username"}: letters, numbers, periods and underscores, up to 30.`,
           );
           return askAccounts(sessionId, network, said, step, done, true);
         }
@@ -137,25 +155,22 @@ function askAccounts(sessionId, network, said, step, done, again = false) {
   const sure = matches.filter((m) => m.found.length === 1);
   const unsure = matches.filter((m) => m.found.length > 1);
   const lost = matches.filter((m) => !m.found.length);
+  // My line above the picker says where things stand; the picker asks.
   postAssistantMessage(
     sessionId,
-    !said.length
-      ? `Who should I mention on ${label}?`
-      : said.length === 1
-        ? found.length
-          ? `Which ${names(said)} should I mention on ${label}?`
-          : `I couldn't find ${names(said)} on ${label}. Search for the account:`
-        : [
-            `Who should I mention on ${label}?`,
-            sure.length ? `I ticked ${names(sure)}.` : "",
-            unsure.length ? `Pick the right ${names(unsure)}.` : "",
-            lost.length ? `I couldn't find ${names(lost)}: search for ${lost.length === 1 ? "it" : "them"}.` : "",
-          ]
-            .filter(Boolean)
-            .join(" "),
+    [
+      sure.length ? `I ticked ${names(sure)} on ${label}.` : "",
+      unsure.length
+        ? `${names(unsure)} ${unsure.length === 1 ? "has" : "have"} more than one account: pick the right one.`
+        : "",
+      lost.length ? `I couldn't find ${names(lost)} on ${label}: search for ${lost.length === 1 ? "it" : "them"}.` : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || `Search ${label} for who to mention.`,
   );
   inlineQuestion.ask(sessionId, {
-    title: null,
+    title: `Who should I mention on ${label}?`,
+    subtitle: `${FINDS[network]} Tick one or more, and check a profile before you do.`,
     stepLabel: step,
     multi: true,
     // One name: the search opens on it. Several: every account shows, each
@@ -163,15 +178,25 @@ function askAccounts(sessionId, network, said, step, done, again = false) {
     searchable: true,
     searchPlaceholder: `Search ${label}…`,
     searchQuery: said.length === 1 && found.length ? said[0].name : "",
+    emptyText: `No ${label} account matches. ${FINDS[network]}`,
     defaultSelected: sure.map((m) => m.found[0].id),
-    submitLabel: "Mention",
-    items: accounts.map((a) => ({
-      value: a.id,
-      label: a.name,
-      caption: mentionCaption(a),
-      search: `${a.name} ${a.handle || ""}`,
-      avatar: { initials: initials(a.name), networkIcon: networkIcon(network) },
-    })),
+    submitCountLabel: (n) => `Mention ${n}`,
+    items: accounts.map((a) => {
+      const avatar = mentionAvatar(a);
+      return {
+        value: a.id,
+        label: a.name,
+        caption: mentionCaption(a),
+        search: `${a.name} ${a.handle || ""}`,
+        avatar: {
+          imageUrl: avatar.imageUrl,
+          square: avatar.square,
+          initials: initials(a.name),
+          networkIcon: networkIcon(network),
+        },
+        link: { href: mentionUrl(a), label: `View on ${label}` },
+      };
+    }),
     ...skip,
     onPick: (ids) => {
       const picked = accounts.filter((a) => ids.includes(a.id));
@@ -227,11 +252,9 @@ function apply(sessionId, drafts, resolved, said) {
   if (left.length) notes.push(`I left ${left.map((p) => `[[post:${p.id}]]`).join(", ")} without mentions.`);
   // Prod's verify link: nothing checks a typed username, so I point at it.
   const typed = all.filter((a) => mentionMode(a.network) === "typed");
-  const links = uniq(typed.map((a) => `${a.network}:${a.handle}`)).map((k) => {
-    const [network, handle] = k.split(":");
-    const url = network === "tiktok" ? `https://www.tiktok.com/@${handle}` : `https://www.instagram.com/${handle}/`;
-    return `<a class="ap-link" href="${url}" target="_blank" rel="noopener">@${handle}</a>`;
-  });
+  const links = typed
+    .filter((a, i) => typed.findIndex((b) => b.network === a.network && b.handle === a.handle) === i)
+    .map((a) => `<a class="ap-link" href="${mentionUrl(a)}" target="_blank" rel="noopener">@${a.handle}</a>`);
   if (links.length)
     notes.push(
       `I can't look up ${joinList(uniq(typed.map((a) => networkLabel(a.network))))} usernames, so check ${joinList(links)} ${links.length === 1 ? "is the right account" : "are the right accounts"}.`,

@@ -9,9 +9,9 @@
 // Facebook and X are searched; Instagram and TikTok take a typed handle;
 // YouTube has no mentions.
 
-import { MENTION_DIRECTORY } from "./mocks.js?v=2632";
-import { fold } from "./utils.js?v=2632";
-import { normalizeNetwork } from "./social-profiles.js?v=2632";
+import { MENTION_DIRECTORY } from "./mocks.js?v=2634";
+import { fold } from "./utils.js?v=2634";
+import { normalizeNetwork } from "./social-profiles.js?v=2634";
 
 const SEARCH = new Set(["linkedin", "facebook", "x"]);
 const TYPED = new Set(["instagram", "tiktok"]);
@@ -35,6 +35,8 @@ export function mentionAccounts(network) {
     network: n,
     // A person or a company everywhere, as LinkedIn says (X and Facebook don't).
     kind: e.accounts.linkedin?.kind,
+    photo: e.photo || null,
+    tint: e.tint || null,
     ...e.accounts[n],
   }));
 }
@@ -71,6 +73,37 @@ export function typedAccount(network, handle, entity) {
 /** The text the mention takes in the draft. */
 export function mentionText(account) {
   return account.network === "linkedin" || account.network === "facebook" ? `@${account.name}` : `@${account.handle}`;
+}
+
+// What the picker and the echo show for an account: a person's face; a
+// company's square logo, its initial on its colour (an SVG, no file); a typed
+// username, nothing (the avatar falls back to initials).
+export function mentionAvatar(account) {
+  if (account.photo) return { imageUrl: account.photo, square: false };
+  if (!account.tint) return { imageUrl: null, square: false };
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="${account.tint}"/><text x="16" y="21.5" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">${account.name.charAt(0).toUpperCase()}</text></svg>`;
+  return { imageUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`, square: true };
+}
+
+const slug = (name) =>
+  fold(name)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/** Where the account lives on its network, to check it before mentioning it. */
+export function mentionUrl(account) {
+  switch (account.network) {
+    case "linkedin":
+      return `https://www.linkedin.com/${account.kind === "person" ? "in" : "company"}/${slug(account.name)}`;
+    case "facebook":
+      return `https://www.facebook.com/${slug(account.name)}`;
+    case "x":
+      return `https://x.com/${account.handle}`;
+    case "tiktok":
+      return `https://www.tiktok.com/@${account.handle}`;
+    default:
+      return `https://www.instagram.com/${account.handle}/`;
+  }
 }
 
 /** The line under an account in a picker. */
