@@ -21,8 +21,8 @@
 // so the caller can repaint the thread (intake turns derive
 // ideaCount/status live from sources-stream).
 
-import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=2652";
-import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=2652";
+import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=2654";
+import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=2654";
 
 // The intake turn always shows "Uploading" for at least this long, even when
 // the source is ready sooner — an upload that lands instantly reads as fake.

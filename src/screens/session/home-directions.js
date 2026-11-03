@@ -23,19 +23,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2652";
-import { chatStarters } from "../../mocks.js?v=2652";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2652";
-import { getTopPosts } from "../../top-posts-store.js?v=2652";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2652";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2652";
-import { findTopicSource } from "../../topics-catalog.js?v=2652";
-import { getContextById } from "../../contexts-store.js?v=2652";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2652";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2652";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2652";
-import { escapeHtml } from "../../utils.js?v=2652";
-import "../../archie-pixels.js?v=2652";
+import { isFlagOn } from "../../feature-flags.js?v=2654";
+import { chatStarters } from "../../mocks.js?v=2654";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2654";
+import { getTopPosts } from "../../top-posts-store.js?v=2654";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2654";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2654";
+import { findTopicSource } from "../../topics-catalog.js?v=2654";
+import { getContextById } from "../../contexts-store.js?v=2654";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2654";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2654";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2654";
+import { escapeHtml } from "../../utils.js?v=2654";
+import "../../archie-pixels.js?v=2654";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -686,52 +686,94 @@ function showcase({ composer, session }) {
 }
 
 // ── 6 · Example requests ────────────────────────────────────────────────────
-// Words only: what you can say to me, one sentence per flow, under the box. Each
-// one is drawn as YOUR message before it is sent: the bubble with the sharp top
-// right corner, white at rest, navy when you point at it, the way it lands in
-// the thread. Pointing also writes it in the box as a ghost; a click sends it
-// and runs that flow (the starters' own hooks), except the free post, which
-// only fills the box: it is there to be rewritten. « Other examples » deals the
-// second set.
-const ASKS = [
+// Words only: what you can say to me. Under the box, one chip per flow (the
+// first one chosen); under the chips, four requests of that flow. Pointing at
+// a request writes it in the box as a ghost; a click sends it and runs the flow
+// (the starters' own hooks, the request as their prompt), except « Write a
+// post », whose requests only fill the box: they are there to be rewritten.
+const FLOWS = [
   {
-    video: "Cut my latest podcast into short vertical clips",
-    top: "Write three posts like my best one this month",
-    source: "Turn this blog post into a week of LinkedIn posts",
-    topic: "Find a trending Topic and give me our take",
-    free: "Write a LinkedIn post about our new feature",
+    k: "video",
+    name: "Video clips",
+    asks: [
+      "Cut my latest podcast into short vertical clips",
+      "Turn this webinar into clips for Reels and TikTok",
+      "Find the three best moments of this interview",
+      "Make a 30-second teaser from our product demo",
+    ],
   },
   {
-    video: "Turn this webinar into clips for Reels and TikTok",
-    top: "Do more of what worked on LinkedIn lately",
-    source: "Pull five post ideas out of this PDF",
-    topic: "What should we react to this week?",
-    free: "Draft an X thread about our latest customer story",
+    k: "top",
+    name: "Top posts",
+    asks: [
+      "Write three posts like my best one this month",
+      "Do more of what worked on LinkedIn lately",
+      "Turn my top Instagram post into a LinkedIn post",
+      "Find my best post of the quarter and write two more like it",
+    ],
+  },
+  {
+    k: "source",
+    name: "From a source",
+    asks: [
+      "Turn this blog post into a week of LinkedIn posts",
+      "Pull five post ideas out of this PDF",
+      "Write posts from our latest newsletter",
+      "Draft posts from this product page",
+    ],
+  },
+  {
+    k: "topic",
+    name: "Topics",
+    asks: [
+      "Find a trending Topic and give me our take",
+      "What should we react to this week?",
+      "What are people in our industry talking about?",
+      "Give me our take on this week's biggest news",
+    ],
+  },
+  {
+    k: "free",
+    name: "Write a post",
+    hint: "Tell me what the post is about, and where it goes.",
+    asks: [
+      "Write a LinkedIn post about our new feature",
+      "Draft an X thread about our latest customer story",
+      "Announce our next webinar on Instagram",
+      "Thank our community for 10,000 followers",
+    ],
   },
 ];
 
 function prompts({ composer, session }) {
   const ctx = ctxOf(session);
   const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
+  const STARTER = { video: "open-video-clips", top: "open-top-posts", source: "open-batch" };
+  const attrsOf = (k, text) =>
+    k === "free" ? DOORS.fill(text).attrs : k === "topic" ? `data-add-source="topic"` : starterAttrs(STARTER[k], text);
   // `fill`: the request only lands in the box, to be rewritten before it goes.
-  const ask = (tone, icon, text, attrs, fill = false) => `
+  const ask = (k, text, attrs = attrsOf(k, text)) => `
     <li>
       <button type="button" class="nch-ask" ${attrs} data-nch-hint="${esc(text)}"
-        title="${fill ? "Put it in the box to edit" : "Send this request"}">
-        <span class="nch-tile nch-tile--sm nch-tone--${tone}" aria-hidden="true"><i class="${icon}"></i></span>
+        title="${k === "free" ? "Put it in the box to edit" : "Send this request"}">
         <span class="nch-ask__text">${esc(text)}</span>
-        <i class="${fill ? "ap-icon-pen" : "ap-icon-arrow-up"} nch-ask__go" aria-hidden="true"></i>
+        <i class="${k === "free" ? "ap-icon-pen" : "ap-icon-arrow-right"} nch-ask__go" aria-hidden="true"></i>
       </button>
     </li>`;
-  const run = (k, text) =>
-    k === "topic"
-      ? `data-add-source="topic"`
-      : starterAttrs({ video: "open-video-clips", top: "open-top-posts", source: "open-batch" }[k], text);
-  const list = (set, i) => `
-    <ul class="nch-asks" data-nch-set="${i}" aria-label="Example requests"${i ? " hidden" : ""}>
-      ${["video", "top", "source", "topic"].map((k) => ask(KINDS[k].tone, KINDS[k].icon, set[k], run(k, set[k]))).join("")}
-      ${ask("free", "ap-icon-pen", set.free, DOORS.fill(set.free).attrs, true)}
-      ${voices.length ? ask("free", networkIcon(voices[0]), `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0]).attrs) : ""}
+  const tone = (f) => (KINDS[f.k] ? KINDS[f.k].tone : "free");
+  const icon = (f) => (KINDS[f.k] ? KINDS[f.k].icon : "ap-icon-pen");
+  const chip = (f, i) => `
+    <button type="button" class="nch-flow-chip" role="tab" id="nchFlow-${f.k}" aria-controls="nchFlowPane-${f.k}"
+      aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-nch-flow="${f.k}"
+      data-nch-hint="${esc(f.hint || KINDS[f.k].hint)}">
+      <span class="nch-tile nch-tile--sm nch-tone--${tone(f)}" aria-hidden="true"><i class="${icon(f)}"></i></span>
+      <span>${esc(f.name)}</span>
+    </button>`;
+  const pane = (f, i) => `
+    <ul class="nch-asks" id="nchFlowPane-${f.k}" role="tabpanel" aria-labelledby="nchFlow-${f.k}"
+      data-nch-flow-pane="${f.k}"${i ? " hidden" : ""}>
+      ${f.asks.map((t) => ask(f.k, t)).join("")}
+      ${f.k === "free" && voices.length ? ask("voice", `Give ${networkLabel(voices[0])} a voice of its own`, DOORS.voice(ctx, voices[0]).attrs) : ""}
     </ul>`;
   return shell(
     "prompts",
@@ -739,11 +781,9 @@ function prompts({ composer, session }) {
     ${WORDMARK}
     <p class="nch__sub">Say what you want to post. Or start from one of these.</p>
     ${lead(composer)}
-    <div class="nch-asks-wrap">
-      ${ASKS.map(list).join("")}
-      <button type="button" class="ap-button ghost grey nch-asks__more" data-nch-shuffle>
-        <i class="ap-icon-refresh" aria-hidden="true"></i><span>Other examples</span>
-      </button>
+    <div class="nch-flows">
+      <div class="nch-flows__chips" role="tablist" aria-label="Example requests by flow">${FLOWS.map(chip).join("")}</div>
+      ${FLOWS.map(pane).join("")}
     </div>`,
   );
 }
@@ -751,7 +791,7 @@ function prompts({ composer, session }) {
 // ── <archie-home>: the directions' local behaviour ──────────────────────────
 // No state outside the element but the mode / slide it shows, kept across the
 // re-renders session.js does while the chat is empty.
-const memory = { mode: "source", slide: 0, held: false, set: 0 };
+const memory = { mode: "source", slide: 0, held: false, flow: null };
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 class ArchieHome extends HTMLElement {
@@ -770,7 +810,7 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("play", playing, true);
     this.addEventListener("pause", playing, true);
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
-    if (this.querySelector("[data-nch-set]")) this.setSet(memory.set);
+    if (this.querySelector("[data-nch-flow]")) this.setFlow(memory.flow);
     if (this.querySelector("[data-nch-stage]")) {
       this.setSlide(memory.slide);
       this.restart();
@@ -826,13 +866,24 @@ class ArchieHome extends HTMLElement {
   }
 
   // The example requests on show (direction 6): one set at a time.
-  // `deal`: the set comes in one bubble after the other (on « Other examples »).
-  setSet(i, deal = false) {
-    const sets = this.querySelectorAll("[data-nch-set]");
-    memory.set = i % sets.length;
-    sets.forEach((l) => {
-      l.hidden = +l.dataset.nchSet !== memory.set;
-      l.classList.toggle("is-dealt", deal && !l.hidden);
+  // The flow whose requests show (direction 6). `deal`: they come in one
+  // after the other, when a chip is chosen.
+  setFlow(k, { deal = false, focus = false } = {}) {
+    const chips = [...this.querySelectorAll("[data-nch-flow]")];
+    if (!chips.some((c) => c.dataset.nchFlow === k)) k = chips[0]?.dataset.nchFlow;
+    memory.flow = k;
+    chips.forEach((c) => {
+      const on = c.dataset.nchFlow === k;
+      c.setAttribute("aria-selected", String(on));
+      c.tabIndex = on ? 0 : -1;
+      if (on) {
+        this.setBase(c.dataset.nchHint);
+        if (focus) c.focus();
+      }
+    });
+    this.querySelectorAll("[data-nch-flow-pane]").forEach((p) => {
+      p.hidden = p.dataset.nchFlowPane !== k;
+      p.classList.toggle("is-dealt", deal && !p.hidden);
     });
   }
 
@@ -869,10 +920,8 @@ class ArchieHome extends HTMLElement {
         memory.held = true;
         return this.setSlide(+to.dataset.nchSlideTo);
       }
-      if (t.closest("[data-nch-shuffle]")) {
-        this.setSet(memory.set + 1, true);
-        return this.hint(this.base);
-      }
+      const flow = t.closest("[data-nch-flow]");
+      if (flow) return this.setFlow(flow.dataset.nchFlow, { deal: true });
       const fill = t.closest("[data-nch-fill]");
       if (fill) {
         const input = this.input();
@@ -885,7 +934,7 @@ class ArchieHome extends HTMLElement {
     }
     if (e.type === "keydown") {
       // Arrow keys move along a tablist (modes, rows), the ARIA way.
-      const tab = t.closest("[data-nch-mode],[data-nch-slide-to]");
+      const tab = t.closest("[data-nch-mode],[data-nch-slide-to],[data-nch-flow]");
       if (!tab || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
       e.preventDefault();
       const list = [...tab.parentElement.children];
@@ -908,7 +957,7 @@ class ArchieHome extends HTMLElement {
       }
     }
     // Hover or focus on a starting point says, in the box, what it will do.
-    const hinted = t.closest(":is(.nch-chip, .nch-ask)[data-nch-hint]");
+    const hinted = t.closest(":is(.nch-chip, .nch-ask, .nch-flow-chip)[data-nch-hint]");
     if (e.type === "pointerover" || e.type === "focusin") {
       if (hinted) this.hint(hinted.dataset.nchHint);
       const media = t.closest("[data-nch-play]")?.querySelector("video");
