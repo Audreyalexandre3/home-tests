@@ -1554,29 +1554,39 @@
 }
 
 /* ── 8 · The drawer under the box (flag homeDrawer) ──────────────────────────
-   A grey tray tucked under the composer card, inset from its edges so it reads
-   as sliding out from beneath it; the card stays on top and its shadow falls
-   on the tray. The flows are tabs on the tray (the chosen one raised in
-   white), the requests are the lines of 6 without their panel. */
+   One object with the composer: a grey tray as wide as the card, starting
+   behind it (pulled up by the card's radius) so the card sits on it and casts
+   its shadow there. Its head: the flows as tabs, their icon in their tone, the
+   chosen one raised in white, a chevron to shut the drawer down to that head.
+   Its body: the lines of 6, each led by its flow's tile, on the grey. */
 .nch--drawer .session__composer-card {
   z-index: 1;
 }
 
 .nch-drawer {
+  --nch-drawer-tuck: var(--ref-border-radius-md);
   position: relative;
-  margin: -1px var(--ref-spacing-sm) 0;
-  padding-top: 1px;
+  margin-top: calc(-1 * var(--nch-drawer-tuck));
+  padding-top: var(--nch-drawer-tuck);
   border: 1px solid var(--ref-color-grey-20);
   border-top: 0;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--nch-radius) var(--nch-radius);
   background: var(--ref-color-grey-05);
+}
+
+.nch-drawer__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xs) var(--ref-spacing-xs);
 }
 
 .nch-drawer__tabs {
   display: flex;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
   gap: 2px;
-  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) 0;
 }
 
 .nch-drawer__tab {
@@ -1584,7 +1594,7 @@
   align-items: center;
   gap: 6px;
   height: 32px;
-  padding: 0 10px 0 4px;
+  padding: 0 10px;
   border: 1px solid transparent;
   border-radius: var(--app-radius-md);
   background: transparent;
@@ -1597,6 +1607,12 @@
     border-color var(--ref-animation-short) var(--app-ease-standard);
 }
 
+.nch-drawer__tab > i {
+  width: 16px;
+  height: 16px;
+  background-color: var(--nch-tone);
+}
+
 .nch-drawer__tab:hover {
   background: var(--ref-color-white);
 }
@@ -1604,6 +1620,14 @@
 .nch-drawer__tab[aria-selected="true"] {
   border-color: var(--ref-color-grey-20);
   background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-low);
+}
+
+/* Shut, no tab is « on »: the drawer shows its flows to choose from. */
+.nch-drawer.is-shut .nch-drawer__tab[aria-selected="true"] {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .nch-drawer__tab:focus-visible {
@@ -1611,50 +1635,35 @@
   outline-offset: 1px;
 }
 
+.nch-drawer__shut {
+  flex: none;
+  align-self: flex-start;
+}
+
+.nch-drawer__shut i {
+  transition: transform var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.nch-drawer.is-shut .nch-drawer__shut i {
+  transform: rotate(180deg);
+}
+
+.nch-drawer__body {
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+
 .nch-asks.nch-drawer__list {
   margin: 0;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs) 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xxs) var(--ref-spacing-xs);
   border: 0;
   border-radius: 0;
   background: transparent;
 }
 
+.nch-drawer__list .nch-ask {
+  padding-left: 10px;
+}
+
 .nch-drawer__list .nch-ask:is(:hover, :focus-visible) {
   background: var(--ref-color-white);
-}
-
-.nch-drawer__lip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  height: 32px;
-  border: 0;
-  border-radius: 0 0 16px 16px;
-  background: transparent;
-  color: var(--ref-color-grey-80);
-  font: inherit;
-  font-size: var(--sys-text-style-caption-size, 12px);
-  cursor: pointer;
-}
-
-.nch-drawer__lip:hover {
-  color: var(--ref-color-grey-100);
-}
-
-.nch-drawer__lip:focus-visible {
-  outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: -2px;
-}
-
-.nch-drawer__lip i {
-  width: 12px;
-  height: 12px;
-  background-color: currentColor;
-  transition: transform var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.nch-drawer.is-shut .nch-drawer__lip i {
-  transform: rotate(180deg);
 }

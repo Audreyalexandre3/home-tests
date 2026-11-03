@@ -25,19 +25,19 @@
 // the way the Clips space frames it; the top posts with their images and score;
 // the Topic Feed's fresh Topics.
 
-import { isFlagOn } from "../../feature-flags.js?v=2657";
-import { chatStarters } from "../../mocks.js?v=2657";
-import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2657";
-import { getTopPosts } from "../../top-posts-store.js?v=2657";
-import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2657";
-import { getFreshTopics, countFresh } from "../../topics-store.js?v=2657";
-import { findTopicSource } from "../../topics-catalog.js?v=2657";
-import { getContextById } from "../../contexts-store.js?v=2657";
-import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2657";
-import { networkLabel, networkIcon } from "../../social-profiles.js?v=2657";
-import { isWorkspaceMode } from "../../active-playbook.js?v=2657";
-import { escapeHtml } from "../../utils.js?v=2657";
-import "../../archie-pixels.js?v=2657";
+import { isFlagOn } from "../../feature-flags.js?v=2659";
+import { chatStarters } from "../../mocks.js?v=2659";
+import { getVideos, getVideo, exampleVideo } from "../../videos-store.js?v=2659";
+import { getTopPosts } from "../../top-posts-store.js?v=2659";
+import { getFeedForPlaybook } from "../../topic-feeds-store.js?v=2659";
+import { getFreshTopics, countFresh } from "../../topics-store.js?v=2659";
+import { findTopicSource } from "../../topics-catalog.js?v=2659";
+import { getContextById } from "../../contexts-store.js?v=2659";
+import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2659";
+import { networkLabel, networkIcon } from "../../social-profiles.js?v=2659";
+import { isWorkspaceMode } from "../../active-playbook.js?v=2659";
+import { escapeHtml } from "../../utils.js?v=2659";
+import "../../archie-pixels.js?v=2659";
 
 const DIRECTIONS = [
   ["homeOneInput", oneInput],
@@ -838,9 +838,10 @@ function promptList({ composer, session }) {
 
 // ── 8 · The drawer under the box ────────────────────────────────────────────
 // The requests of 6, in a drawer that slides out from under the composer card:
-// a grey tray tucked beneath it, the flows as tabs on its top edge, the chosen
-// flow's four requests below, and a lip to close it (the box stays alone) or
-// open it again. Same hover and click as 6.
+// a grey tray as wide as the card, starting behind it, so the two read as one
+// object. On the tray, the flows as tabs (their icon in their tone) and a
+// chevron to shut it; shut, the tabs stay and choosing one opens it again.
+// Under them, the chosen flow's four requests. Same hover and click as 6.
 function drawer({ composer, session }) {
   const ctx = ctxOf(session);
   const voices = networkVoiceOn() && ctx ? voicesToFinish(ctx) : [];
@@ -848,24 +849,25 @@ function drawer({ composer, session }) {
     <button type="button" class="nch-drawer__tab" role="tab" id="nchFlow-${f.k}" aria-controls="nchFlowPane-${f.k}"
       aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-nch-flow="${f.k}"
       data-nch-hint="${esc(f.hint || KINDS[f.k].hint)}">
-      <span class="nch-tile nch-tile--sm nch-tone--${flowTone(f.k)}" aria-hidden="true"><i class="${flowIcon(f.k)}"></i></span>
+      <i class="${flowIcon(f.k)} nch-tone--${flowTone(f.k)}" aria-hidden="true"></i>
       <span>${esc(f.name)}</span>
     </button>`;
   const pane = (f, i) => `
     <ul class="nch-asks nch-drawer__list" id="nchFlowPane-${f.k}" role="tabpanel" aria-labelledby="nchFlow-${f.k}"
       data-nch-flow-pane="${f.k}"${i ? " hidden" : ""}>
-      ${f.asks.map((t) => askRow(f.k, t)).join("")}
-      ${f.k === "free" ? voiceAsk(ctx, voices) : ""}
+      ${f.asks.map((t) => askRow(f.k, t, { icon: flowIcon(f.k) })).join("")}
+      ${f.k === "free" ? voiceAsk(ctx, voices, true) : ""}
     </ul>`;
   const tray = `
     <div class="nch-drawer" data-nch-drawer>
-      <div class="nch-drawer__body" id="nchDrawerBody">
+      <div class="nch-drawer__head">
         <div class="nch-drawer__tabs" role="tablist" aria-label="Example requests by flow">${FLOWS.map(tab).join("")}</div>
-        ${FLOWS.map(pane).join("")}
+        <button type="button" class="ap-icon-button transparent grey nch-drawer__shut" data-nch-drawer-toggle
+          aria-controls="nchDrawerBody" aria-expanded="true" aria-label="Hide examples" title="Hide examples">
+          <i class="ap-icon-chevron-up" aria-hidden="true"></i>
+        </button>
       </div>
-      <button type="button" class="nch-drawer__lip" data-nch-drawer-toggle aria-controls="nchDrawerBody" aria-expanded="true">
-        <span data-nch-drawer-label>Hide examples</span><i class="ap-icon-chevron-up" aria-hidden="true"></i>
-      </button>
+      <div class="nch-drawer__body" id="nchDrawerBody">${FLOWS.map(pane).join("")}</div>
     </div>`;
   // The tray goes right under the card, before the composer's hint row.
   const hint = '<div class="session__composer-hint">';
@@ -1004,9 +1006,11 @@ class ArchieHome extends HTMLElement {
     const d = this.querySelector("[data-nch-drawer]");
     d.classList.toggle("is-shut", shut);
     d.querySelector("#nchDrawerBody").hidden = shut;
-    const lip = d.querySelector("[data-nch-drawer-toggle]");
-    lip.setAttribute("aria-expanded", String(!shut));
-    lip.querySelector("[data-nch-drawer-label]").textContent = shut ? "Show examples" : "Hide examples";
+    const btn = d.querySelector("[data-nch-drawer-toggle]");
+    const label = shut ? "Show examples" : "Hide examples";
+    btn.setAttribute("aria-expanded", String(!shut));
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
   }
 
   // The example set on show (direction 7). `deal`: on « Other examples ».
@@ -1058,7 +1062,11 @@ class ArchieHome extends HTMLElement {
       }
       if (t.closest("[data-nch-drawer-toggle]")) return this.shutDrawer(!memory.drawerShut);
       const flow = t.closest("[data-nch-flow]");
-      if (flow) return this.setFlow(flow.dataset.nchFlow, { deal: true });
+      if (flow) {
+        // A shut drawer opens on the flow you chose.
+        if (memory.drawerShut && flow.closest("[data-nch-drawer]")) this.shutDrawer(false);
+        return this.setFlow(flow.dataset.nchFlow, { deal: true });
+      }
       const fill = t.closest("[data-nch-fill]");
       if (fill) {
         const input = this.input();
