@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2660";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2660";
-import { conceptHint } from "./concepts.js?v=2660";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2662";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2662";
+import { conceptHint } from "./concepts.js?v=2662";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2660";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2660";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2660";
-import { isFlagOn } from "./feature-flags.js?v=2660";
-import { clipLookOf } from "./videos-store.js?v=2660";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2660";
-import { parseHashParams } from "./url-state.js?v=2660";
+} from "./playbook-brand-kit.js?v=2662";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2662";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2662";
+import { isFlagOn } from "./feature-flags.js?v=2662";
+import { clipLookOf } from "./videos-store.js?v=2662";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2662";
+import { parseHashParams } from "./url-state.js?v=2662";
 import {
   isListPart,
   voiceParts,
@@ -56,13 +56,13 @@ import {
   canLearnFrom,
   ADAPTED_FROM,
   voiceHasRules,
-} from "./voice-parts.js?v=2660";
-import { showToast } from "./components/toast.js?v=2660";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2660";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2660";
-import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2660";
-import { consumeHandoff } from "./handoff.js?v=2660";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2660";
+} from "./voice-parts.js?v=2662";
+import { showToast } from "./components/toast.js?v=2662";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2662";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2662";
+import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2662";
+import { consumeHandoff } from "./handoff.js?v=2662";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2662";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -71,7 +71,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2660";
+} from "./social-profiles.js?v=2662";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -1097,15 +1097,25 @@ function renderSectionHint(hint) {
 function renderLanguagePicker(data) {
   const selected = contextLanguages(data);
   const primary = data.primaryLanguage || selected[0];
-  // Single-language mode (flag OFF) — a plain picker fixed to the primary
-  // language, matching the pre-multilingual behaviour.
+  // Single-language mode (flag OFF) — one language, switchable (asked
+  // 2026-11-04: « dans la review, il faut pouvoir changer la langue »).
   if (!multilingualOn()) {
-    // The review (cfg.chipCloud): one language can't be changed here — say it
-    // as the fact it is, not as a dropdown with a single option.
-    if (cfg?.chipCloud) return `<span class="ap-tag grey"><span>${esc(primary)}</span></span>`;
-    return `<select class="ap-native-select recap__lang-select" data-recap-primary-language aria-label="Language">
-      <option value="${esc(primary)}" selected>${esc(primary)}</option>
-    </select>`;
+    const options = LANGUAGE_OPTIONS.map((o) => {
+      const on = o === primary;
+      return `<div class="ap-select-option${on ? " selected" : ""}" data-recap-lang-pick="${esc(o)}" role="option" aria-selected="${on}">
+          <span class="ap-select-option-text">${esc(o)}</span>
+          ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    }).join("");
+    return `<details class="ap-select recap__lang-select">
+        <summary class="ap-select-trigger" aria-label="Language">
+          <span class="ap-select-value">${esc(primary)}</span>
+          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+        </summary>
+        <div class="ap-select-dropdown" role="listbox" aria-label="Language">
+          <div class="ap-select-options">${options}</div>
+        </div>
+      </details>`;
   }
   const chips = LANGUAGE_OPTIONS.map((o) => {
     const on = selected.includes(o);
@@ -4021,6 +4031,26 @@ function onClick(event) {
     }
     data.languages = langs;
     if (!data.primaryLanguage || !langs.includes(data.primaryLanguage)) data.primaryLanguage = langs[0];
+    repaint();
+    return;
+  }
+
+  // Single-language switch (flag OFF): the Playbook's one language, replaced.
+  // Its voice entry moves with it — the same words, relabelled.
+  const langPick = event.target.closest("[data-recap-lang-pick]");
+  if (langPick) {
+    langPick.closest("details")?.removeAttribute("open");
+    const lang = langPick.dataset.recapLangPick;
+    const prev = contextLanguages(data)[0];
+    if (lang !== prev) {
+      const vbl = data.voiceByLanguage && typeof data.voiceByLanguage === "object" ? data.voiceByLanguage : {};
+      vbl[lang] = vbl[prev] || vbl[lang] || emptyVoiceEntry(data);
+      delete vbl[prev];
+      data.voiceByLanguage = vbl;
+      data.languages = [lang];
+      data.primaryLanguage = lang;
+      data.language = lang;
+    }
     repaint();
     return;
   }

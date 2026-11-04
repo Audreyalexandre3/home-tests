@@ -997,6 +997,13 @@ body:not(.onboarding) .welcome-intro__wordmark {
   display: block;
 }
 
+/* A card with an open dropdown (the language) rises above the next card —
+   each card is its own stacking context (transform), so the menu would sit
+   under its neighbour. */
+.welcome-flow__sheet.is-scroll .welcome-review__card:has(details[open]) {
+  z-index: 1;
+}
+
 /* A card of the column: one Playbook block, in edit. */
 .welcome-flow__sheet.is-scroll .welcome-review__card {
   position: relative;
