@@ -3372,3 +3372,11 @@ button.recap__logotile:hover {
 .welcome-intro.welcome-flow .welcome-intro__card {
   animation: none;
 }
+
+/* The review's empty network voice is an empty state, not a card
+   (playbook-v2.css .pb2-voice-empty): no frame, whatever the column does. */
+.welcome-intro.welcome-flow .welcome-flow__sheet .welcome-review__card.pb2-voice-empty {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}

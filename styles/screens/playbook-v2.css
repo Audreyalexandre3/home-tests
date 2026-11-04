@@ -1339,6 +1339,54 @@
 
 /* The ways to give a voice: the run's option rows, in a block — no top margin
    (the block's head spaces it). */
+/* A network with no voice of its own (voiceEmptyState): an empty state on the
+   ground, not a card — the DS anatomy (design-guidelines empty-states,
+   bounded-region tier): glyph, H3 + one sentence, then the ways; centred,
+   the text capped at 420px. */
+.pb2-block.pb2-voice-empty {
+  align-items: center;
+  gap: 0;
+  padding: var(--ref-spacing-lg) 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: center;
+}
+
+.pb2-voice-empty__icon {
+  font-size: var(--sys-icon-css-xl);
+  color: var(--ref-color-grey-80);
+}
+
+.pb2-voice-empty__text {
+  display: grid;
+  gap: var(--ref-spacing-xxxs);
+  max-width: 420px;
+  margin: var(--ref-spacing-lg) 0 var(--ref-spacing-md);
+}
+
+.pb2-voice-empty__title {
+  margin: 0;
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.pb2-voice-empty__body {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+  text-wrap: pretty;
+}
+
+.pb2-voice-empty .pb2-voice-rows {
+  width: 100%;
+  max-width: 560px;
+  text-align: start;
+}
+
 .welcome-flow__options.pb2-voice-rows {
   margin: 0;
 }

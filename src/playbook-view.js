@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2688";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2688";
-import { conceptHint } from "./concepts.js?v=2688";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2689";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2689";
+import { conceptHint } from "./concepts.js?v=2689";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2688";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2688";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2688";
-import { isFlagOn } from "./feature-flags.js?v=2688";
-import { clipLookOf } from "./videos-store.js?v=2688";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2688";
-import { parseHashParams } from "./url-state.js?v=2688";
+} from "./playbook-brand-kit.js?v=2689";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2689";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2689";
+import { isFlagOn } from "./feature-flags.js?v=2689";
+import { clipLookOf } from "./videos-store.js?v=2689";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2689";
+import { parseHashParams } from "./url-state.js?v=2689";
 import {
   isListPart,
   voiceParts,
@@ -57,13 +57,13 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2688";
-import { showToast } from "./components/toast.js?v=2688";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2688";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2688";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2688";
-import { consumeHandoff } from "./handoff.js?v=2688";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2688";
+} from "./voice-parts.js?v=2689";
+import { showToast } from "./components/toast.js?v=2689";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2689";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2689";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2689";
+import { consumeHandoff } from "./handoff.js?v=2689";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2689";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -71,7 +71,7 @@ import {
   networkIcon,
   getConnectedProfiles,
   normalizeNetwork,
-} from "./social-profiles.js?v=2688";
+} from "./social-profiles.js?v=2689";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2820,7 +2820,30 @@ function voiceWaysRows(items) {
     .join("")}</ul>`;
 }
 
-function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", className = "pb2-voice-ways" } = {}) {
+// A network with no voice of its own, in the run's review and on the fiche:
+// an empty state, straight on the ground, not a card (2026-11-04, asked:
+// « ceci devrait prendre le style des empty states, donc pas dans une card,
+// mais direct sur le background. Partout »). The DS ships no generic empty
+// state, so it is composed from its anatomy (design-guidelines empty-states):
+// the network's glyph bare (no medallion), the benefit as an H3, one sentence,
+// then the ways as the run's option rows. Still a .pb2-block, so the review
+// picks it as its part's card like any other.
+function voiceEmptyState(net, rows, body, { className = "" } = {}) {
+  const label = networkLabel(net);
+  return `<section class="pb2-block pb2-block--wide pb2-voice-empty ${className}">
+    <i class="${networkIcon(net)} pb2-voice-empty__icon" aria-hidden="true"></i>
+    <div class="pb2-voice-empty__text">
+      <h3 class="pb2-voice-empty__title">Give ${esc(label)} its own voice</h3>
+      <p class="pb2-voice-empty__body">${esc(body)}</p>
+    </div>
+    ${rows}
+  </section>`;
+}
+
+function voiceWaysCard(
+  net = null,
+  { title = "Rewrite it from", hint = "", className = "pb2-voice-ways", empty = "" } = {},
+) {
   const account = getConnectedProfiles().find((p) => canLearnFrom(p) && (!net || normalizeNetwork(p.platform) === net));
   const label = net ? networkLabel(net) : "";
   const tiles = [
@@ -2869,27 +2892,25 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
         )
         .join("")}</div>
     </section>`;
-  return pb2Block(
-    title,
-    voiceWaysRows(
-      tiles.map((c) => ({
-        attrs: `data-voice-ask="${esc(net || "")}" data-voice-choice="${c.value}"`,
-        icon: c.icon,
-        name: c.tile,
-        hint: c.hint,
-      })),
-    ),
-    {
-      wide: true,
-      hint:
-        hint ||
-        (net
-          ? `I show you what I'd change, and you decide what to keep.`
-          : "I rewrite your default voice from what I read. You can edit it after."),
-      className,
-      icon: net ? networkIcon(net) : "",
-    },
+  const rows = voiceWaysRows(
+    tiles.map((c) => ({
+      attrs: `data-voice-ask="${esc(net || "")}" data-voice-choice="${c.value}"`,
+      icon: c.icon,
+      name: c.tile,
+      hint: c.hint,
+    })),
   );
+  if (empty && net) return voiceEmptyState(net, rows, empty, { className });
+  return pb2Block(title, rows, {
+    wide: true,
+    hint:
+      hint ||
+      (net
+        ? `I show you what I'd change, and you decide what to keep.`
+        : "I rewrite your default voice from what I read. You can edit it after."),
+    className,
+    icon: net ? networkIcon(net) : "",
+  });
 }
 
 // The run's Voice review (cfg.networkPicker — 2026-10-29): a card per
@@ -2909,8 +2930,7 @@ function networkPickerCards(data, nets) {
     .filter((net) => picked.includes(net) && !networkVoiceFilled(data, net))
     .map((net) =>
       voiceWaysCard(net, {
-        title: `Voice for ${networkLabel(net)}`,
-        hint: `Empty for now. Until you fill it in, I write your ${networkLabel(net)} posts in your default voice. Start from:`,
+        empty: `Until you do, I write your ${networkLabel(net)} posts in your default voice. Start from one of these.`,
         className: `pb2-voice-net pb2-voice-net--${net}`,
       }),
     );
@@ -3005,13 +3025,16 @@ function networkVoiceEmpty(net, chosen) {
       hint: "Start from your default voice",
     },
   ].filter(Boolean);
-  // One block under the tab's head (asked: « visuellement c'est pas terrible »):
-  // the head says what happens and carries Keep the default voice; the block
-  // only offers the ways — no second title, icon or sentence.
-  return pb2Block(`Give ${label} its own voice`, voiceWaysRows(tiles), {
-    wide: true,
-    className: `pb2-voice-net pb2-voice-net--${net}`,
-  });
+  // Under the tab's head (which carries Keep the default voice), the empty
+  // state: what happens meanwhile, then the ways.
+  return voiceEmptyState(
+    net,
+    voiceWaysRows(tiles),
+    chosen
+      ? `I write your ${label} posts in your default voice, as you chose. Give it one anytime.`
+      : `Until you do, I write your ${label} posts in your default voice. Start from one of these.`,
+    { className: `pb2-voice-net pb2-voice-net--${net}` },
+  );
 }
 
 function networkVoiceLead(net, voice, data) {
@@ -3056,9 +3079,7 @@ function renderNetworkVoiceRead(data) {
       data,
       `${pb2TabHead("voice", keep, {
         noEdit: true,
-        lead: chosen
-          ? `${label} uses your default voice, by choice.`
-          : `No voice of its own yet. Until then, I write your ${label} posts in your default voice.`,
+        lead: chosen ? `${label} uses your default voice, by choice.` : `${label} has no voice of its own yet.`,
         ...voiceTitle(data),
       })}${voiceIntroHtml(data)}<div class="pb2-grid">${networkVoiceEmpty(net, chosen)}</div>`,
     );
