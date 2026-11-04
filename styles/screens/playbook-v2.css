@@ -1264,34 +1264,147 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* « One idea, two voices » before the network rows (2026-11-04): the voice
-   intro's two posts, still — the review repaints on every tick, so no
-   word-by-word fade. */
-.pb2-voice-example {
+/* « One idea, every network » after the network rows (playbook-view
+   voiceFanHtml, 2026-11-04): an illustration, not UI — no card, no border
+   around a post. The explainer's vocabulary (welcome-explainer.css): a butter
+   disc behind, the idea on butter, olive threads (.wx-thread, .wx-particle)
+   with a particle running each, the posts as grey bars (grey-40 is a fill
+   here, never a line). A network with its own voice: its bars on butter, the
+   one shape that differs. Motion: the idea pops, the threads draw, the posts
+   write themselves bar by bar, then only the particles run. It replays when
+   the review repaints (a checkbox), which shows the change. Reduced motion:
+   the last frame, still. */
+.pb2-fan {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(96px, 160px) 48px minmax(0, 1fr);
+  align-items: center;
+  padding: var(--ref-spacing-md) 0;
+  isolation: isolate;
+}
+
+.pb2-fan::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: -24px;
+  width: 220px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--app-butter) 50%, transparent);
+  transform: translateY(-50%);
+  animation: wx-bg-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pb2-fan__idea {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
-}
-
-.pb2-voice-example .voice-intro__post {
-  padding: var(--ref-spacing-sm);
-  border: 1px solid var(--ref-color-grey-20);
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border-radius: var(--app-radius-card);
-}
-
-.pb2-voice-example .voice-intro__post-text {
-  min-height: 0;
+  background: var(--app-butter);
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+  animation: wx-pop 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.pb2-voice-example .voice-intro__traits {
-  display: none;
+.pb2-fan__idea-label {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-80);
 }
 
-.pb2-voice-example *,
-.pb2-voice-example .voice-intro__post {
-  animation: none;
+.pb2-fan__threads {
+  overflow: visible;
+}
+
+.pb2-fan__rows {
+  display: grid;
+  grid-auto-rows: 52px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pb2-fan__row {
+  display: grid;
+  grid-template-columns: 16px minmax(72px, 200px) minmax(0, auto);
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  animation: wx-pop 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
+}
+
+.pb2-fan__post {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 var(--ref-spacing-xs);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-05);
+  box-sizing: border-box;
+}
+
+.pb2-fan__post b,
+.pb2-fan__tags b {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ref-color-grey-40);
+  transform-origin: left;
+  animation: pb2-fan-write 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0s) + 0.2s + var(--j, 0) * 0.08s) both;
+}
+
+.pb2-fan__tags {
+  display: flex;
+  gap: 4px;
+}
+
+.pb2-fan__tags b {
+  width: 22px;
+}
+
+.pb2-fan__row.is-own .pb2-fan__post {
+  background: var(--app-butter);
+}
+
+.pb2-fan__row.is-own .pb2-fan__post b {
+  background: var(--app-butter-accent);
+}
+
+.pb2-fan__who {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.pb2-fan__row.is-own .pb2-fan__who {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
+}
+
+@keyframes pb2-fan-write {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb2-fan *,
+  .pb2-fan::before {
+    animation: none !important;
+  }
+  .pb2-fan .wx-particle {
+    display: none;
+  }
+  .pb2-fan .wx-thread path {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* The voice review's network rows: the connected accounts on the network,

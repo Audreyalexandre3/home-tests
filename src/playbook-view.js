@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2670";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2670";
-import { conceptHint } from "./concepts.js?v=2670";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2672";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2672";
+import { conceptHint } from "./concepts.js?v=2672";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2670";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2670";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2670";
-import { isFlagOn } from "./feature-flags.js?v=2670";
-import { clipLookOf } from "./videos-store.js?v=2670";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2670";
-import { parseHashParams } from "./url-state.js?v=2670";
+} from "./playbook-brand-kit.js?v=2672";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2672";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2672";
+import { isFlagOn } from "./feature-flags.js?v=2672";
+import { clipLookOf } from "./videos-store.js?v=2672";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2672";
+import { parseHashParams } from "./url-state.js?v=2672";
 import {
   isListPart,
   voiceParts,
@@ -57,13 +57,14 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2670";
-import { showToast } from "./components/toast.js?v=2670";
-import { introSeen, voiceAskHtml, learnedVoiceHtml, postCardHtml } from "./components/voice-intro-modal.js?v=2670";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2670";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2670";
-import { consumeHandoff } from "./handoff.js?v=2670";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2670";
+} from "./voice-parts.js?v=2672";
+import { showToast } from "./components/toast.js?v=2672";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2672";
+import { NETWORK_VOICE_SAMPLE } from "./mocks.js?v=2672";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2672";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2672";
+import { consumeHandoff } from "./handoff.js?v=2672";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2672";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -72,7 +73,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2670";
+} from "./social-profiles.js?v=2672";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2893,6 +2894,81 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
   );
 }
 
+// « One idea, every network » (networkPickerCards): an illustration in the
+// explainer's vocabulary (welcome-explainer.css) — Archie's butter, olive
+// threads, a particle running each one. A post is sketched from its sample
+// (NETWORK_VOICE_SAMPLE): a bar per line, a pill per hashtag, so each voice
+// keeps its real shape without a word to read. Rows are a fixed pitch so the
+// threads are drawn without measuring.
+const FAN_ROW = 52;
+const FAN_GAP = 8;
+const FAN_W = 48;
+const LINE_CHARS = 44;
+
+function sketchBars(text) {
+  const bars = [];
+  const tags = [];
+  for (const para of String(text)
+    .split("\n")
+    .filter((l) => l.trim())) {
+    const words = para.split(/\s+/).filter((w) => !(w.startsWith("#") && tags.push(w)));
+    let line = "";
+    for (const w of words) {
+      if (line && (line + " " + w).length > LINE_CHARS) (bars.push(line), (line = w));
+      else line = line ? `${line} ${w}` : w;
+    }
+    if (line) bars.push(line);
+  }
+  return {
+    bars: bars.slice(0, 4).map((l) => Math.max(18, Math.round((l.length / LINE_CHARS) * 100))),
+    tags: tags.length,
+  };
+}
+
+function voiceFanHtml(nets, picked) {
+  const pitch = FAN_ROW + FAN_GAP;
+  const h = nets.length * pitch - FAN_GAP;
+  const mid = h / 2;
+  const threads = nets
+    .map((net, i) => {
+      const y = i * pitch + FAN_ROW / 2;
+      const p = `M0 ${mid} C${FAN_W / 2} ${mid}, ${FAN_W / 2} ${y}, ${FAN_W} ${y}`;
+      const d = 0.2 + i * 0.12;
+      return `<g class="wx-thread" style="--d:${d}s">
+        <path d="${p}" pathLength="1" />
+        <circle class="wx-particle" r="3" opacity="0">
+          <set attributeName="opacity" to="1" begin="${(d + 0.8).toFixed(2)}s" />
+          <animateMotion dur="2.4s" begin="${(d + 0.8).toFixed(2)}s" repeatCount="indefinite" path="${p}" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.45 0 0.55 1" />
+        </circle>
+      </g>`;
+    })
+    .join("");
+  const rows = nets
+    .map((net, i) => {
+      const own = picked.includes(net);
+      const { bars, tags } = sketchBars(NETWORK_VOICE_SAMPLE[own ? net : "brand"] || NETWORK_VOICE_SAMPLE.brand);
+      const label = networkLabel(net);
+      return `<li class="pb2-fan__row${own ? " is-own" : ""}" style="--d:${(0.7 + i * 0.12).toFixed(2)}s">
+        <i class="${networkIcon(net)} pb2-fan__net" aria-hidden="true"></i>
+        <span class="pb2-fan__post" aria-hidden="true">${bars
+          .map((w, j) => `<b style="width:${w}%;--j:${j}"></b>`)
+          .join("")}${tags ? `<span class="pb2-fan__tags">${"<b></b>".repeat(Math.min(tags, 3))}</span>` : ""}</span>
+        <span class="pb2-fan__who">${own ? `${esc(label)} voice` : "Default voice"}</span>
+      </li>`;
+    })
+    .join("");
+  const said = nets
+    .map((n) => `${networkLabel(n)}: ${picked.includes(n) ? "a post in its own voice" : "the default post"}`)
+    .join(", ");
+  return `<div class="pb2-fan" style="--fan-h:${h}px" role="img" aria-label="${esc(`One idea, every network. ${said}.`)}">
+    <div class="pb2-fan__idea" aria-hidden="true"><span class="pb2-fan__idea-label">One idea</span>${esc(
+      NETWORK_VOICE_SAMPLE.brand.split(":")[0],
+    )}</div>
+    <svg class="pb2-fan__threads" viewBox="0 0 ${FAN_W} ${h}" width="${FAN_W}" height="${h}" aria-hidden="true">${threads}</svg>
+    <ul class="pb2-fan__rows" aria-hidden="true">${rows}</ul>
+  </div>`;
+}
+
 // The run's Voice review (cfg.networkPicker — 2026-10-29,
 // asked: « que l'on puisse ou non ajouter des voices pour des networks
 // spécifiques »; the main-network card was removed the same day, asked):
@@ -2941,30 +3017,20 @@ function networkPickerCards(data, nets, first) {
   };
   // What « the default voice » means for the posts, shown, not told
   // (2026-11-04, asked: « est-ce que le user comprend que ses posts seront
-  // pareils partout s'il utilise la même default voice partout ? »): said in
-  // the question's hint, then shown in its own card right after it (after, so
-  // the part's confirm is never reached before the checkboxes) — the voice
-  // intro's sample, one idea in the
-  // default voice (the post every unchecked network gets), then the same idea
-  // in a network's own voice (the first one checked, else LinkedIn, the
-  // starkest contrast, else the first listed). Picked with the networks part
-  // (`.pb2-voice-networks`).
-  const sampleNet = picked[0] || (all.includes("linkedin") ? "linkedin" : all[0]);
-  const sampleLabel = networkLabel(sampleNet);
-  const exampleBlock = pb2Block(
-    "One idea, two voices",
-    `<div class="pb2-voice-example">${postCardHtml(data, "brand", "Default voice · every network without its own")}${postCardHtml(
-      data,
-      sampleNet,
-      picked.includes(sampleNet) ? `${sampleLabel} voice` : `If ${sampleLabel} had its own voice`,
-    )}</div>`,
-    {
-      wide: true,
-      hint: "The same idea, written for every network without its own voice, then for one with its own.",
-      index: first + 1,
-      className: "pb2-voice-networks pb2-voice-compare",
-    },
-  );
+  // pareils partout s'il utilise la même default voice partout ? »), as an
+  // illustration, not as UI (same day, asked: « une illustration/animation
+  // didactique, plutôt que cet élément qui ressemble à de l'interface »): one
+  // idea, a thread to each network, and the post each one gets sketched as
+  // bars — the same shape for every unchecked network, its own for a checked
+  // one. Live: checking a network redraws its post. After the checkboxes, so
+  // the part's confirm is never reached before them; picked with the networks
+  // part (`.pb2-voice-networks`).
+  const exampleBlock = pb2Block("One idea, every network", voiceFanHtml(all, picked), {
+    wide: true,
+    hint: "A network without its own voice gets the default post. One with its own voice gets a post written for it.",
+    index: first + 1,
+    className: "pb2-voice-networks pb2-voice-compare",
+  });
   const pickBlock = pb2Block(
     "Which networks get their own voice?",
     `<div class="pb2-netpick">${all.map(row).join("")}</div>`,
