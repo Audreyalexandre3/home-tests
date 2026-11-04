@@ -1264,131 +1264,155 @@
   gap: var(--ref-spacing-xs);
 }
 
-/* « One idea, every network » after the network rows (playbook-view
-   voiceFanHtml, 2026-11-04): an illustration, not UI — no card, no border
-   around a post. The explainer's vocabulary (welcome-explainer.css): a butter
-   disc behind, the idea on butter, olive threads (.wx-thread, .wx-particle)
-   with a particle running each, the posts as grey bars (grey-40 is a fill
-   here, never a line). A network with its own voice: its bars on butter, the
-   one shape that differs. Motion: the idea pops, the threads draw, the posts
-   write themselves bar by bar, then only the particles run. It replays when
-   the review repaints (a checkbox), which shows the change. Reduced motion:
-   the last frame, still. */
+/* « One idea, every network » (playbook-view voiceFanHtml, 2026-11-04): the
+   rule as a three-beat story in one SVG that scales with the card — the
+   default voice writes one post, the post is copied word for word to every
+   network without its own voice, a checked network gets its own post by its
+   own thread. Illustration, not UI: no hover, nothing clickable. The
+   explainer's vocabulary (welcome-explainer.css): butter for what Archie
+   writes, olive threads; grey-40 is a fill here, never a line. Motion: each
+   beat in turn, eased out, then it holds (it replays when the review
+   repaints, on a checkbox). Reduced motion: the last frame, still. */
 .pb2-fan {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(96px, 160px) 48px minmax(0, 1fr);
-  align-items: center;
-  padding: var(--ref-spacing-md) 0;
-  isolation: isolate;
-}
-
-.pb2-fan::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 50%;
-  left: -24px;
-  width: 220px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--app-butter) 50%, transparent);
-  transform: translateY(-50%);
-  animation: wx-bg-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.pb2-fan__idea {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-radius: var(--app-radius-card);
-  background: var(--app-butter);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  animation: wx-pop 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.pb2-fan__idea-label {
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--ref-font-weight-regular);
-  color: var(--ref-color-grey-80);
-}
-
-.pb2-fan__threads {
-  overflow: visible;
-}
-
-.pb2-fan__rows {
-  display: grid;
-  grid-auto-rows: 52px;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pb2-fan__row {
-  display: grid;
-  grid-template-columns: 16px minmax(72px, 200px) minmax(0, auto);
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  animation: wx-pop 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
-}
-
-.pb2-fan__post {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  height: 100%;
-  padding: 0 var(--ref-spacing-xs);
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-grey-05);
-  box-sizing: border-box;
-}
-
-.pb2-fan__post b,
-.pb2-fan__tags b {
   display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ref-color-grey-40);
-  transform-origin: left;
-  animation: pb2-fan-write 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0s) + 0.2s + var(--j, 0) * 0.08s) both;
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  overflow: visible;
+  font-family: inherit;
 }
 
-.pb2-fan__tags {
-  display: flex;
-  gap: 4px;
+.pb2-fan .vf-idea {
+  fill: var(--app-butter);
 }
 
-.pb2-fan__tags b {
-  width: 22px;
+.pb2-fan .vf-card {
+  fill: var(--ref-color-white);
+  stroke: var(--ref-color-grey-20);
 }
 
-.pb2-fan__row.is-own .pb2-fan__post {
-  background: var(--app-butter);
+.pb2-fan .vf-caption {
+  font-size: 12px;
+  fill: var(--ref-color-grey-80);
 }
 
-.pb2-fan__row.is-own .pb2-fan__post b {
-  background: var(--app-butter-accent);
-}
-
-.pb2-fan__who {
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--ref-color-grey-80);
-}
-
-.pb2-fan__row.is-own .pb2-fan__who {
+.pb2-fan .vf-caption--strong,
+.pb2-fan .vf-strong {
   font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
+  fill: var(--ref-color-grey-100);
 }
 
-@keyframes pb2-fan-write {
+.pb2-fan .vf-strong {
+  font-size: 14px;
+}
+
+.pb2-fan .vf-card__text {
+  font-size: 12px;
+  fill: var(--ref-color-grey-100);
+}
+
+.pb2-fan .vf-card__text tspan {
+  animation: vf-word 0.3s ease-out both;
+  animation-delay: calc(0.9s + var(--w) * 0.05s);
+}
+
+.pb2-fan .vf-thread {
+  fill: none;
+  stroke: var(--app-butter-accent);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: wx-draw 0.6s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0s) forwards;
+}
+
+.pb2-fan .vf-thread--copy {
+  stroke-dasharray: 0.02 0.02;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  animation: vf-fade 0.4s ease-out var(--d, 0s) both;
+}
+
+.pb2-fan .vf-thread--own {
+  stroke-opacity: 0.9;
+  stroke-width: 2;
+}
+
+.pb2-fan .vf-net {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.pb2-fan .vf-mini {
+  fill: var(--ref-color-grey-05);
+}
+
+.pb2-fan .vf-mini--own {
+  fill: var(--app-butter);
+}
+
+.pb2-fan .vf-bar {
+  fill: var(--ref-color-grey-40);
+}
+
+.pb2-fan .vf-bar--own {
+  fill: var(--app-butter-accent);
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: vf-write 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--d, 0s) + var(--j, 0) * 0.1s);
+}
+
+.pb2-fan .vf-pop {
+  animation: vf-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
+}
+
+.pb2-fan .vf-fade {
+  animation: vf-fade 0.5s ease-out var(--d, 0s) both;
+}
+
+/* A copy leaves the default card at its size and lands in its slot. */
+.pb2-fan .vf-copy {
+  transform-box: fill-box;
+  transform-origin: 0 0;
+  animation: vf-copy 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
+}
+
+@keyframes vf-copy {
+  from {
+    opacity: 0;
+    transform: translate(var(--fx), var(--fy)) scale(var(--fs));
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+@keyframes vf-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes vf-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vf-word {
+  from {
+    fill-opacity: 0;
+  }
+}
+
+@keyframes vf-write {
   from {
     transform: scaleX(0);
   }
@@ -1396,14 +1420,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pb2-fan *,
-  .pb2-fan::before {
+  .pb2-fan tspan {
     animation: none !important;
   }
-  .pb2-fan .wx-particle {
-    display: none;
-  }
-  .pb2-fan .wx-thread path {
+  .pb2-fan .vf-thread {
     stroke-dashoffset: 0;
+  }
+  .pb2-fan .vf-thread--copy {
+    opacity: 1;
   }
 }
 
