@@ -3352,6 +3352,17 @@ button.recap__logotile:hover {
   mask: linear-gradient(to bottom, transparent 10%, #000 50%);
 }
 
+/* Two grounds (2026-11-04, asked: « 2 backgrounds différents »): Archie's
+   gradient and dots behind the animated scenes; the reviews (the Playbook's,
+   the Voice's), where you read and edit, on plain grey-bg. */
+.welcome-intro.welcome-flow.is-review .welcome-intro__stage {
+  background: var(--ref-color-grey-bg);
+}
+
+.welcome-intro.welcome-flow.is-review .welcome-intro__stage::before {
+  content: none;
+}
+
 .welcome-intro.welcome-flow .welcome-intro__card,
 .welcome-intro.welcome-flow .welcome-flow__sheet.is-scroll .welcome-review__card {
   border: 1px solid var(--ref-color-grey-20);
