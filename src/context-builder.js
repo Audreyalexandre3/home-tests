@@ -12,23 +12,41 @@
 // objective, contentAction, ctaLinks, language, color, suggestions, editingId,
 // onComplete }.
 
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=2669";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=2669";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=2670";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=2670";
 import {
   analyzeWebsite,
   analyzeSocialProfiles,
   analyzeDocument,
   analyzeBrandFiles,
   analyzeInterview,
-} from "./context-mock-analysis.js?v=2669";
-import { cloneItems, withNetworkVoices, networkVoiceOn } from "./voice-parts.js?v=2669";
-import { markIntroSeen } from "./components/voice-intro-modal.js?v=2669";
-import { getConnectedProfiles, getConnectedProfileById } from "./social-profiles.js?v=2669";
-import { cloneVoiceByLanguage, DEFAULT_LANGUAGE } from "./languages.js?v=2669";
-import { isFlagOn } from "./feature-flags.js?v=2669";
+} from "./context-mock-analysis.js?v=2670";
+import {
+  cloneItems,
+  withNetworkVoices,
+  networkVoiceOn,
+  networkVoice,
+  voiceHasRules,
+  brandVoiceAsIs,
+} from "./voice-parts.js?v=2670";
+import { markIntroSeen } from "./components/voice-intro-modal.js?v=2670";
+import { getConnectedProfiles, getConnectedProfileById } from "./social-profiles.js?v=2670";
+import { cloneVoiceByLanguage, DEFAULT_LANGUAGE } from "./languages.js?v=2670";
+import { isFlagOn } from "./feature-flags.js?v=2670";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
+
+// The voices the run's review saved: its own for a network that has rules,
+// the default voice (chosen) for one picked and left empty.
+function reviewedVoices(d) {
+  const kept = { ...(d.voiceByNetwork || {}) };
+  for (const n of d.voiceRulesFor) {
+    const { state, voice } = networkVoice(d, n);
+    if (!(state === "own" && voiceHasRules(voice))) kept[n] = brandVoiceAsIs(d);
+  }
+  return kept;
+}
 
 function notify(sessionId) {
   const set = subscribers.get(sessionId);
@@ -469,12 +487,15 @@ export function save(sessionId) {
     voiceSometimes: cloneItems(d.voiceSometimes),
     // A NEW Playbook: each network it publishes on keeps what the review gave
     // it — rules learned from the account's posts, added there, or the default
-    // voice kept. One left unanswered gets nothing, so its first draft asks
-    // (flag voicePerNetwork — stored either way, shown under the flag).
+    // voice kept (flag voicePerNetwork — stored either way, shown under the flag).
     // Re-saving an existing one never rewrites them.
     // The run's voice review (`voiceRulesFor` set) learns nothing behind the
-    // user's back: what it gave each network is what is saved.
-    ...(!d.editingId && { voiceByNetwork: d.voiceRulesFor ? { ...(d.voiceByNetwork || {}) } : withNetworkVoices(d) }),
+    // user's back: what it gave each network is what is saved — and a network
+    // picked there but left empty keeps the default voice, chosen: the run ends
+    // with no network unanswered, so no first draft asks (2026-11-04, asked:
+    // « soit il en choisit un et il applique une voice, soit il fait rien du
+    // tout et la voice by default s'applique »).
+    ...(!d.editingId && { voiceByNetwork: d.voiceRulesFor ? reviewedVoices(d) : withNetworkVoices(d) }),
     brandPersonality: d.brandPersonality || "",
     brandTypography: d.brandTypography ? { ...d.brandTypography } : null,
     brandColors: Array.isArray(d.brandColors) ? d.brandColors.map((c) => ({ ...c })) : [],
