@@ -1191,14 +1191,14 @@ body:not(.onboarding) .welcome-intro__wordmark {
 }
 
 /* Inside the card, one step of air between pieces (12), never two stacked:
-   the rows' own padding halves, the add button and a sub-section (Words to
+   the rule fields one step apart, the add button and a sub-section (Words to
    avoid) ride on the body's gap instead of adding their own margin on top. */
 .welcome-flow__sheet .welcome-review__card .pb2-block__body {
   gap: var(--ref-spacing-xs);
 }
 
-.welcome-flow__sheet .welcome-review__card .pb2-rule-edit {
-  padding-block: var(--ref-spacing-xxs);
+.welcome-flow__sheet .welcome-review__card .pb2-rule-edits {
+  gap: var(--ref-spacing-xs);
 }
 
 .welcome-flow__sheet .welcome-review__card .pb2-avoid-row {
@@ -1321,21 +1321,10 @@ body:not(.onboarding) .welcome-intro__wordmark {
   grid-column: 2;
 }
 
-/* Rules (Always, Never, Now and then): a list — a row per rule between
-   hairlines, its example right under it, small, as part of it. */
-.welcome-review__card .pb2-rule-edits {
-  gap: 0;
-}
-
-.welcome-review__card .pb2-rule-edit {
-  padding: var(--ref-spacing-xs) 0;
-  border-bottom: 1px solid var(--ref-color-grey-20);
-}
-
-.welcome-review__card .pb2-rule-edit:last-child {
-  border-bottom: none;
-}
-
+/* Rules (Always, Never, Now and then): a list — a field per rule, its
+   example right under it, small, as part of it. No hairlines between them
+   (2026-11-04, asked: « pas besoin des séparateurs dans ce genre de blocs »):
+   each field is already a box, the gap separates them. */
 .welcome-review__card .pb2-rule-edit__examples {
   margin: var(--ref-spacing-xxxs) 0 0;
   font-size: var(--sys-text-style-caption-size);
