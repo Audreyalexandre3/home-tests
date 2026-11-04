@@ -638,6 +638,8 @@ const BRING = [
   },
 ];
 
+const FIRST_ASK = "A LinkedIn post announcing our new feature";
+
 function composerFirst({ composer, session }) {
   const chip = (b) => `
     <button type="button" class="nch-chip" data-add-source="${b.kind}" data-nch-hint="${esc(b.hint)}">
@@ -671,7 +673,19 @@ function composerFirst({ composer, session }) {
             DOORS.video(video),
           )}
           ${card("source", "From a doc or a link", fileToDrafts(), "A draft for each network", DOORS.source())}
-          ${card("source", "From your brand", brandImages, "Images in your colours", DOORS.images(ctx))}
+          ${
+            // No Playbook yet → no image settings to open (the door would be
+            // dead). Show the third way in instead: just say what to post.
+            ctx
+              ? card("source", "From your brand", brandImages, "Images in your colours", DOORS.images(ctx))
+              : card(
+                  "source",
+                  "From one sentence",
+                  draftStack(["linkedin"], [FIRST_ASK]),
+                  "Tell me what to post",
+                  DOORS.fill(FIRST_ASK),
+                )
+          }
         </div>
       </section>`;
   } else {
