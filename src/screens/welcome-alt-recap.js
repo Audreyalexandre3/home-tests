@@ -4,8 +4,9 @@
 // staged loader, reload-rehydration, and the "Enter Archie" finish. The
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
-import { navigate } from "../router.js?v=2677";
-import { catalogueRoute } from "../active-playbook.js?v=2677";
+import { navigate } from "../router.js?v=2679";
+import { escapeHtml } from "../utils.js?v=2679";
+import { catalogueRoute } from "../active-playbook.js?v=2679";
 import {
   getDraft,
   isAnalysisReady,
@@ -13,11 +14,11 @@ import {
   patchDraft,
   restoreDraft,
   sectionPatchFromAnalysis,
-} from "../context-builder.js?v=2677";
-import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled } from "../playbook-view.js?v=2677";
-import { renderPageReview, renderReview } from "./welcome-alt-review.js?v=2677";
-import { open as openRenameModal } from "../components/rename-modal.js?v=2677";
-import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2677";
+} from "../context-builder.js?v=2679";
+import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled, setNetworkRules } from "../playbook-view.js?v=2679";
+import { renderPageReview, renderReview } from "./welcome-alt-review.js?v=2679";
+import { open as openRenameModal } from "../components/rename-modal.js?v=2679";
+import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2679";
 import {
   brandVoiceAsIs,
   canLearnFrom,
@@ -27,15 +28,15 @@ import {
   playbookNetworks,
   voiceNetworks,
   onlyNetwork,
-} from "../voice-parts.js?v=2677";
-import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2677";
-import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2677";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2677";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2677";
-import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2677";
-import { openVoiceProposal } from "../components/voice-proposal-modal.js?v=2677";
-import { showToast } from "../components/toast.js?v=2677";
-import { open as openConfirm } from "../components/confirm-modal.js?v=2677";
+} from "../voice-parts.js?v=2679";
+import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2679";
+import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2679";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2679";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2679";
+import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2679";
+import { openVoiceProposal } from "../components/voice-proposal-modal.js?v=2679";
+import { showToast } from "../components/toast.js?v=2679";
+import { open as openConfirm } from "../components/confirm-modal.js?v=2679";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
@@ -166,22 +167,6 @@ function voiceReview(sid, overrides = {}) {
         open: () => editVoiceNetwork(null),
         pick: (all) => all.filter(notNetworks),
       },
-      nets().length > 0 && {
-        id: "voice-networks",
-        tab: "voice",
-        tint: VOICE_TINT,
-        group: NETWORKS_GROUP,
-        groupHint: NETWORKS_HINT,
-        title: "Your networks",
-        nextLabel: "Looks good, on to your networks",
-        // A row like the others, not a « + » button (2026-11-04, asked: « perdue
-        // entre ce qui se passe à gauche et à droite » — the + opened the card
-        // « Looks good, on to your networks » leads to, in other words).
-        icon: "ap-icon-web",
-        lead: "Which networks get a voice of their own.",
-        open: () => editVoiceNetwork(null),
-        pick: (all) => all.filter((el) => el.matches(".pb2-voice-networks")),
-      },
       ...nets()
         .filter((n) => (getDraft(sid).voiceRulesFor || []).includes(n))
         .map((n) => ({
@@ -206,6 +191,74 @@ function voiceReview(sid, overrides = {}) {
           },
         })),
     ].filter(Boolean);
+
+  // Which networks get a voice of their own: a DS multi-select on the left,
+  // under « Network by network » (2026-11-04, asked: « ça pourrait pas juste
+  // être un select avec un dropdown à choix multiple ? » — it replaces a
+  // « Your networks » part and its card of checkboxes). Each network picked
+  // becomes a « Voice for X » part under it.
+  let netMenuOpen = false;
+  const netCheckbox = (on) =>
+    `<span class="ap-checkbox-container" aria-hidden="true"><input type="checkbox" tabindex="-1"${on ? " checked" : ""} /><i></i></span>`;
+  const netSelectHtml = () => {
+    const picked = getDraft(sid).voiceRulesFor || [];
+    const names = nets()
+      .filter((n) => picked.includes(n))
+      .map(networkLabel);
+    return `
+      <details class="ap-select welcome-review__netselect"${netMenuOpen ? " open" : ""}>
+        <summary class="ap-select-trigger" data-voice-netmenu aria-label="Networks with a voice of their own">
+          ${
+            names.length
+              ? `<span class="ap-select-value">${escapeHtml(names.join(", "))}</span>`
+              : `<span class="ap-select-value ap-select-placeholder">Default voice everywhere</span>`
+          }
+          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+        </summary>
+        <div class="ap-select-dropdown" role="listbox" aria-multiselectable="true" aria-label="Networks with a voice of their own">
+          <div class="ap-select-options">
+            ${nets()
+              .map((n) => {
+                const on = picked.includes(n);
+                return `<div class="ap-select-option" role="option" aria-selected="${on}" data-voice-netmenu-net="${escapeHtml(n)}">
+                  ${netCheckbox(on)}<i class="${networkIcon(n)}" aria-hidden="true"></i><span class="ap-select-option-text">${escapeHtml(networkLabel(n))}</span>
+                </div>`;
+              })
+              .join("")}
+          </div>
+        </div>
+      </details>`;
+  };
+  const netSelectClick = (e, repaint) => {
+    if (e.target.closest("[data-voice-netmenu]")) {
+      e.preventDefault();
+      netMenuOpen = !netMenuOpen;
+      repaint();
+      return true;
+    }
+    const net = e.target.closest("[data-voice-netmenu-net]")?.dataset.voiceNetmenuNet;
+    if (net) {
+      setNetworkRules(net, !(getDraft(sid).voiceRulesFor || []).includes(net));
+      repaint();
+      return true;
+    }
+    // A click anywhere else closes it, and goes on to do what it does.
+    if (netMenuOpen && !e.target.closest(".welcome-review__netselect")) {
+      netMenuOpen = false;
+      repaint();
+    }
+    return false;
+  };
+  const extra = () =>
+    nets().length
+      ? {
+          group: NETWORKS_GROUP,
+          hint: NETWORKS_HINT,
+          after: "voice-default",
+          html: netSelectHtml,
+          onClick: netSelectClick,
+        }
+      : null;
 
   // The accounts to read on a network (or any, for the default voice).
   const accountsOn = (net) => getConnectedProfiles().filter((p) => !net || normalizeNetwork(p.platform) === net);
@@ -326,6 +379,7 @@ function voiceReview(sid, overrides = {}) {
         : "Every draft I write starts from this voice. I save as you type.",
     parts,
     onWay,
+    extra,
     next: { label: finishLabel(), go: () => finishRun(sid) },
     // The last confirm and the left's way out are one action: one wording
     // (2026-11-04 — it read « Looks good, finish » beside « Draft my first post »).

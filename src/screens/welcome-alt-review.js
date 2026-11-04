@@ -33,12 +33,12 @@
 // is re-applied after every paint (a MutationObserver on the host) — the card
 // index lives here, not in the DOM.
 
-import { html, raw } from "../utils.js?v=2677";
-import { navigate } from "../router.js?v=2677";
-import { getDraft, patchDraft } from "../context-builder.js?v=2677";
-import { mount } from "../playbook-view.js?v=2677";
-import { parseHashParams } from "../url-state.js?v=2677";
-import { mountShell, tint } from "./welcome-alt-shell.js?v=2677";
+import { html, raw } from "../utils.js?v=2679";
+import { navigate } from "../router.js?v=2679";
+import { getDraft, patchDraft } from "../context-builder.js?v=2679";
+import { mount } from "../playbook-view.js?v=2679";
+import { parseHashParams } from "../url-state.js?v=2679";
+import { mountShell, tint } from "./welcome-alt-shell.js?v=2679";
 
 // Each part's tint (`tint`, welcome-alt-shell.js — the card's rows share it):
 // its cards' header band, its cover and its tile in the list, so the colour
@@ -53,7 +53,8 @@ const GLIDE_MS = 720; // a card glides to the middle
 // `review`: { step, title, sub, parts (a list, or a function for parts that
 // come and go; a part's `open()` opens its tab in edit itself, its `badge` says
 // what's left to do, its `group` / `groupHint` head a run of parts —
-// what's left to do), next: { label, go }, back, onWay?,
+// what's left to do), next: { label, go }, back, onWay?, extra? (a function:
+// { group, hint, after: partId, html(), onClick(e, repaint) }),
 // start? (the part to open first), progress? (false: no step dots) }.
 // `onWay(partId, way, refresh)`: a card's tile was picked (the voice review);
 // `refresh()` repaints the part with what it changed.
@@ -86,6 +87,7 @@ export function renderReview(target, sid, config, review) {
 
   const left = () => {
     const done = reviewed();
+    const extra = review.extra?.();
     return html`
       <h1 class="welcome-flow__title" id="welcomeFlowTitle">${review.title}</h1>
       <p class="welcome-intro__sub">${review.sub}</p>
@@ -96,13 +98,19 @@ export function renderReview(target, sid, config, review) {
           // the default voice, then the networks).
           // Only when there are groups to tell apart: a group of one part was a
           // kicker and a hint repeating the sub-line above it.
+          const groupLi = (name, hint, control = "") =>
+            html`<li class="welcome-review__group">
+              <p class="welcome-flow__kicker">${name}</p>
+              ${hint ? raw(html`<p class="welcome-review__group-hint">${hint}</p>`) : ""}${raw(control)}
+            </li>`;
+          const groups = new Set([...all.map((p) => p.group), extra?.group].filter(Boolean));
           const group =
-            t.group && new Set(all.map((p) => p.group)).size > 1 && t.group !== all[i - 1]?.group
-              ? html`<li class="welcome-review__group">
-                  <p class="welcome-flow__kicker">${t.group}</p>
-                  ${t.groupHint ? raw(html`<p class="welcome-review__group-hint">${t.groupHint}</p>`) : ""}
-                </li>`
+            t.group && t.group !== extra?.group && groups.size > 1 && t.group !== all[i - 1]?.group
+              ? groupLi(t.group, t.groupHint)
               : "";
+          // `review.extra`: a group headed by a control rather than a part
+          // (the voice review's network select), after the part it follows.
+          const after = extra && extra.after === t.id ? groupLi(extra.group, extra.hint, extra.html()) : "";
           const mark = done.has(t.id)
             ? `<span class="welcome-review__check${t.id === justChecked ? " is-new" : ""}" title="Done"><i class="ap-icon-check" aria-hidden="true"></i></span>`
             : here && count > 1 && !calm
@@ -128,6 +136,7 @@ export function renderReview(target, sid, config, review) {
                 ${raw(mark)}
               </button>
             </li>
+            ${raw(after)}
           `;
         })}
       </ul>
@@ -451,6 +460,9 @@ export function renderReview(target, sid, config, review) {
   };
 
   const onClick = (e) => {
+    // The extra control's own clicks (review.extra().onClick returns true when
+    // it handled one); the left repaints with what it changed.
+    if (review.extra?.()?.onClick?.(e, () => shell.paint())) return;
     const part = e.target.closest("[data-review-part]")?.dataset.reviewPart;
     if (part) {
       if (part !== current()) switchPart(part);

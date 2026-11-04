@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2677";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2677";
-import { conceptHint } from "./concepts.js?v=2677";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2679";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2679";
+import { conceptHint } from "./concepts.js?v=2679";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2677";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2677";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2677";
-import { isFlagOn } from "./feature-flags.js?v=2677";
-import { clipLookOf } from "./videos-store.js?v=2677";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2677";
-import { parseHashParams } from "./url-state.js?v=2677";
+} from "./playbook-brand-kit.js?v=2679";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2679";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2679";
+import { isFlagOn } from "./feature-flags.js?v=2679";
+import { clipLookOf } from "./videos-store.js?v=2679";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2679";
+import { parseHashParams } from "./url-state.js?v=2679";
 import {
   isListPart,
   voiceParts,
@@ -57,13 +57,13 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2677";
-import { showToast } from "./components/toast.js?v=2677";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2677";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2677";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2677";
-import { consumeHandoff } from "./handoff.js?v=2677";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2677";
+} from "./voice-parts.js?v=2679";
+import { showToast } from "./components/toast.js?v=2679";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2679";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2679";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2679";
+import { consumeHandoff } from "./handoff.js?v=2679";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2679";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -71,8 +71,7 @@ import {
   networkIcon,
   getConnectedProfiles,
   normalizeNetwork,
-  renderProfileTag,
-} from "./social-profiles.js?v=2677";
+} from "./social-profiles.js?v=2679";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2766,7 +2765,7 @@ function voiceSplitBlock(data, index) {
 // asks. The document and « Write them myself » stay on the saved Playbook's tab.
 function networkVoiceCards(data) {
   if (cfg.networkPicker && !isLibrary() && data.voiceMode !== "manual")
-    return networkPickerCards(data, voiceNetworks(data), voiceParts().length);
+    return networkPickerCards(data, voiceNetworks(data));
   const nets = isLibrary() ? [] : voiceNets(data);
   if (!nets.length) return [];
   const first = voiceParts().length;
@@ -2893,64 +2892,20 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
   );
 }
 
-// The run's Voice review (cfg.networkPicker — 2026-10-29,
-// asked: « que l'on puisse ou non ajouter des voices pour des networks
-// spécifiques »; the main-network card was removed the same day, asked):
-// where the brand posts, then which networks get rules of their own — none by
-// default, every network on the default voice — then a card per network
-// picked. The ways to add rules are tiles in a network's card (2026-10-29: in
-// the right column, not the review's left); once it has rules, its part opens
-// them in edit (setVoiceNetwork).
+// The run's Voice review (cfg.networkPicker — 2026-10-29): a card per
+// network picked, the ways to fill its voice as tiles; once it has rules, its
+// part opens them in edit (setVoiceNetwork). Which networks get a voice of
+// their own is picked on the review's left, in a DS multi-select
+// (welcome-alt-recap, 2026-11-04, asked: « ça pourrait pas juste être un select
+// avec un dropdown à choix multiple ? » — a « Your networks » part with a card
+// of checkboxes, and an illustration under it, came before).
 // `voiceRulesFor` is the draft's (never saved): a network out of it keeps the
-// default voice, chosen; in it with no rules yet, its first draft asks.
-function networkPickerCards(data, nets, first) {
-  // Only the connected networks, from two up (voiceNetworks) — no voice for a
-  // network not connected (2026-10-29, reverting the same morning's « créer une
-  // voice pour un network non connecté »).
+// default voice, chosen; in it and left empty, the default voice too, at save.
+function networkPickerCards(data, nets) {
   if (!networkVoiceOn() || !nets.length) return [];
-  const all = nets;
   const picked = data.voiceRulesFor || [];
-  // One row per network — a voice is a network's, not an account's — with the
-  // connected accounts on it underneath, as a reminder of what I write for
-  // (2026-10-29, asked: « groupe ça par network »).
-  const accountsOn = (net) => getConnectedProfiles().filter((p) => normalizeNetwork(p.platform) === net);
-  // One compact row per network (2026-10-29, asked: « + compact ») — its icon,
-  // its name, the account I write for (or « Not connected »), and a DS
-  // checkbox first, as a multi-select list reads (asked: « c'est ptet des
-  // checkbox plutôt non? », then « à gauche »). The whole row is the label.
-  const row = (net) => {
-    const accounts = accountsOn(net);
-    const on = picked.includes(net);
-    // Each account wears its avatar (the house profile tag, asked: « les profils
-    // devraient porter leurs avatars aussi »).
-    const toFill = on && !networkVoiceFilled(data, net) ? " · to fill in" : "";
-    const caption = accounts.length
-      ? `${accounts.map((a) => renderProfileTag(a)).join("")}${toFill ? `<span>${esc(toFill)}</span>` : ""}`
-      : esc(`Not connected${toFill}`);
-    return `
-    <label class="pb2-netpick__row">
-      <span class="ap-checkbox-container" data-pb2-voice-rules="${esc(net)}"><input type="checkbox" ${
-        on ? "checked" : ""
-      } aria-label="A voice of its own for ${esc(networkLabel(net))}" /><i></i></span>
-      <i class="${networkIcon(net)} pb2-netpick__icon" aria-hidden="true"></i>
-      <span class="pb2-netpick__text">
-        <span class="pb2-netpick__name">${esc(networkLabel(net))}</span>
-        <span class="pb2-netpick__account">${caption}</span>
-      </span>
-    </label>`;
-  };
-  const pickBlock = pb2Block(
-    "Which networks get their own voice?",
-    `<div class="pb2-netpick">${all.map(row).join("")}</div>`,
-    {
-      wide: true,
-      hint: "Every network uses your default voice. Check the ones where you write differently, and I'll tune it there.",
-      index: first,
-      className: "pb2-voice-networks",
-    },
-  );
   // A network picked with an empty voice: its card is the ways to fill it.
-  const cards = nets
+  return nets
     .filter((net) => picked.includes(net) && !networkVoiceFilled(data, net))
     .map((net) =>
       voiceWaysCard(net, {
@@ -2959,7 +2914,6 @@ function networkPickerCards(data, nets, first) {
         className: `pb2-voice-net pb2-voice-net--${net}`,
       }),
     );
-  return [pickBlock, ...cards];
 }
 
 // A network's own voice with something in it — empty, it still has to be filled.
@@ -2969,13 +2923,14 @@ export function networkVoiceFilled(data, net) {
 }
 
 // Picking: a network out of `voiceRulesFor` keeps the default voice,
-// chosen (its rules, if any, go), one in it waits for rules.
-function setNetworkRules(net, on) {
+// chosen (its rules, if any, go), one in it waits for rules. Exported for the
+// review's network select (welcome-alt-recap).
+export function setNetworkRules(net, on) {
   const d = cfg.getData();
   const picked = (d.voiceRulesFor || []).filter((n) => n !== net);
   d.voiceRulesFor = on ? [...picked, net] : picked;
   const rest = Object.fromEntries(Object.entries(d.voiceByNetwork || {}).filter(([n]) => n !== net));
-  d.voiceByNetwork = on || !connected ? rest : { ...rest, [net]: brandVoiceAsIs(d) };
+  d.voiceByNetwork = on ? rest : { ...rest, [net]: brandVoiceAsIs(d) };
   repaint();
 }
 
@@ -3758,9 +3713,6 @@ function onClick(event) {
     useDefaultVoice(cfg.getData().id, keepVoice.dataset.pb2VoiceKeep);
     return repaint();
   }
-  const rulesFor = event.target.closest("[data-pb2-voice-rules]");
-  if (rulesFor)
-    return event.target.matches("input") && setNetworkRules(rulesFor.dataset.pb2VoiceRules, event.target.checked);
   const resetVoice = event.target.closest("[data-pb2-voice-reset]");
   if (resetVoice && cfg.networkPicker) return setNetworkRules(resetVoice.dataset.pb2VoiceReset, false);
   if (resetVoice)

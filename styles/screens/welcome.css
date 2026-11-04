@@ -1369,6 +1369,21 @@ body:not(.onboarding) .welcome-intro__wordmark {
   color: var(--ref-color-grey-80);
 }
 
+/* « Network by network »: which networks get a voice of their own, a DS
+   multi-select (welcome-alt-recap, 2026-11-04). The menu floats over the
+   parts under it. */
+.welcome-review__netselect {
+  position: relative;
+  margin-bottom: var(--ref-spacing-xxs);
+}
+.welcome-review__netselect > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.welcome-review__netselect > summary::-webkit-details-marker {
+  display: none;
+}
+
 .welcome-review__count {
   flex-shrink: 0;
   font-size: var(--sys-text-style-caption-bold-size);
