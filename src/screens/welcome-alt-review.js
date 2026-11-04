@@ -33,12 +33,12 @@
 // is re-applied after every paint (a MutationObserver on the host) — the card
 // index lives here, not in the DOM.
 
-import { html, raw } from "../utils.js?v=2664";
-import { navigate } from "../router.js?v=2664";
-import { getDraft, patchDraft } from "../context-builder.js?v=2664";
-import { mount } from "../playbook-view.js?v=2664";
-import { parseHashParams } from "../url-state.js?v=2664";
-import { mountShell, tint } from "./welcome-alt-shell.js?v=2664";
+import { html, raw } from "../utils.js?v=2666";
+import { navigate } from "../router.js?v=2666";
+import { getDraft, patchDraft } from "../context-builder.js?v=2666";
+import { mount } from "../playbook-view.js?v=2666";
+import { parseHashParams } from "../url-state.js?v=2666";
+import { mountShell, tint } from "./welcome-alt-shell.js?v=2666";
 
 // Each part's tint (`tint`, welcome-alt-shell.js — the card's rows share it):
 // its cards' header band, its cover and its tile in the list, so the colour
@@ -68,7 +68,11 @@ export function renderReview(target, sid, config, review) {
   const tintOf = (id) => tint(partOf(id).tint || id);
   // The part's yes says where it leads — the next part, or the end
   // (2026-10-20: "Confirm Brief" read as admin).
+  // A part with nothing in it yet says so (`skipLabel`: the voice review's
+  // empty network) instead of « Looks good ».
   const looksGood = (id) => {
+    const skip = partOf(id).skipLabel?.();
+    if (skip) return skip;
     const next = parts()[parts().findIndex((t) => t.id === id) + 1];
     return next ? next.nextLabel || `Looks good, on to ${next.title}` : review.lastLabel || "Looks good, finish";
   };
@@ -104,23 +108,6 @@ export function renderReview(target, sid, config, review) {
             : here && count > 1 && !calm
               ? `<span class="welcome-review__count">${index + 1} of ${count}</span>`
               : "";
-          // A part that adds rather than reviews (`action`: the voice review's
-          // networks) is a + button, not a row like the parts (2026-10-29, asked:
-          // « plutôt un genre de "bouton +" »).
-          if (t.action)
-            return html`
-              ${raw(group)}
-              <li>
-                <button
-                  type="button"
-                  class="ap-button secondary blue welcome-review__add"
-                  data-review-part="${t.id}"
-                  aria-current="${here ? "true" : "false"}"
-                >
-                  <i class="ap-icon-plus" aria-hidden="true"></i><span>${t.action}</span>
-                </button>
-              </li>
-            `;
           return html`
             ${raw(group)}
             <li>

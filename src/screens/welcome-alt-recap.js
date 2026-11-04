@@ -4,8 +4,8 @@
 // staged loader, reload-rehydration, and the "Enter Archie" finish. The
 // actual rendering + per-card edit machine lives in ../playbook-view.js.
 
-import { navigate } from "../router.js?v=2664";
-import { catalogueRoute } from "../active-playbook.js?v=2664";
+import { navigate } from "../router.js?v=2666";
+import { catalogueRoute } from "../active-playbook.js?v=2666";
 import {
   getDraft,
   isAnalysisReady,
@@ -13,11 +13,11 @@ import {
   patchDraft,
   restoreDraft,
   sectionPatchFromAnalysis,
-} from "../context-builder.js?v=2664";
-import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled } from "../playbook-view.js?v=2664";
-import { renderPageReview, renderReview } from "./welcome-alt-review.js?v=2664";
-import { open as openRenameModal } from "../components/rename-modal.js?v=2664";
-import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2664";
+} from "../context-builder.js?v=2666";
+import { RECAP_SECTIONS, editVoiceNetwork, networkVoiceFilled } from "../playbook-view.js?v=2666";
+import { renderPageReview, renderReview } from "./welcome-alt-review.js?v=2666";
+import { open as openRenameModal } from "../components/rename-modal.js?v=2666";
+import { getConnectedProfiles, networkIcon, networkLabel, normalizeNetwork } from "../social-profiles.js?v=2666";
 import {
   brandVoiceAsIs,
   canLearnFrom,
@@ -27,15 +27,15 @@ import {
   playbookNetworks,
   voiceNetworks,
   onlyNetwork,
-} from "../voice-parts.js?v=2664";
-import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2664";
-import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2664";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2664";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2664";
-import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2664";
-import { openVoiceProposal } from "../components/voice-proposal-modal.js?v=2664";
-import { showToast } from "../components/toast.js?v=2664";
-import { open as openConfirm } from "../components/confirm-modal.js?v=2664";
+} from "../voice-parts.js?v=2666";
+import { analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=2666";
+import { accountIdsForNetwork } from "../connect-profiles-flow.js?v=2666";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=2666";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=2666";
+import { open as openConnectAccountModal } from "../components/connect-account-modal.js?v=2666";
+import { openVoiceProposal } from "../components/voice-proposal-modal.js?v=2666";
+import { showToast } from "../components/toast.js?v=2666";
+import { open as openConfirm } from "../components/confirm-modal.js?v=2666";
 
 const WELCOME_ALT_KEY = "welcomeAltSessionId";
 const WELCOME_ALT_DRAFT_KEY = "welcomeAltDraft";
@@ -174,7 +174,9 @@ function voiceReview(sid, overrides = {}) {
         groupHint: NETWORKS_HINT,
         title: "Your networks",
         nextLabel: "Looks good, on to your networks",
-        action: "Add a voice for a network",
+        // A row like the others, not a « + » button (2026-11-04, asked: « perdue
+        // entre ce qui se passe à gauche et à droite » — the + opened the card
+        // « Looks good, on to your networks » leads to, in other words).
         icon: "ap-icon-web",
         lead: "Which networks get a voice of their own.",
         open: () => editVoiceNetwork(null),
@@ -193,6 +195,9 @@ function voiceReview(sid, overrides = {}) {
           // Empty: its card, the ways as tiles. Filled: it opens in edit (the
           // network's own five parts, voiceNet).
           badge: networkVoiceFilled(getDraft(sid), n) ? null : "To fill in",
+          // Empty: nothing to say « Looks good » to — the confirm skips it, and
+          // its first draft asks (2026-11-04).
+          skipLabel: () => !networkVoiceFilled(getDraft(sid), n) && `Skip ${networkLabel(n)} for now`,
           open: () => editVoiceNetwork(n),
           pick: (all) => {
             const card = all.filter((el) => el.matches(`.pb2-voice-net--${n}`));
@@ -321,6 +326,9 @@ function voiceReview(sid, overrides = {}) {
     parts,
     onWay,
     next: { label: finishLabel(), go: () => finishRun(sid) },
+    // The last confirm and the left's way out are one action: one wording
+    // (2026-11-04 — it read « Looks good, finish » beside « Draft my first post »).
+    lastLabel: `Looks good, ${finishLabel().charAt(0).toLowerCase()}${finishLabel().slice(1)}`,
     back: "/welcome-alt/recap",
     ...overrides,
   };
