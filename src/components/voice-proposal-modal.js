@@ -16,18 +16,18 @@
 //     review) — nothing is saved here, onUse(voice) adds it to the draft, and
 //     there is no Playbook to edit it in.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2673";
-import { getContextById } from "../contexts-store.js?v=2673";
-import { networkLabel } from "../social-profiles.js?v=2673";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2676";
+import { getContextById } from "../contexts-store.js?v=2676";
+import { networkLabel } from "../social-profiles.js?v=2676";
 import {
   learnPhases,
   LEARN_PHASE_MS,
   proposeNetworkVoice,
   saveNetworkVoice,
   editNetworkVoiceInPlaybook,
-} from "../network-voice-flow.js?v=2673";
-import { learnedVoiceHtml } from "./voice-intro-modal.js?v=2673";
-import { escapeHtml } from "../utils.js?v=2673";
+} from "../network-voice-flow.js?v=2676";
+import { learnedVoiceHtml } from "./voice-intro-modal.js?v=2676";
+import { escapeHtml } from "../utils.js?v=2676";
 
 const MODAL_ID = "voice-proposal";
 

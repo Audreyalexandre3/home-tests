@@ -13,10 +13,10 @@
 //   subscribe(sessionId, fn)   → unsubscribe
 //   renderInto(container, sessionId)  // helper for session.js composer
 
-import { getIdeas } from "./library.js?v=2673";
-import { escapeHtml, escapeAttr } from "./utils.js?v=2673";
-import { createSessionNotifier } from "./store-utils.js?v=2673";
-import { IDEA_KIND_TAG } from "./components/idea-card-compact.js?v=2673";
+import { getIdeas } from "./library.js?v=2676";
+import { escapeHtml, escapeAttr } from "./utils.js?v=2676";
+import { createSessionNotifier } from "./store-utils.js?v=2676";
+import { IDEA_KIND_TAG } from "./components/idea-card-compact.js?v=2676";
 
 // Resolve a mention name to its tag color: match the session's ideas by
 // title and use the kind color; otherwise default blue.

@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2673";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2673";
-import { conceptHint } from "./concepts.js?v=2673";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2676";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2676";
+import { conceptHint } from "./concepts.js?v=2676";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2673";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2673";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2673";
-import { isFlagOn } from "./feature-flags.js?v=2673";
-import { clipLookOf } from "./videos-store.js?v=2673";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2673";
-import { parseHashParams } from "./url-state.js?v=2673";
+} from "./playbook-brand-kit.js?v=2676";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2676";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2676";
+import { isFlagOn } from "./feature-flags.js?v=2676";
+import { clipLookOf } from "./videos-store.js?v=2676";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2676";
+import { parseHashParams } from "./url-state.js?v=2676";
 import {
   isListPart,
   voiceParts,
@@ -57,14 +57,14 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2673";
-import { showToast } from "./components/toast.js?v=2673";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2673";
-import { NETWORK_VOICE_SAMPLE } from "./mocks.js?v=2673";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2673";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2673";
-import { consumeHandoff } from "./handoff.js?v=2673";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2673";
+} from "./voice-parts.js?v=2676";
+import { showToast } from "./components/toast.js?v=2676";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2676";
+import { NETWORK_VOICE_TRAITS } from "./mocks.js?v=2676";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2676";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2676";
+import { consumeHandoff } from "./handoff.js?v=2676";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2676";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -73,7 +73,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2673";
+} from "./social-profiles.js?v=2676";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2894,172 +2894,80 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
   );
 }
 
-// « One idea, every network » (networkPickerCards): the rule told as a short
-// story, one SVG that scales with its card (2026-11-04, asked: « pas folle ni
-// très compréhensible ton animation, améliores ça » — bars on threads said
-// nothing). Three beats, then it holds:
-//   1. the default voice writes ONE post, in real words, from the idea;
-//   2. that post is copied as it is to every network without its own voice —
-//      the copies leave the card and land, word-for-word miniatures of it;
-//   3. a network with its own voice gets another post, by a thread of its own
-//      that skips the default card — another shape, on butter.
-// Rows: the networks with their own voice first (their threads run above the
-// card), then the others, grouped under « Same post, word for word ».
-// Fixed user units, the explainer's vocabulary (butter, olive threads).
-const FAN = { pad: 20, pitch: 44, mini: { x: 452, w: 84, h: 32 }, card: { x: 172, w: 200 }, idea: { w: 132, h: 60 } };
-const CARD_CHARS = 26;
-
-function wrapWords(text, max) {
-  const lines = [];
-  let line = "";
-  for (const w of String(text).replace(/\s+/g, " ").trim().split(" ")) {
-    if (line && `${line} ${w}`.length > max) (lines.push(line), (line = w));
-    else line = line ? `${line} ${w}` : w;
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-// A network's own post, as a shape: a bar per line (its paragraphs wrapped),
-// a short bar per hashtag.
-function postShape(text) {
-  const tags = (String(text).match(/#\w+/g) || []).length;
-  const lines = String(text)
-    .split("\n")
-    .filter((l) => l.trim())
-    .flatMap((p) => wrapWords(p.replace(/#\w+/g, ""), CARD_CHARS))
-    .filter(Boolean);
-  return { lines: lines.slice(0, 4).map((l) => l.length / CARD_CHARS), tags: Math.min(tags, 3) };
-}
-
-function miniBars(x, y, shape, cls) {
-  const inner = FAN.mini.w - 16;
-  const n = shape.lines.length + (shape.tags ? 1 : 0);
-  const gap = Math.min(6, (FAN.mini.h - 8) / Math.max(n, 1));
-  const top = y + (FAN.mini.h - (n - 1) * gap) / 2;
-  const bars = shape.lines.map(
-    (r, j) =>
-      `<rect class="${cls}" x="${x + 8}" y="${(top + j * gap - 1.5).toFixed(1)}" width="${Math.max(10, Math.min(1, r) * inner).toFixed(1)}" height="3" rx="1.5" style="--j:${j}"/>`,
-  );
-  if (shape.tags)
-    for (let k = 0; k < shape.tags; k++)
-      bars.push(
-        `<rect class="${cls}" x="${x + 8 + k * 16}" y="${(top + shape.lines.length * gap - 1.5).toFixed(1)}" width="12" height="3" rx="1.5" style="--j:${shape.lines.length}"/>`,
-      );
-  return bars.join("");
-}
+// « Your voice, every network » (networkPickerCards): what a voice is, drawn
+// (2026-11-04, asked: « la voice, c'est la façon que l'Archie reproduit comment
+// un utilisateur s'exprime. Et par network, il peut vouloir tweaker et
+// optimiser ça. Y'a pas d'histoire de trucs copiés » — a story of one post
+// copied to every network, the same day, got the concept wrong). Your voice —
+// how you write, in its own words — runs to every network; a checked network
+// keeps it and adds its tweaks (NETWORK_VOICE_TRAITS), on butter. One SVG that
+// scales with its card, the explainer's vocabulary (butter, olive threads).
+// Rows in the networks' order, so checking one never moves the others.
+const FAN = { pitch: 48, card: { w: 200 }, trunk: 20, row: { x: 44 }, chars: 6.2 };
 
 function voiceFanHtml(data, nets, picked) {
-  const brand = data?.brandName || data?.name || "Your brand";
-  const own = nets.filter((n) => picked.includes(n));
-  const same = nets.filter((n) => !picked.includes(n));
-  const order = [...own, ...same];
-  const { pad, pitch, mini, card, idea } = FAN;
-  const rowY = (i) => pad + i * pitch; // a mini's top
-  const mid = (i) => rowY(i) + mini.h / 2;
-  const words = wrapWords(NETWORK_VOICE_SAMPLE.brand.replaceAll("{brand}", brand), CARD_CHARS);
-  const cardH = 34 + words.length * 16 + 8;
-  const sameTop = own.length ? rowY(own.length) : pad;
-  const sameMid = same.length ? (mid(own.length) + mid(nets.length - 1)) / 2 : 0;
-  // The card sits on its group, never under the own threads above it.
-  const cardY = same.length ? Math.max(sameMid - cardH / 2, own.length ? rowY(own.length) - 8 : pad) : 0;
-  const H = Math.max(rowY(nets.length - 1) + mini.h, same.length ? cardY + cardH : 0) + pad;
-  const ideaY = (same.length ? cardY + cardH / 2 : H / 2) - idea.h / 2;
-  const ideaMid = ideaY + idea.h / 2;
-  const ideaR = idea.w;
-  const endX = mini.x - 30; // threads stop before the network icon
+  const head = (data?.voiceProfile?.headline || "").split(/\s*·\s*/).filter(Boolean);
+  const traits = (head.length ? head : data?.tones || []).slice(0, 3);
+  const mine = traits.length ? traits : ["Your words", "Your tone", "Your rhythm"];
+  const { pitch, card, trunk, row, chars } = FAN;
+  // The voice on top, the networks under it, each on a branch of one trunk —
+  // it reads down the review's narrow column at full size.
+  const cardH = 44 + mine.length * 20;
+  const top = cardH + 8;
+  const mid = (i) => top + i * pitch + pitch / 2;
+  const H = top + nets.length * pitch;
+  const tagW = (t) => Math.round((t.length + 2) * chars + 26);
+  const nameX = row.x + 24;
+  const width = Math.max(
+    card.w,
+    ...nets.map((n) => nameX + (NETWORK_VOICE_TRAITS[n] || []).reduce((w, t) => w + tagW(t) + 6, 0)),
+  );
 
-  // Beat 1 — the idea, then the default post writing itself.
-  const T = { card: 0.5, words: 0.9, copies: 0, own: 0 };
-  let w = 0;
-  const cardText = words
-    .map(
-      (line, i) =>
-        `<text x="${card.x + 14}" y="${cardY + 44 + i * 16}" class="vf-card__text">${line
-          .split(" ")
-          .map((word) => `<tspan style="--w:${w++}">${esc(word)} </tspan>`)
-          .join("")}</text>`,
-    )
-    .join("");
-  T.copies = T.words + w * 0.05 + 0.3;
-  T.own = T.copies + same.length * 0.14 + 0.5;
-  const defaultShape = { lines: words.map((l) => l.length / CARD_CHARS), tags: 0 };
-
-  const thread = (d, path, cls = "") => `<path class="vf-thread ${cls}" d="${path}" pathLength="1" style="--d:${d}s"/>`;
-  const icon = (n, i) =>
-    `<foreignObject x="${mini.x - 24}" y="${mid(i) - 8}" width="16" height="16"><i class="${networkIcon(n)} vf-net" aria-hidden="true"></i></foreignObject>`;
-
-  const parts = [];
-  // The idea.
-  parts.push(`<g class="vf-pop" style="--d:0s">
-    <rect x="0" y="${ideaY}" width="${idea.w}" height="${idea.h}" rx="12" class="vf-idea"/>
-    <text x="14" y="${ideaY + 22}" class="vf-caption">One idea</text>
-    <text x="14" y="${ideaY + 42}" class="vf-strong">Scheduled reports</text>
-  </g>`);
-  if (same.length) {
-    // Beat 1: the default post.
+  const parts = [
+    `<g class="vf-pop" style="--d:0s">
+      <rect x="0" y="0" width="${card.w}" height="${cardH}" rx="12" class="vf-voice"/>
+      <text x="16" y="26" class="vf-title">Your voice</text>
+      ${mine
+        .map(
+          (t, k) =>
+            `<g class="vf-fade" style="--d:${0.25 + k * 0.15}s"><circle cx="20" cy="${46 + k * 20}" r="2.5" class="vf-dot"/><text x="30" y="${50 + k * 20}" class="vf-text">${esc(t)}</text></g>`,
+        )
+        .join("")}
+    </g>`,
+  ];
+  nets.forEach((n, i) => {
+    const d = 0.8 + i * 0.1;
+    const tuned = picked.includes(n);
+    const y = mid(i) - 9; // the name's line
     parts.push(
-      thread(
-        0.25,
-        `M${ideaR} ${ideaMid} C${ideaR + 20} ${ideaMid}, ${card.x - 20} ${cardY + cardH / 2}, ${card.x} ${cardY + cardH / 2}`,
-      ),
+      `<path class="vf-thread${tuned ? " vf-thread--tuned" : ""}" d="M${trunk} ${cardH} V${y - 10} Q${trunk} ${y}, ${trunk + 10} ${y} H${row.x - 6}" pathLength="1" style="--d:${d}s"/>`,
     );
-    parts.push(`<g class="vf-pop" style="--d:${T.card}s">
-      <rect x="${card.x}" y="${cardY}" width="${card.w}" height="${cardH}" rx="12" class="vf-card"/>
-      <text x="${card.x + 14}" y="${cardY + 22}" class="vf-caption vf-caption--strong">Default voice</text>
-      ${cardText}
-    </g>`);
-    // Beat 2: copied as it is.
-    same.forEach((n, k) => {
-      const i = own.length + k;
-      const d = T.copies + k * 0.14;
-      parts.push(
-        thread(
-          d,
-          `M${card.x + card.w} ${cardY + cardH / 2} C${card.x + card.w + 30} ${cardY + cardH / 2}, ${endX - 30} ${mid(i)}, ${endX} ${mid(i)}`,
-          "vf-thread--copy",
-        ),
-      );
-      parts.push(icon(n, i));
-      const fx = card.x - mini.x;
-      const fy = cardY - rowY(i);
-      parts.push(`<g class="vf-copy" style="--d:${d}s;--fx:${fx}px;--fy:${fy.toFixed(1)}px;--fs:${(card.w / mini.w).toFixed(2)}">
-        <rect x="${mini.x}" y="${rowY(i)}" width="${mini.w}" height="${mini.h}" rx="6" class="vf-mini"/>
-        ${miniBars(mini.x, rowY(i), defaultShape, "vf-bar")}
-      </g>`);
-    });
-    parts.push(`<g class="vf-fade" style="--d:${T.copies + same.length * 0.14 + 0.3}s">
-      <path class="vf-brace" d="M${mini.x + mini.w + 10} ${sameTop} v${rowY(nets.length - 1) + mini.h - sameTop}"/>
-      <text x="${mini.x + mini.w + 20}" y="${sameMid - 3}" class="vf-caption vf-caption--strong">Same post,</text>
-      <text x="${mini.x + mini.w + 20}" y="${sameMid + 13}" class="vf-caption vf-caption--strong">word for word</text>
-    </g>`);
-  }
-  // Beat 3: its own post, by its own thread.
-  own.forEach((n, i) => {
-    const d = (same.length ? T.own : 0.3) + i * 0.2;
-    parts.push(
-      thread(
-        d,
-        `M${ideaR} ${ideaMid} C${ideaR + 40} ${ideaMid}, ${ideaR + 30} ${mid(i)}, ${ideaR + 70} ${mid(i)} L${endX} ${mid(i)}`,
-        "vf-thread--own",
-      ),
-    );
-    parts.push(icon(n, i));
-    parts.push(`<g class="vf-pop" style="--d:${d + 0.5}s">
-      <rect x="${mini.x}" y="${rowY(i)}" width="${mini.w}" height="${mini.h}" rx="6" class="vf-mini vf-mini--own"/>
-      <g style="--d:${d + 0.6}s">${miniBars(mini.x, rowY(i), postShape(NETWORK_VOICE_SAMPLE[n] || NETWORK_VOICE_SAMPLE.brand), "vf-bar vf-bar--own")}</g>
-      <text x="${mini.x + mini.w + 20}" y="${mid(i) + 4}" class="vf-caption vf-caption--strong">${esc(networkLabel(n))} voice</text>
-    </g>`);
+    let x = nameX;
+    const line2 = tuned
+      ? (NETWORK_VOICE_TRAITS[n] || [])
+          .map((t, k) => {
+            const w = tagW(t);
+            const tag = `<g class="vf-pop" style="--d:${d + 0.7 + k * 0.15}s"><rect x="${x}" y="${y + 8}" width="${w}" height="20" rx="10" class="vf-tag"/><text x="${x + 10}" y="${y + 22}" class="vf-text"><tspan class="vf-plus">+</tspan> ${esc(t)}</text></g>`;
+            x += w + 6;
+            return tag;
+          })
+          .join("")
+      : `<text x="${x}" y="${y + 22}" class="vf-caption vf-fade" style="--d:${d + 0.5}s">Your voice, as it is</text>`;
+    parts.push(`<g class="vf-pop" style="--d:${d + 0.4}s">
+      <foreignObject x="${row.x}" y="${y - 8}" width="16" height="16"><i class="${networkIcon(n)} vf-net" aria-hidden="true"></i></foreignObject>
+      <text x="${nameX}" y="${y + 5}" class="vf-name">${esc(networkLabel(n))}</text>
+    </g>${line2}`);
   });
 
   const said = nets
-    .map(
-      (n) =>
-        `${networkLabel(n)}: ${picked.includes(n) ? "a post written in its own voice" : "a copy of the default post"}`,
+    .map((n) =>
+      picked.includes(n)
+        ? `${networkLabel(n)}: your voice, plus ${(NETWORK_VOICE_TRAITS[n] || []).join(", ").toLowerCase()}`
+        : `${networkLabel(n)}: your voice, as it is`,
     )
-    .join(", ");
-  return `<svg class="pb2-fan" viewBox="-8 0 ${mini.x + mini.w + 130} ${H}" role="img" aria-label="${esc(
-    `One idea. ${same.length ? "Your default voice writes one post, copied word for word. " : ""}${said}.`,
+    .join(". ");
+  return `<svg class="pb2-fan" viewBox="0 0 ${width + 4} ${H}" width="${width + 4}" role="img" aria-label="${esc(
+    `Your voice (${mine.join(", ")}) on every network. ${said}.`,
   )}">${parts.join("")}</svg>`;
 }
 
@@ -3109,19 +3017,13 @@ function networkPickerCards(data, nets, first) {
       </span>
     </label>`;
   };
-  // What « the default voice » means for the posts, shown, not told
-  // (2026-11-04, asked: « est-ce que le user comprend que ses posts seront
-  // pareils partout s'il utilise la même default voice partout ? »), as an
-  // illustration, not as UI (same day, asked: « une illustration/animation
-  // didactique, plutôt que cet élément qui ressemble à de l'interface »): one
-  // idea, a thread to each network, and the post each one gets sketched as
-  // bars — the same shape for every unchecked network, its own for a checked
-  // one. Live: checking a network redraws its post. After the checkboxes, so
-  // the part's confirm is never reached before them; picked with the networks
-  // part (`.pb2-voice-networks`).
-  const exampleBlock = pb2Block("One idea, every network", voiceFanHtml(data, all, picked), {
+  // What a voice is, drawn (voiceFanHtml): your voice on every network, tuned
+  // on the checked ones. Live: checking a network redraws it. After the
+  // checkboxes, so the part's confirm is never reached before them; picked
+  // with the networks part (`.pb2-voice-networks`).
+  const exampleBlock = pb2Block("Your voice, every network", voiceFanHtml(data, all, picked), {
     wide: true,
-    hint: "A network without its own voice gets the default post. One with its own voice gets a post written for it.",
+    hint: "I write like you everywhere. Where you write a bit differently, I tune your voice for that network.",
     index: first + 1,
     className: "pb2-voice-networks pb2-voice-compare",
   });
@@ -3130,7 +3032,7 @@ function networkPickerCards(data, nets, first) {
     `<div class="pb2-netpick">${all.map(row).join("")}</div>`,
     {
       wide: true,
-      hint: "Unchecked networks all get the same post, word for word. Check the ones you write for differently.",
+      hint: "Every network uses your default voice. Check the ones where you write differently, and I'll tune it there.",
       index: first,
       className: "pb2-voice-networks",
     },
