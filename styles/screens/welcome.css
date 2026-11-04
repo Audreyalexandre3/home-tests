@@ -3295,8 +3295,10 @@ button.recap__logotile:hover {
 /* The run's steps and reviews (welcome-alt-shell.js), first time or not: no
    pixels, a flat grey-05 canvas edge to edge, only a grey-20 rule between it
    and the step; the cards bordered instead of lifted, no entrance. The intro
-   (/welcome-alt/intro) keeps its pixel stage. */
-.welcome-intro.welcome-flow .welcome-intro__stage {
+   (/welcome-alt/intro) too when it plays its scene (.is-plain, flag
+   playbookAnimations); flag OFF it keeps its pixel stage and its card. */
+.welcome-intro.welcome-flow .welcome-intro__stage,
+.welcome-intro.is-plain .welcome-intro__stage {
   margin: 0;
   border-radius: 0;
   border-left: 1px solid var(--ref-color-grey-20);

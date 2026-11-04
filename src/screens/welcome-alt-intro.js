@@ -13,15 +13,16 @@
 // The card is an illustration, not data: the Playbook's real parts (Voice
 // profile, Branding…) filled with example values.
 
-import "../archie-pixels.js?v=2682";
-import { startDemo } from "../demo-flow.js?v=2682";
-import { isFlagOn } from "../feature-flags.js?v=2682";
-import { html, raw } from "../utils.js?v=2682";
-import { NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=2682";
-import { navigate } from "../router.js?v=2682";
-import { setHandoff } from "../handoff.js?v=2682";
-import { flowSteps, startFlow, STEP_TEXT, playbookCard, tint } from "./welcome-alt-shell.js?v=2682";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2682";
+import "../archie-pixels.js?v=2684";
+import { startDemo } from "../demo-flow.js?v=2684";
+import { isFlagOn } from "../feature-flags.js?v=2684";
+import { html, raw } from "../utils.js?v=2684";
+import { NETWORK_ICON_BY_PLATFORM } from "../social-profiles.js?v=2684";
+import { navigate } from "../router.js?v=2684";
+import { setHandoff } from "../handoff.js?v=2684";
+import { flowSteps, startFlow, STEP_TEXT, playbookCard, tint } from "./welcome-alt-shell.js?v=2684";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2684";
+import { paintExplainer } from "./welcome-alt-explainer.js?v=2684";
 
 // What a Playbook holds, shown rather than told: the parts the card on the
 // right fills, under their Playbook names, glyphs and tints.
@@ -88,9 +89,12 @@ export function renderWelcomeAltIntro(_params, target) {
   const steps = flowSteps();
   const rows = ROWS.filter((r) => steps.includes(r.step));
   const last = steps.length - 1;
+  // Flag playbookAnimations: the stage plays what a Playbook changes, on the
+  // run's plain stage, instead of the example card on the pixels.
+  const scene = isFlagOn("playbookAnimations");
 
   target.innerHTML = html`
-    <div class="welcome-intro">
+    <div class="welcome-intro ${scene ? "is-plain" : ""}">
       <section class="welcome-intro__lede" aria-labelledby="welcomeIntroTitle">
         <img class="welcome-intro__wordmark" src="assets/logos/archie-wordmark.svg" alt="Archie" />
         <div class="welcome-intro__copy">
@@ -155,26 +159,32 @@ export function renderWelcomeAltIntro(_params, target) {
         </div>
       </section>
 
-      <div class="welcome-intro__stage" aria-hidden="true">
-        <archie-pixels data-quiet></archie-pixels>
-        <div class="welcome-intro__card">
-          ${raw(
-            playbookCard({
-              mark: `<i class="ap-icon-buildings" aria-hidden="true"></i>`,
-              name: "Your Playbook",
-              status: `<span class="ap-status mermaid welcome-intro__card-status" style="--i: ${last}">Ready to write</span>`,
-              // Several lines from one step land one after the other.
-              rows: rows.map((r) => ({
-                label: r.label,
-                html: r.value,
-                style: `--i: ${steps.indexOf(r.step) + rows.filter((o) => o.step === r.step).indexOf(r) * 0.18}`,
-              })),
-            }),
+      ${scene
+        ? raw(`<div class="welcome-intro__stage"><div class="welcome-explainer" data-intro-explainer></div></div>`)
+        : raw(
+            html`<div class="welcome-intro__stage" aria-hidden="true">
+              <archie-pixels data-quiet></archie-pixels>
+              <div class="welcome-intro__card">
+                ${raw(
+                  playbookCard({
+                    mark: `<i class="ap-icon-buildings" aria-hidden="true"></i>`,
+                    name: "Your Playbook",
+                    status: `<span class="ap-status mermaid welcome-intro__card-status" style="--i: ${last}">Ready to write</span>`,
+                    // Several lines from one step land one after the other.
+                    rows: rows.map((r) => ({
+                      label: r.label,
+                      html: r.value,
+                      style: `--i: ${steps.indexOf(r.step) + rows.filter((o) => o.step === r.step).indexOf(r) * 0.18}`,
+                    })),
+                  }),
+                )}
+              </div>
+            </div>`,
           )}
-        </div>
-      </div>
     </div>
   `;
+  const sceneEl = target.querySelector("[data-intro-explainer]");
+  if (sceneEl) paintExplainer(sceneEl, "intro", null);
 
   const onClick = (event) => {
     if (event.target.closest("[data-welcome-demo]")) return startDemo();

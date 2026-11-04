@@ -1,5 +1,6 @@
-/* A returning user's « Create a Playbook »: the teaching scenes that replace
-   the filling card on the stage (welcome-alt-explainer.js).
+/* Building a Playbook (flag playbookAnimations): the teaching scenes that
+   replace the filling card on the stage, on the intro and every step of the
+   run (welcome-alt-explainer.js).
    One 560 × 540 canvas laid out in px and scaled to the stage (--s, set by
    fit()): the objects keep real product sizes (13–14px text, 32/40px DS
    avatars) and the pieces flying between them keep their paths.
@@ -898,6 +899,76 @@
 .is-done .wx-doors {
   opacity: 1;
   transform: none;
+}
+
+/* ── The intro: one draft, rewritten part by part ────────────────────────
+   A sentence holds its generic version and the brand's in one grid cell (the
+   line never jumps); the part's light swaps them, then marks the new one. */
+.wx-swap {
+  display: inline-grid;
+}
+
+.wx-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wx-swap__before {
+  color: var(--ref-color-grey-80);
+}
+
+.wx-swap__after {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.wx-swap.is-lit .wx-swap__before {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.wx-swap.is-lit .wx-swap__after {
+  opacity: 1;
+  transform: none;
+}
+
+/* One sentence at a time: the incoming one waits for the outgoing one. */
+.wx-swap.is-lit .wx-swap__after,
+.wx-swap:not(.is-lit) .wx-swap__before {
+  transition-delay: 0.3s;
+}
+
+.wx-swap.is-lit .wx-hl {
+  opacity: 1;
+  background-size: 100% 100%;
+}
+
+.wx-swap.is-lit .wx-pin {
+  transform: none;
+}
+
+.wx-draft__state {
+  margin-left: auto;
+  justify-items: end;
+}
+
+/* The generic draft's picture: a stock placeholder, at full strength. */
+[data-scene-intro] .wx-draft__img {
+  display: grid;
+  place-items: center;
+  opacity: 1;
+}
+
+.wx-draft__stock {
+  font-size: 32px;
+  color: var(--ref-color-grey-40);
+  transition: opacity 0.4s ease;
+}
+
+.wx-draft__img.is-lit .wx-draft__stock {
+  opacity: 0;
 }
 
 /* ── Threads ──────────────────────────────────────────────────────────── */

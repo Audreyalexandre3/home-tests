@@ -17,15 +17,15 @@
 // The ready screen paints once and moves by attributes (`is-lit`, `is-done`)
 // so its stages light the parts one by one without replaying the scene.
 
-import { escapeHtml } from "../utils.js?v=2682";
-import { isFlagOn } from "../feature-flags.js?v=2682";
-import { networkIcon, networkLabel } from "../social-profiles.js?v=2682";
-import { playbookNetworks } from "../voice-parts.js?v=2682";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2682";
-import { tint, domainOf } from "./welcome-alt-shell.js?v=2682";
-import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2682";
-import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2682";
-import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2682";
+import { escapeHtml } from "../utils.js?v=2684";
+import { isFlagOn } from "../feature-flags.js?v=2684";
+import { networkIcon, networkLabel } from "../social-profiles.js?v=2684";
+import { playbookNetworks } from "../voice-parts.js?v=2684";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2684";
+import { tint, domainOf } from "./welcome-alt-shell.js?v=2684";
+import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2684";
+import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2684";
+import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2684";
 
 const W = 560;
 const H = 540;
@@ -474,22 +474,15 @@ function voiceScene(d, gap = 0) {
   );
 }
 
-// Building, then ready: four parts, one post. Each stage lights a part, its
-// thread draws, and its share of the post is marked on the post itself.
-function readyScene(d, gap = 0) {
-  const b = brandOf(d);
-  const Y = rowsOf([124, 482], gap);
-  const net = b.networks[0];
-  const pin = (id) => `<span class="wx-pin" style="${tint(id)}"><i class="${part(id).icon}"></i></span>`;
-  const mark = (id, text) => `<span class="wx-hl" data-part="${id}" style="${tint(id)}">${pin(id)}${text}</span>`;
-  // What each part gives the draft, said on its chip.
-  const ROLE = {
-    goals: "Who it's for",
-    voice: "How it sounds",
-    brand: "How it looks",
-    competitors: "What's different",
-  };
-  const chipsRow = PART_IDS.map((id, i) =>
+// What each part gives a draft, said on its chip.
+const ROLE = {
+  goals: "Who it's for",
+  voice: "How it sounds",
+  brand: "How it looks",
+  competitors: "What's different",
+};
+const partChips = () =>
+  PART_IDS.map((id, i) =>
     at(
       i * 142,
       0,
@@ -498,6 +491,16 @@ function readyScene(d, gap = 0) {
       { cls: "wx-corner", attrs: `data-part="${id}"` },
     ),
   ).join("");
+const pin = (id) => `<span class="wx-pin" style="${tint(id)}"><i class="${part(id).icon}"></i></span>`;
+
+// Building, then ready: four parts, one post. Each stage lights a part, its
+// thread draws, and its share of the post is marked on the post itself.
+function readyScene(d, gap = 0) {
+  const b = brandOf(d);
+  const Y = rowsOf([124, 482], gap);
+  const net = b.networks[0];
+  const mark = (id, text) => `<span class="wx-hl" data-part="${id}" style="${tint(id)}">${pin(id)}${text}</span>`;
+  const chipsRow = partChips();
   const draft = `
     <article class="wx-draft">
       <header class="wx-post__head">${avatar(b, net, 40)}
@@ -537,7 +540,61 @@ function readyScene(d, gap = 0) {
   );
 }
 
+// The intro (/welcome-alt/intro), before anything is asked: what a Playbook
+// is FOR. The same idea drafted without one, then rewritten one part at a
+// time: each part lights, its thread draws, and the sentence it owns turns from
+// generic into the brand's (the image takes the brand's palette). Then it
+// holds, and plays again (play()). An example brand, the run's prefilled one.
+const INTRO_BRAND = {
+  websiteUrl: "https://nicesoap.com",
+  audience: ["People with sensitive skin"],
+  voiceProfile: { headline: "Warm · Witty · Never salesy" },
+};
+function introScene(_d, gap = 0) {
+  const b = brandOf(INTRO_BRAND);
+  const Y = rowsOf([124], gap);
+  const net = "instagram";
+  // A sentence the part rewrites: the generic one, then the brand's, marked.
+  const swap = (id, before, after) =>
+    `<span class="wx-swap" data-part="${id}"><span class="wx-swap__before">${e(before)}</span><span class="wx-swap__after"><span class="wx-hl" style="${tint(id)}">${pin(id)}${e(after)}</span></span></span>`;
+  const draft = `
+    <article class="wx-draft">
+      <header class="wx-post__head">${avatar(b, net, 40)}
+        <span class="wx-post__who"><strong>${e(b.name)}</strong><span>Post about the new soap</span></span>
+        <span class="wx-swap wx-draft__state" data-part="done">
+          <span class="wx-swap__before"><span class="ap-status grey">Without a Playbook</span></span>
+          <span class="wx-swap__after"><span class="ap-status mermaid">With your Playbook</span></span>
+        </span>
+      </header>
+      <p class="wx-draft__text">
+        ${swap("goals", "Check out our new product!", "Sensitive skin? This one's for you.")}
+        ${swap(
+          "voice",
+          "We're thrilled to announce our amazing new lavender soap, available now!",
+          "Lavender, olive oil, and nothing you can't pronounce. Made by hand in Lyon.",
+        )}
+      </p>
+      <div class="wx-draft__img wx-hl is-block" data-part="brand" style="${tint("brand")}">
+        <i class="ap-icon-image wx-draft__stock" aria-hidden="true"></i>
+        <img src="${b.art("flat-lay")}" alt="" />
+        ${pin("brand")}
+      </div>
+      <p class="wx-draft__text">${swap("competitors", "Buy yours today.", "Wrapped in paper, never in plastic.")}</p>
+    </article>`;
+  const ends = [170, 250, 330, 410].map((x) => [x, Y(124)]);
+  return stage(
+    {
+      title: "Same idea, written like you",
+      text: "I write every draft from your Playbook. Here's what each part changes.",
+    },
+    partChips() + at(100, Y(124), 360, draft, { cls: "wx-hero" }),
+    PART_IDS.map((id, i) => thread(67 + i * 142, 52, ...ends[i], 0, `data-part="${id}"`)).join(""),
+    { attrs: `data-scene-ready data-scene-intro`, h: 476, Y },
+  );
+}
+
 const SCENES = {
+  intro: introScene,
   url: brandScene,
   language: languageScene,
   documents: documentsScene,
@@ -625,11 +682,37 @@ function light(el) {
   const build = el._wx?.build;
   const ready = el.querySelector("[data-scene-ready]");
   if (!ready) return;
+  if (ready.hasAttribute("data-scene-intro")) return play(el, ready);
   const stages = build?.stages?.length || 1;
   const done = Boolean(build?.done);
-  const lit = done ? 4 : Math.min(4, Math.ceil((((build?.at ?? -1) + 1) / stages) * 4));
+  litParts(ready, done ? 4 : Math.min(4, Math.ceil((((build?.at ?? -1) + 1) / stages) * 4)), done);
+}
+
+function litParts(ready, lit, done) {
   ready.classList.toggle("is-done", done);
   ready.querySelectorAll("[data-part]").forEach((p) => {
-    p.classList.toggle("is-lit", PART_IDS.indexOf(p.dataset.part) < lit);
+    p.classList.toggle("is-lit", p.dataset.part === "done" ? done : PART_IDS.indexOf(p.dataset.part) < lit);
   });
+}
+
+// The intro's rewrite, on a clock: a part every STEP_MS, the result held,
+// then again from the generic draft. Stops once its scene is gone (a redraw,
+// a route change). Reduced motion: the result, still.
+const STEP_MS = 1400;
+function play(el, ready) {
+  if (el._wxPlaying === ready) return;
+  el._wxPlaying = ready;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return litParts(ready, 4, true);
+  const beats = [...PART_IDS.map((_, i) => [i + 1, false]), [4, true]];
+  const run = (i) => {
+    if (!ready.isConnected) return;
+    if (i === beats.length) {
+      litParts(ready, 0, false);
+      return window.setTimeout(() => run(0), STEP_MS);
+    }
+    litParts(ready, ...beats[i]);
+    window.setTimeout(() => run(i + 1), i === beats.length - 1 ? 5200 : STEP_MS);
+  };
+  litParts(ready, 0, false);
+  window.setTimeout(() => run(0), 1600);
 }
