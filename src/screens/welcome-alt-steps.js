@@ -14,8 +14,8 @@
 // Enter submits; nothing on these screens leaves the run by accident (no Esc
 // exit); Back always keeps what was answered.
 
-import { html, raw, escapeHtml } from "../utils.js?v=2659";
-import { navigate } from "../router.js?v=2659";
+import { html, raw, escapeHtml } from "../utils.js?v=2660";
+import { navigate } from "../router.js?v=2660";
 import {
   getDraft,
   patchDraft,
@@ -24,12 +24,12 @@ import {
   writeAltManually,
   analyzeAltInterview,
   setAltVoiceSource,
-} from "../context-builder.js?v=2659";
-import { nextInterviewQuestion } from "../context-mock-analysis.js?v=2659";
-import { LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "../languages.js?v=2659";
-import { connectors as connectorMocks } from "../mocks.js?v=2659";
-import { ensureFlowDraft, goBack, goNext, mountShell, STEP_TEXT, voiceAccounts } from "./welcome-alt-shell.js?v=2659";
-import { networkIcon } from "../social-profiles.js?v=2659";
+} from "../context-builder.js?v=2660";
+import { nextInterviewQuestion } from "../context-mock-analysis.js?v=2660";
+import { LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "../languages.js?v=2660";
+import { connectors as connectorMocks } from "../mocks.js?v=2660";
+import { ensureFlowDraft, goBack, goNext, mountShell, STEP_TEXT, voiceAccounts } from "./welcome-alt-shell.js?v=2660";
+import { networkIcon } from "../social-profiles.js?v=2660";
 
 // Wire one screen: the shell, a click handler, an optional submit / change.
 function screen(target, { step, left, onClick, onSubmit, onChange, onInput, onKeydown }) {
@@ -368,13 +368,17 @@ function pickDocument(onFile) {
   input.click();
 }
 
-// The way out says what it does (asked: « faut renommer le bouton ») — the
-// voice comes from what the Playbook was built from.
+// The voice can also come from what the Playbook was built from: one more card,
+// level with the others (2026-11-04, asked: « toutes des cards clickables, pas
+// "use my website" en bas comme action principale »). With no source, a plain
+// Skip in the footer.
 function fallbackFor(sid) {
   const source = getDraft(sid)?.sourceType;
-  if (source === "website") return { label: "Use my website", sub: "I'll take it from your website" };
-  if (source === "interview") return { label: "Use my answers", sub: "I'll take it from your answers" };
-  return { label: "Skip for now", sub: "skip it for now" };
+  if (source === "website")
+    return { icon: "ap-icon-web", title: "Use my website", desc: "I read how your site talks." };
+  if (source === "interview")
+    return { icon: "ap-icon-double-chat-bubbles", title: "Use my answers", desc: "I go by what you just told me." };
+  return null;
 }
 
 export function renderWelcomeAltVoiceFrom(_params, target) {
@@ -441,17 +445,22 @@ export function renderWelcomeAltVoiceFrom(_params, target) {
           </form>
         `;
       }
+      const fallback = fallbackFor(sid);
+      const ways = VOICE_WAYS.filter((w) => w.value !== "profile" || voiceAccounts().length);
       return html`
         <h1 class="welcome-flow__title" id="welcomeFlowTitle">How should I learn your voice?</h1>
         <p class="welcome-intro__sub">
-          Your voice is how your posts sound: the tone, the words, the length. Every draft I write follows it. Pick one,
-          or ${fallbackFor(sid).sub}.
+          Your voice is how your posts sound: the tone, the words, the length. Every draft I write follows it.
         </p>
         <ul class="welcome-flow__options">
-          ${VOICE_WAYS.filter((w) => w.value !== "profile" || voiceAccounts().length).map(
+          ${(fallback ? [...ways, { ...fallback, value: "fallback" }] : ways).map(
             (w) => html`
               <li>
-                <button type="button" class="welcome-flow__option" data-voice-way="${w.value}">
+                <button
+                  type="button"
+                  class="welcome-flow__option"
+                  ${raw(w.value === "fallback" ? "data-flow-skip" : `data-voice-way="${w.value}"`)}
+                >
                   <span class="welcome-flow__glyph is-icon"><i class="${w.icon}" aria-hidden="true"></i></span>
                   <span class="welcome-flow__option-text">
                     <span class="welcome-flow__option-title">${w.title}</span>
@@ -463,7 +472,7 @@ export function renderWelcomeAltVoiceFrom(_params, target) {
             `,
           )}
         </ul>
-        ${actions("", { skip: fallbackFor(sid).label, skipClass: "secondary blue" })}
+        ${actions("", { skip: fallback ? "" : "Skip for now" })}
       `;
     },
     onInput: (e) => {
