@@ -3295,8 +3295,8 @@ button.recap__logotile:hover {
 /* The run's steps and reviews (welcome-alt-shell.js), first time or not, and
    the intro when it plays its scene (.is-plain, flag playbookAnimations; flag
    OFF the intro keeps its pixel stage and its card): edge to edge, only a
-   grey-20 rule between it and the step; the cards bordered instead of lifted,
-   no entrance.
+   grey-20 rule between it and the step; the cards bordered and lifted (they
+   must read over the ground), no entrance.
    The ground is Archie's own (Brand Guidelines 2026, Visual elements; picked
    2026-11-04 over a flat grey-05 with two butter discs): the light gradient —
    white, butter rising from the bottom left, the orange hot spot in the
@@ -3308,10 +3308,15 @@ button.recap__logotile:hover {
   margin: 0;
   border-radius: 0;
   border-left: 1px solid var(--ref-color-grey-20);
+  /* Warmed past the guidelines' faint sample (2026-11-04, asked: « accentuer
+     les couleurs »): a wider orange corner, a peach band across the foot, the
+     butter climbing higher, a blush in the top-right corner. */
   background:
-    radial-gradient(42% 30% at 92% 100%, color-mix(in srgb, var(--app-archie-mark) 85%, transparent), transparent),
-    radial-gradient(60% 40% at 60% 100%, color-mix(in srgb, var(--ref-color-orange-80) 35%, transparent), transparent),
-    radial-gradient(70% 55% at 0% 100%, var(--app-butter), transparent), var(--ref-color-white);
+    radial-gradient(55% 40% at 95% 100%, var(--app-archie-mark), transparent),
+    radial-gradient(80% 50% at 60% 100%, color-mix(in srgb, var(--ref-color-orange-80) 55%, transparent), transparent),
+    radial-gradient(85% 70% at 0% 100%, var(--app-butter), transparent),
+    radial-gradient(60% 45% at 100% 0%, color-mix(in srgb, var(--ref-color-orange-20) 70%, transparent), transparent),
+    var(--ref-color-white);
 }
 
 .welcome-intro.welcome-flow .welcome-intro__stage::before,
@@ -3328,13 +3333,14 @@ button.recap__logotile:hover {
       transparent 0
     )
     26px 26px / 56px 56px;
-  mask: linear-gradient(to bottom, transparent, #000 45%);
+  -webkit-mask: linear-gradient(to bottom, transparent 10%, #000 50%);
+  mask: linear-gradient(to bottom, transparent 10%, #000 50%);
 }
 
 .welcome-intro.welcome-flow .welcome-intro__card,
 .welcome-intro.welcome-flow .welcome-flow__sheet.is-scroll .welcome-review__card {
   border: 1px solid var(--ref-color-grey-20);
-  box-shadow: none;
+  box-shadow: var(--app-shadow-card), var(--app-shadow-popover-md);
 }
 
 .welcome-intro.welcome-flow .welcome-intro__card {
