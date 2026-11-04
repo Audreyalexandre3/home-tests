@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2662";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2662";
-import { conceptHint } from "./concepts.js?v=2662";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2664";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2664";
+import { conceptHint } from "./concepts.js?v=2664";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2662";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2662";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2662";
-import { isFlagOn } from "./feature-flags.js?v=2662";
-import { clipLookOf } from "./videos-store.js?v=2662";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2662";
-import { parseHashParams } from "./url-state.js?v=2662";
+} from "./playbook-brand-kit.js?v=2664";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2664";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2664";
+import { isFlagOn } from "./feature-flags.js?v=2664";
+import { clipLookOf } from "./videos-store.js?v=2664";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2664";
+import { parseHashParams } from "./url-state.js?v=2664";
 import {
   isListPart,
   voiceParts,
@@ -56,13 +56,14 @@ import {
   canLearnFrom,
   ADAPTED_FROM,
   voiceHasRules,
-} from "./voice-parts.js?v=2662";
-import { showToast } from "./components/toast.js?v=2662";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2662";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2662";
-import { openVoiceProposal, openVoiceInterview } from "./components/voice-proposal-modal.js?v=2662";
-import { consumeHandoff } from "./handoff.js?v=2662";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2662";
+  partQuestion,
+} from "./voice-parts.js?v=2664";
+import { showToast } from "./components/toast.js?v=2664";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2664";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2664";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2664";
+import { consumeHandoff } from "./handoff.js?v=2664";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2664";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -71,7 +72,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2662";
+} from "./social-profiles.js?v=2664";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -1168,14 +1169,6 @@ function learnMenu(net = null) {
               <i class="ap-icon-file--text"></i>
               <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">Documents…</span></div></div>
             </button>
-            ${
-              net
-                ? `<button type="button" class="ap-action-dropdown-item" data-recap-learn="interview"${netAttr} role="menuitem">
-              <i class="ap-icon-double-chat-bubbles"></i>
-              <div class="ap-action-dropdown-item-text"><div class="ap-action-dropdown-item-label-container"><span class="ap-action-dropdown-item-label">A few questions…</span></div></div>
-            </button>`
-                : ""
-            }
           </div>
         </details>`
     : "";
@@ -2696,7 +2689,9 @@ function pb2VoiceParts(data, { edit = false, lead = "", index = 2, brand = data,
     return pb2Block(title, body, {
       aside: ownSummary && !edit ? tag : "",
       wide: true,
-      hint,
+      // A network's voice written by hand: each part asks its question (the
+      // former « A few questions » way, merged in 2026-11-04).
+      hint: (net && edit && partQuestion(field, net)) || hint,
       index: index + i,
       icon: field === "voiceSummary" ? "ap-icon-quote" : "",
     });
@@ -2841,12 +2836,6 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
       icon: "ap-icon-file--text",
       tile: "A document",
       hint: net ? "A style guide or a brief" : "A brand book or a style guide",
-    },
-    net && {
-      value: "interview",
-      icon: "ap-icon-question",
-      tile: "A few questions",
-      hint: "5 questions, about a minute",
     },
     net && {
       value: "adapt",
@@ -3030,11 +3019,6 @@ function giveNetworkVoice(net, choice) {
     repaint();
   };
   if (choice === "default") return set(brandVoiceAsIs(d));
-  if (choice === "interview")
-    return openVoiceInterview({
-      net,
-      onDone: (answers) => openVoiceProposal({ ctx: d, net, choice, from: answers, onUse: set }),
-    });
   openVoiceProposal({ ctx: d, net, choice, onUse: set });
 }
 
@@ -3053,12 +3037,6 @@ function networkVoiceEmpty(net, chosen) {
       hint: `${account.handle} · ${account.postCount} posts`,
     },
     { attrs: hook("documents"), icon: "ap-icon-file--text", name: "A document", hint: "A style guide or a brief" },
-    {
-      attrs: hook("interview"),
-      icon: "ap-icon-question",
-      name: "A few questions",
-      hint: "5 questions, about a minute",
-    },
     {
       attrs: hook("adapt"),
       icon: "ap-icon-sparkles",

@@ -2,16 +2,16 @@
 // that gives one.
 //
 // A network writes in its own voice, or in the Playbook's default voice. It
-// gets its own the same four ways everywhere (voiceChoices): learned from the
-// account's posts, from a document, from a few questions, or edited by the user
-// in the Playbook. What Archie learns is a PROPOSAL: shown — what it changes
+// gets its own the same ways everywhere (voiceChoices): learned from the
+// account's posts, the default voice adapted, a document, or written by the
+// user in the Playbook (« A few questions » merged into it on 2026-11-04). What Archie learns is a PROPOSAL: shown — what it changes
 // from the default voice — then used (only then saved) or edited in the
 // Playbook. Where a draft is waiting, a fifth answer: use the default voice.
 //
 // The chat (this file): before a draft for a network never given a voice, the
 // Voice step — blocking, in the flow's slot, like requireConnectedProfiles —
-// and « Give X its own voice » on a draft in the default voice. The interview
-// is asked in the thread; the proposal is a turn (« voice-learned »).
+// and « Give X its own voice » on a draft in the default voice. The proposal
+// is a turn (« voice-learned »).
 // Without a chat (the Clips space, the Playbook): network-voice-modal.js and
 // voice-proposal-modal.js — the same choices, the same proposal.
 //
@@ -25,7 +25,7 @@
 //   answerLearnedVoice(sessionId, turnId, "use" | "edit")
 // Shared with the dialogs:
 //   missingNetworkVoices(ctx, networks) · voiceChoices(net, { needed, chat }) ·
-//   INTERVIEW · learnPhases(net, from?) · LEARN_PHASE_MS ·
+//   learnPhases(net, from?) · LEARN_PHASE_MS ·
 //   proposeNetworkVoice(ctx, net, choice, from?) · saveNetworkVoice(ctxId, net, voice) ·
 //   useDefaultVoice(ctxId, net) · editNetworkVoiceInPlaybook(ctxId, net, voice?) ·
 //   documentName(url)
@@ -33,7 +33,6 @@
 // onReady() runs IMMEDIATELY when every network already has a voice — always
 // the case with the flag off — so callers wrap unconditionally.
 
-import * as inlineQuestion from "./inline-question.js?v=2662";
 import {
   postAssistantMessage,
   postUserTurn,
@@ -43,37 +42,34 @@ import {
   postVoiceTurn,
   resolveTurn,
   getThread,
-} from "./assistant.js?v=2662";
-import { getContextById, updateContext } from "./contexts-store.js?v=2662";
-import { getSessionById } from "./sessions-store.js?v=2662";
-import { networkLabel, networkMeta, normalizeNetwork, profileForNetwork } from "./social-profiles.js?v=2662";
-import { setHandoff } from "./handoff.js?v=2662";
-import { navigate } from "./router.js?v=2662";
-import { open as openFillDocumentModal } from "./components/fill-document-modal.js?v=2662";
-import { getPosts } from "./posts-store.js?v=2662";
+} from "./assistant.js?v=2664";
+import { getContextById, updateContext } from "./contexts-store.js?v=2664";
+import { getSessionById } from "./sessions-store.js?v=2664";
+import { networkLabel, networkMeta, normalizeNetwork, profileForNetwork } from "./social-profiles.js?v=2664";
+import { setHandoff } from "./handoff.js?v=2664";
+import { navigate } from "./router.js?v=2664";
+import { open as openFillDocumentModal } from "./components/fill-document-modal.js?v=2664";
+import { getPosts } from "./posts-store.js?v=2664";
 import {
   networkVoiceOn,
   networkVoice,
   canLearnFrom,
   learnNetworkVoice,
-  interviewNetworkVoice,
   brandVoiceAsIs,
   voiceNetworks,
-  voiceParts,
   adaptNetworkVoice,
-} from "./voice-parts.js?v=2662";
+} from "./voice-parts.js?v=2664";
 
 // Learning a voice takes a moment, and says what it's doing.
 export const LEARN_PHASE_MS = 1400;
 
-// `from`: a document's name, the interview's answers, or nothing (the posts).
+// `from`: a document's name, or nothing (the posts).
 // `choice` "adapt": the default voice, adapted.
 export function learnPhases(net, from = null, choice = null) {
   const label = networkLabel(net);
   const account = profileForNetwork(net);
   if (choice === "adapt")
     return ["Reading your default voice…", `Adding what works on ${label}…`, `Writing your ${label} voice…`];
-  if (from && typeof from === "object") return ["Reading your answers…", `Writing your ${label} voice…`];
   return [
     from ? `Reading ${from}…` : `Reading ${account.postCount} posts of ${account.handle}…`,
     from ? `Finding how you write on ${label}…` : `Finding what works on ${label}…`,
@@ -100,8 +96,8 @@ export function requireNetworkVoices(sessionId, networks, onReady, contextId = n
 
 // The ways to give a network its own voice, the best first — the same
 // everywhere. `needed`: a draft is waiting, so the default voice is an answer
-// too. `chat`: the questions are asked in the thread, else in a dialog.
-export function voiceChoices(net, { needed = false, chat = false } = {}) {
+// too.
+export function voiceChoices(net, { needed = false } = {}) {
   const label = networkLabel(net);
   const account = profileForNetwork(net);
   const learn = canLearnFrom(account);
@@ -134,14 +130,6 @@ export function voiceChoices(net, { needed = false, chat = false } = {}) {
           : `A style guide or a brief about how you write on ${label}.`,
     },
     {
-      value: "interview",
-      icon: "ap-icon-question",
-      tile: `Answer ${INTERVIEW.length} questions`,
-      hint: "About a minute",
-      label: "Answer a few questions",
-      caption: `Five quick questions about how you write on ${label}${chat ? ", right here" : ""}.`,
-    },
-    {
       value: "edit",
       icon: "ap-icon-pen",
       tile: "Write them myself",
@@ -158,26 +146,13 @@ export function voiceChoices(net, { needed = false, chat = false } = {}) {
   return { account, items };
 }
 
-// The questions about how the user writes on a network, each skippable.
-// ONE question per part of the Voice profile, in its order and under its
-// title (voice-parts VOICE_PARTS): each answer lands in that part.
-const QUESTIONS = {
-  voiceSummary: (l) => `How do you sound on ${l}, in a sentence?`,
-  voiceAlways: (l) => `What does every post of yours on ${l} do? Its length, how it opens, its layout…`,
-  voiceNever: (l) => `What would you never do on ${l}?`,
-  voiceByPost: () => "Does it change with the kind of post? An announcement, a tip, a story…",
-  voiceSometimes: (l) => `What do you do now and then on ${l}, not every time? Hashtags, a question at the end…`,
-};
-export const INTERVIEW = voiceParts().map((p) => ({ key: p.field, title: p.title, ask: QUESTIONS[p.field] }));
-
-// What Archie learned, not saved: from the account's posts, a document (`from`
-// its name) or the interview (`from` its answers).
+// What Archie learned, not saved: from the account's posts, the default voice
+// adapted, or a document (`from` its name).
 export function proposeNetworkVoice(ctx, net, choice, from = null) {
   const account = profileForNetwork(net);
   if (choice === "learn") return learnNetworkVoice(ctx, net, { from: account.handle, postCount: account.postCount });
   if (choice === "adapt") return adaptNetworkVoice(ctx, net);
-  if (choice === "document") return learnNetworkVoice(ctx, net, { from });
-  return interviewNetworkVoice(ctx, net, from || {});
+  return learnNetworkVoice(ctx, net, { from });
 }
 
 // Saves a network's voice — stamped, so the drafts written before it say so.
@@ -238,31 +213,6 @@ export function giveNetworkVoice(sessionId, ctxId, net) {
   );
 }
 
-function askInterview(sessionId, net, onDone, answers = {}, k = 0) {
-  const step = INTERVIEW[k];
-  if (!step) return onDone(answers);
-  const question = step.ask(networkLabel(net));
-  const record = (answer, echo) => {
-    postAssistantMessage(sessionId, question);
-    postUserTurn(sessionId, echo);
-    inlineQuestion.exit(sessionId);
-    askInterview(sessionId, net, onDone, { ...answers, ...(answer && { [step.key]: answer }) }, k + 1);
-  };
-  inlineQuestion.ask(sessionId, {
-    title: question,
-    stepLabel: `Voice profile · ${step.title}`,
-    items: [],
-    customPlaceholder: "Type your answer…",
-    onCustom: (value) => {
-      const answer = (value || "").trim();
-      if (!answer) return askInterview(sessionId, net, onDone, answers, k);
-      record(answer, answer);
-    },
-    skipLabel: "Skip this question",
-    onSkip: () => record("", "Skipped"),
-  });
-}
-
 // The proposals waiting for an answer: turn id → { ctxId, net, voice, go }.
 const awaiting = new Map();
 
@@ -313,7 +263,7 @@ export function answerVoiceAsk(sessionId, turnId, choice) {
 function askVoice(sessionId, ctxId, nets, onReady, { giving = false, line = null } = {}) {
   const [net, ...rest] = nets;
   const label = networkLabel(net);
-  const { items } = voiceChoices(net, { needed: !giving, chat: true });
+  const { items } = voiceChoices(net, { needed: !giving });
   const turnId = postVoiceTurn(sessionId, "voice-ask", {
     contextId: ctxId,
     network: net,
@@ -369,22 +319,10 @@ function askVoice(sessionId, ctxId, nets, onReady, { giving = false, line = null
     answered(item.label);
     if (choice === "default") return keepDefault();
     if (choice === "learn" || choice === "adapt") return learning(choice);
-    if (choice === "edit") {
-      postAssistantMessage(
-        sessionId,
-        `I've opened ${label} in your Voice profile, starting from your default voice. Add your rules, save, then ask me again.`,
-      );
-      return editNetworkVoiceInPlaybook(ctxId, net);
-    }
     postAssistantMessage(
       sessionId,
-      `${INTERVIEW.length} quick questions about how you write on ${label} — one per section of your Voice profile. Answer in your own words, or skip any of them.`,
+      `I've opened ${label} in your Voice profile, starting from your default voice. Add your rules, save, then ask me again.`,
     );
-    askInterview(sessionId, net, (answers) => {
-      if (Object.keys(answers).length) return learning(choice, answers);
-      // Nothing said: the default voice — or, from « Add rules for X », as it was.
-      if (giving) return postAssistantMessage(sessionId, `OK — ${label} stays on your default voice for now.`);
-      keepDefault();
-    });
+    editNetworkVoiceInPlaybook(ctxId, net);
   });
 }

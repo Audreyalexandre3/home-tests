@@ -1516,16 +1516,6 @@ body.has-modal {
   max-height: 70vh;
   overflow-y: auto;
 }
-/* An interview field: its Voice profile section, then the question. */
-.voice-proposal-modal__part {
-  display: block;
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-.voice-proposal-modal__lead {
-  margin: 0;
-  color: var(--ref-color-grey-80);
-}
 /* Learning: the orange sheen of Archie at work (as the intro's rows). */
 .voice-proposal-modal__phase {
   margin: var(--ref-spacing-lg) 0;
@@ -2207,22 +2197,6 @@ body.has-modal {
   background-clip: text;
   animation: e-sheen 1.6s linear infinite;
 }
-/* The five questions, on the stage — one per Voice profile section. */
-.voice-intro__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  padding: var(--ref-spacing-sm);
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
-}
-.voice-intro__form-part {
-  display: block;
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-
 /* Step 2, the stage: the Playbook card of the first-time run, its Voice
    profile only — a line per network, a quiet bar until it has a voice. */
 .voice-intro__card-head {

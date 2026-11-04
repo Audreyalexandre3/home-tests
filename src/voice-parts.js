@@ -10,9 +10,9 @@
 // A rule is { text, examples?: string[] }; a case adds `when` (the kind of
 // post). `examples` are lines from the brand's own posts.
 
-import { escapeHtml } from "./utils.js?v=2662";
-import { isFlagOn } from "./feature-flags.js?v=2662";
-import { NETWORK_VOICE_ADAPTATIONS } from "./mocks.js?v=2662";
+import { escapeHtml } from "./utils.js?v=2664";
+import { isFlagOn } from "./feature-flags.js?v=2664";
+import { NETWORK_VOICE_ADAPTATIONS } from "./mocks.js?v=2664";
 import {
   networkMeta,
   networkLabel,
@@ -21,7 +21,7 @@ import {
   getConnectedProfileById,
   getConnectedProfiles,
   profileForNetwork,
-} from "./social-profiles.js?v=2662";
+} from "./social-profiles.js?v=2664";
 
 // `hint`: what the part holds, said under its title — on the Playbook's tab
 // and in a voice proposal (one source for both).
@@ -198,28 +198,18 @@ export function learnNetworkVoice(ctx, network, { from, postCount = 0 }) {
 export const ADAPTED_FROM = "your default voice";
 export const adaptNetworkVoice = (ctx, network) => learnNetworkVoice(ctx, network, { from: ADAPTED_FROM });
 
-// The network's voice, learned from the user's own answers (the Voice step's
-// interview, network-voice-flow.js INTERVIEW): ONE question per part of the
-// Voice profile, so each answer lands in its part — the summary sentence goes
-// after the default voice's, every other answer is the part's new rule for
-// the network. `answers`: { [field]: text } — any may be missing. ponytail:
-// their words go in as written; in the product a model turns them into rules.
-export function interviewNetworkVoice(ctx, network, answers) {
-  // A rule reads as a sentence: capital first, full stop last.
-  const sentence = (s) => {
-    if (!s) return s;
-    const t = s.charAt(0).toUpperCase() + s.slice(1);
-    return /[.!?…]$/.test(t) ? t : `${t}.`;
-  };
-  const voice = brandVoiceAsIs(ctx);
-  VOICE_PARTS.forEach(({ field, kind }) => {
-    const said = sentence((answers?.[field] || "").trim());
-    if (!said) return;
-    if (kind === "text") voice[field] = [voice[field], said].filter(Boolean).join(" ");
-    else voice[field] = [...voice[field], { text: said, adapted: true }];
-  });
-  return { ...voice, optimizedBy: "learned", learnedFrom: "your answers" };
-}
+// What a part asks when a network's voice is written by hand: the questions of
+// the « A few questions » way, merged into « Write it myself » (2026-11-04,
+// asked: « même expérience, des boîtes à remplir manuellement »). Said as the
+// part's hint in the network's editor (playbook-view pb2VoiceParts).
+const PART_QUESTIONS = {
+  voiceSummary: (l) => `How do you sound on ${l}, in a sentence?`,
+  voiceAlways: (l) => `What does every post of yours on ${l} do? Its length, how it opens, its layout…`,
+  voiceNever: (l) => `What would you never do on ${l}?`,
+  voiceByPost: () => "Does it change with the kind of post? An announcement, a tip, a story…",
+  voiceSometimes: (l) => `What do you do now and then on ${l}, not every time? Hashtags, a question at the end…`,
+};
+export const partQuestion = (field, network) => PART_QUESTIONS[field]?.(networkLabel(network)) || "";
 
 // What Archie gives a network on its own (creation): its voice learned from the
 // account's posts when it has enough. Else nothing: the network writes in the

@@ -20,11 +20,11 @@
 //   voiceAskHtml(ctx, net, { id, choices, giving, resolved }) — the Voice step's block
 // Anything carrying [data-vi-open] opens the dialog (one delegated listener).
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2662";
-import { getContextById } from "../contexts-store.js?v=2662";
-import { playbookForNewWork } from "../active-playbook.js?v=2662";
-import { isNewUser } from "../user-mode.js?v=2662";
-import { networkLabel, networkIcon } from "../social-profiles.js?v=2662";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2664";
+import { getContextById } from "../contexts-store.js?v=2664";
+import { playbookForNewWork } from "../active-playbook.js?v=2664";
+import { isNewUser } from "../user-mode.js?v=2664";
+import { networkLabel, networkIcon } from "../social-profiles.js?v=2664";
 import {
   networkVoiceOn,
   networkVoice,
@@ -34,21 +34,20 @@ import {
   baseValue,
   voiceItemsHtml,
   voiceNetTagHtml,
-} from "../voice-parts.js?v=2662";
+} from "../voice-parts.js?v=2664";
 import {
   proposeNetworkVoice,
   saveNetworkVoice,
   useDefaultVoice,
   editNetworkVoiceInPlaybook,
   voiceChoices,
-  INTERVIEW,
   learnPhases,
   LEARN_PHASE_MS,
-} from "../network-voice-flow.js?v=2662";
-import { NETWORK_VOICE_SAMPLE, NETWORK_VOICE_TRAITS } from "../mocks.js?v=2662";
-import "../archie-pixels.js?v=2662";
-import { navigate } from "../router.js?v=2662";
-import { escapeHtml } from "../utils.js?v=2662";
+} from "../network-voice-flow.js?v=2664";
+import { NETWORK_VOICE_SAMPLE, NETWORK_VOICE_TRAITS } from "../mocks.js?v=2664";
+import "../archie-pixels.js?v=2664";
+import { navigate } from "../router.js?v=2664";
+import { escapeHtml } from "../utils.js?v=2664";
 
 const MODAL_ID = "voice-intro";
 const KEY = "archie-voice-intro-seen";
@@ -383,7 +382,6 @@ function injectOnce() {
       qi -= 1;
       renderPersonalize();
     } else if (action === "back") renderPersonalize();
-    else if (action === "answers") submitForm();
     else if (action === "use") {
       saveNetworkVoice(ctxId, queue[qi], proposal);
       nextNetwork("added");
@@ -606,8 +604,7 @@ function renderStand() {
 }
 
 // One network: the ways to adapt the default voice to it, the best first —
-// its posts when it has enough, the default voice adapted, five questions, by
-// hand — or keep it as is.
+// its posts when it has enough, the default voice adapted, by hand — or keep it as is.
 function renderPersonalize() {
   const ctx = getContextById(ctxId);
   const net = queue[qi];
@@ -624,7 +621,7 @@ function renderPersonalize() {
       ? `${label} has its own voice, ${stateText(ctx, net).replace(/^Its own voice, /, "")}. How should I update it?`
       : `${label} uses your default voice for now. How should I adapt it to ${label}?`
   }`;
-  const ways = voiceChoices(net).items.filter((i) => ["learn", "adapt", "interview", "edit"].includes(i.value));
+  const ways = voiceChoices(net).items.filter((i) => ["learn", "adapt", "edit"].includes(i.value));
   leftEl.innerHTML = `
     <ul class="voice-intro__voices" aria-label="Ways to personalize ${escapeHtml(label)}">
       ${ways
@@ -682,34 +679,6 @@ function learnWay(choice, from = null) {
   }, LEARN_PHASE_MS * phases.length);
 }
 
-// The five questions, on the stage — one per Voice profile section.
-function renderForm() {
-  const net = queue[qi];
-  const label = networkLabel(net);
-  stageEl.classList.add("is-result");
-  stageEl.innerHTML = `
-    <form class="voice-intro__form" data-vi-form>
-      ${INTERVIEW.map(
-        (q) => `<div class="ap-form-field">
-          <label for="vi-${q.key}"><span class="voice-intro__form-part">${escapeHtml(q.title)}</span>${escapeHtml(q.ask(label))}</label>
-          <div class="ap-textarea-field resizable"><textarea id="vi-${q.key}" rows="2" data-vi-answer="${q.key}"></textarea></div>
-        </div>`,
-      ).join("")}
-    </form>`;
-  actionsEl.innerHTML = button("back", "ghost grey", "Back") + button("answers", "primary orange", "Write the voice");
-  setTimeout(() => stageEl.querySelector("textarea")?.focus({ preventScroll: true }), 0);
-}
-
-function submitForm() {
-  const answers = Object.fromEntries(
-    [...stageEl.querySelectorAll("[data-vi-answer]")]
-      .map((t) => [t.dataset.viAnswer, t.value.trim()])
-      .filter(([, v]) => v),
-  );
-  if (!Object.keys(answers).length) return stageEl.querySelector("textarea")?.focus();
-  learnWay("interview", answers);
-}
-
 function showProposal() {
   const ctx = getContextById(ctxId);
   const net = queue[qi];
@@ -731,7 +700,6 @@ function nextNetwork(result) {
 function pickWay(way) {
   const net = queue[qi];
   if (way === "learn" || way === "adapt") return learnWay(way);
-  if (way === "interview") return renderForm();
   const id = ctxId;
   close();
   editNetworkVoiceInPlaybook(id, net);

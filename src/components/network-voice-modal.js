@@ -2,7 +2,7 @@
 // ask in (the Clips space). The same choices as everywhere (network-voice-flow
 // voiceChoices), one group per network, the best answer checked; Cancel writes
 // nothing. Then, network by network: a document asks for it in its own dialog,
-// the questions in theirs, and what Archie learned is shown before it's used
+// and what Archie learned is shown before it's used
 // (voice-proposal-modal); backing out of any of them brings this one back.
 // « Edit it myself » or « Edit in the Playbook » leave for the Playbook, and
 // the drafts aren't written.
@@ -14,19 +14,19 @@
 //   `giving` (« Give X its own voice » on a draft): asked even for a network on
 //   the default voice, without that answer.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2662";
-import { getContextById } from "../contexts-store.js?v=2662";
-import { networkLabel, networkIcon } from "../social-profiles.js?v=2662";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2664";
+import { getContextById } from "../contexts-store.js?v=2664";
+import { networkLabel, networkIcon } from "../social-profiles.js?v=2664";
 import {
   missingNetworkVoices,
   voiceChoices,
   useDefaultVoice,
   editNetworkVoiceInPlaybook,
   documentName,
-} from "../network-voice-flow.js?v=2662";
-import { open as openFillDocumentModal } from "./fill-document-modal.js?v=2662";
-import { openVoiceProposal, openVoiceInterview } from "./voice-proposal-modal.js?v=2662";
-import { escapeHtml } from "../utils.js?v=2662";
+} from "../network-voice-flow.js?v=2664";
+import { open as openFillDocumentModal } from "./fill-document-modal.js?v=2664";
+import { openVoiceProposal } from "./voice-proposal-modal.js?v=2664";
+import { escapeHtml } from "../utils.js?v=2664";
 
 const MODAL_ID = "network-voice";
 
@@ -124,7 +124,7 @@ function confirm() {
   );
 }
 
-// Network by network: the source (a document, the questions), then what
+// Network by network: the source (a document), then what
 // Archie learned, used — then the drafts. Backing out brings the step back.
 function giveVoices(p, [pick, ...rest]) {
   if (!pick) return p.onReady();
@@ -140,7 +140,6 @@ function giveVoices(p, [pick, ...rest]) {
       onCancel: back,
     });
   if (choice === "learn" || choice === "adapt") return propose();
-  if (choice === "interview") return openVoiceInterview({ net, onDone: propose, onCancel: back });
   openFillDocumentModal({
     proposal: true,
     onConfirm: ({ file, url }) => propose(file?.name || documentName(url)),

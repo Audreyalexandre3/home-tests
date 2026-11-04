@@ -1,13 +1,11 @@
 // A network's voice, given where there is no chat (flag voicePerNetwork) — the
 // Playbook's network tab, the Clips space, a draft's feedback. One dialog, two
-// moments, the same as the chat's (network-voice-flow.js):
-//   openVoiceInterview — the few questions, as fields, each optional;
+// the same as the chat's (network-voice-flow.js):
 //   openVoiceProposal  — learning takes a moment (its phases), then what
 //     Archie proposes, shown (learnedVoiceHtml): Edit in the Playbook (opens
 //     it there, unsaved) · Use this voice (saves it). Closing saves nothing.
 //
 // Public API:
-//   openVoiceInterview({ net, onDone(answers), onCancel? })
 //   openVoiceProposal({ ctxId, net, choice?, from?, voice?, phases?, only?,
 //                       title?, useLabel?, onUse?(voice), onCancel? })
 //     Learned from `choice` / `from`, after its phases — or `voice`, already
@@ -18,24 +16,23 @@
 //     review) — nothing is saved here, onUse(voice) adds it to the draft, and
 //     there is no Playbook to edit it in.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2662";
-import { getContextById } from "../contexts-store.js?v=2662";
-import { networkLabel } from "../social-profiles.js?v=2662";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=2664";
+import { getContextById } from "../contexts-store.js?v=2664";
+import { networkLabel } from "../social-profiles.js?v=2664";
 import {
-  INTERVIEW,
   learnPhases,
   LEARN_PHASE_MS,
   proposeNetworkVoice,
   saveNetworkVoice,
   editNetworkVoiceInPlaybook,
-} from "../network-voice-flow.js?v=2662";
-import { learnedVoiceHtml } from "./voice-intro-modal.js?v=2662";
-import { escapeHtml } from "../utils.js?v=2662";
+} from "../network-voice-flow.js?v=2664";
+import { learnedVoiceHtml } from "./voice-intro-modal.js?v=2664";
+import { escapeHtml } from "../utils.js?v=2664";
 
 const MODAL_ID = "voice-proposal";
 
 let backdrop, modal, titleEl, bodyEl, footEl;
-let current = null; // { kind: "interview" | "proposal", …the open call's options, voice? }
+let current = null; // { kind: "proposal", …the open call's options, voice? }
 let timers = [];
 
 const HTML = `
@@ -63,7 +60,6 @@ function injectOnce() {
   modal.addEventListener("click", (e) => {
     const action = e.target.closest("[data-vp-action]")?.dataset.vpAction;
     if (action === "close") cancel();
-    else if (action === "answers") submitAnswers();
     else if (action === "use") use();
     else if (action === "edit") edit();
   });
@@ -81,37 +77,6 @@ function show() {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
-}
-
-export function openVoiceInterview({ net, onDone, onCancel = null }) {
-  const label = networkLabel(net);
-  show();
-  current = { kind: "interview", net, onDone, onCancel };
-  titleEl.textContent = `How you write on ${label}`;
-  bodyEl.innerHTML = `
-    <p class="voice-proposal-modal__lead">One question per section of your Voice profile. Answer in your own words, or leave any empty.</p>
-    ${INTERVIEW.map(
-      (q) => `<div class="ap-form-field">
-        <label for="vp-${q.key}"><span class="voice-proposal-modal__part">${escapeHtml(q.title)}</span>${escapeHtml(q.ask(label))}</label>
-        <div class="ap-textarea-field resizable">
-          <textarea id="vp-${q.key}" rows="2" data-vp-answer="${q.key}"></textarea>
-        </div>
-      </div>`,
-    ).join("")}`;
-  footEl.innerHTML = button("close", "ghost grey", "Cancel") + button("answers", "primary orange", "Write the voice");
-  setTimeout(() => bodyEl.querySelector("textarea")?.focus({ preventScroll: true }), 0);
-}
-
-function submitAnswers() {
-  const c = current;
-  const answers = Object.fromEntries(
-    [...bodyEl.querySelectorAll("[data-vp-answer]")]
-      .map((t) => [t.dataset.vpAnswer, t.value.trim()])
-      .filter(([, v]) => v),
-  );
-  if (!Object.keys(answers).length) return bodyEl.querySelector("textarea")?.focus();
-  hide();
-  c.onDone(answers);
 }
 
 export function openVoiceProposal(opts) {
