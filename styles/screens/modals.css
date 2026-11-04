@@ -1504,8 +1504,8 @@ body.has-modal {
   animation-delay: calc(300ms + var(--w) * 28ms);
 }
 
-/* A network's voice, given without a chat (voice-proposal-modal.js): the
-   questions as fields, then what Archie proposes. */
+/* A network's voice, given without a chat (voice-proposal-modal.js): what
+   Archie proposes. */
 .voice-proposal-modal {
   width: min(calc(100% - 32px), 560px);
 }

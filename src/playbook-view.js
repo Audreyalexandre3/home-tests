@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2666";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2666";
-import { conceptHint } from "./concepts.js?v=2666";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2669";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2669";
+import { conceptHint } from "./concepts.js?v=2669";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2666";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2666";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2666";
-import { isFlagOn } from "./feature-flags.js?v=2666";
-import { clipLookOf } from "./videos-store.js?v=2666";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2666";
-import { parseHashParams } from "./url-state.js?v=2666";
+} from "./playbook-brand-kit.js?v=2669";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2669";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2669";
+import { isFlagOn } from "./feature-flags.js?v=2669";
+import { clipLookOf } from "./videos-store.js?v=2669";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2669";
+import { parseHashParams } from "./url-state.js?v=2669";
 import {
   isListPart,
   voiceParts,
@@ -57,13 +57,13 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2666";
-import { showToast } from "./components/toast.js?v=2666";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2666";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2666";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2666";
-import { consumeHandoff } from "./handoff.js?v=2666";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2666";
+} from "./voice-parts.js?v=2669";
+import { showToast } from "./components/toast.js?v=2669";
+import { introSeen, voiceAskHtml, learnedVoiceHtml, postCardHtml } from "./components/voice-intro-modal.js?v=2669";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2669";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2669";
+import { consumeHandoff } from "./handoff.js?v=2669";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2669";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -72,7 +72,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2666";
+} from "./social-profiles.js?v=2669";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2939,12 +2939,38 @@ function networkPickerCards(data, nets, first) {
       </span>
     </label>`;
   };
+  // What « the default voice » means for the posts, shown, not told
+  // (2026-11-04, asked: « est-ce que le user comprend que ses posts seront
+  // pareils partout s'il utilise la même default voice partout ? »): said in
+  // the question's hint, then shown in its own card right after it (after, so
+  // the part's confirm is never reached before the checkboxes) — the voice
+  // intro's sample, one idea in the
+  // default voice (the post every unchecked network gets), then the same idea
+  // in a network's own voice (the first one checked, else LinkedIn, the
+  // starkest contrast, else the first listed). Picked with the networks part
+  // (`.pb2-voice-networks`).
+  const sampleNet = picked[0] || (all.includes("linkedin") ? "linkedin" : all[0]);
+  const sampleLabel = networkLabel(sampleNet);
+  const exampleBlock = pb2Block(
+    "One idea, two voices",
+    `<div class="pb2-voice-example">${postCardHtml(data, "brand", "Default voice · every network without its own")}${postCardHtml(
+      data,
+      sampleNet,
+      picked.includes(sampleNet) ? `${sampleLabel} voice` : `If ${sampleLabel} had its own voice`,
+    )}</div>`,
+    {
+      wide: true,
+      hint: "The same idea, written for every network without its own voice, then for one with its own.",
+      index: first + 1,
+      className: "pb2-voice-networks pb2-voice-compare",
+    },
+  );
   const pickBlock = pb2Block(
     "Which networks get their own voice?",
     `<div class="pb2-netpick">${all.map(row).join("")}</div>`,
     {
       wide: true,
-      hint: "The others use your default voice.",
+      hint: "Unchecked networks all get the same post, word for word. Check the ones you write for differently.",
       index: first,
       className: "pb2-voice-networks",
     },
@@ -2959,7 +2985,7 @@ function networkPickerCards(data, nets, first) {
         className: `pb2-voice-net pb2-voice-net--${net}`,
       }),
     );
-  return [pickBlock, ...cards];
+  return [pickBlock, exampleBlock, ...cards];
 }
 
 // A network's own voice with something in it — empty, it still has to be filled.

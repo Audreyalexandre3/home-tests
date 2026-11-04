@@ -28,7 +28,7 @@
 // are pure DOM/CSS. Karaoke word-sweep is intentionally omitted; emphasis is
 // per-word marks + an optional static "phrase" highlight under the playhead.
 
-import { escapeHtml, formatClock } from "./utils.js?v=2666";
+import { escapeHtml, formatClock } from "./utils.js?v=2669";
 import {
   PRESETS,
   presetById,
@@ -43,7 +43,7 @@ import {
   detectFillers,
   detectPauses,
   videoForClip,
-} from "./clip-captions.js?v=2666";
+} from "./clip-captions.js?v=2669";
 
 const FONT_FAMILIES = [
   "Montserrat, Roboto, sans-serif",

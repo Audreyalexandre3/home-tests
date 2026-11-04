@@ -1264,6 +1264,36 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* « One idea, two voices » before the network rows (2026-11-04): the voice
+   intro's two posts, still — the review repaints on every tick, so no
+   word-by-word fade. */
+.pb2-voice-example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+}
+
+.pb2-voice-example .voice-intro__post {
+  padding: var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-card);
+}
+
+.pb2-voice-example .voice-intro__post-text {
+  min-height: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+}
+
+.pb2-voice-example .voice-intro__traits {
+  display: none;
+}
+
+.pb2-voice-example *,
+.pb2-voice-example .voice-intro__post {
+  animation: none;
+}
+
 /* The voice review's network rows: the connected accounts on the network,
    as profile tags under its state. */
 /* « Which networks get their own voice? » — one compact row per network
