@@ -3292,23 +3292,23 @@ button.recap__logotile:hover {
   color: var(--sys-text-color-error);
 }
 
-/* A returning user's « Create a Playbook » (.is-integrated, welcome-alt-shell.js):
-   no pixels, a flat grey-05 canvas edge to edge, only a grey-20 rule between it
-   and the step; the cards bordered instead of lifted, no entrance. The
-   first-time run keeps its stage. */
-.welcome-flow.is-integrated .welcome-intro__stage {
+/* The run's steps and reviews (welcome-alt-shell.js), first time or not: no
+   pixels, a flat grey-05 canvas edge to edge, only a grey-20 rule between it
+   and the step; the cards bordered instead of lifted, no entrance. The intro
+   (/welcome-alt/intro) keeps its pixel stage. */
+.welcome-intro.welcome-flow .welcome-intro__stage {
   margin: 0;
   border-radius: 0;
   border-left: 1px solid var(--ref-color-grey-20);
   background: var(--ref-color-grey-05);
 }
 
-.welcome-flow.is-integrated .welcome-intro__card,
-.welcome-flow.is-integrated .welcome-flow__sheet.is-scroll .welcome-review__card {
+.welcome-intro.welcome-flow .welcome-intro__card,
+.welcome-intro.welcome-flow .welcome-flow__sheet.is-scroll .welcome-review__card {
   border: 1px solid var(--ref-color-grey-20);
   box-shadow: none;
 }
 
-.welcome-flow.is-integrated .welcome-intro__card {
+.welcome-intro.welcome-flow .welcome-intro__card {
   animation: none;
 }

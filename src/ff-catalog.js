@@ -394,16 +394,16 @@ export const FLAGS = Object.freeze([
   {
     id: "playbookAnimations",
     group: "Playbook",
-    tip: "Create a Playbook (returning users): each step plays a scene that teaches the Playbook's parts, instead of the card filling in.",
+    tip: "Creating a Playbook (first time or Create a Playbook): each step plays a scene that teaches the Playbook's parts, instead of the card filling in.",
     label: "Playbook animations",
-    // OFF: the integrated run keeps its card filling in. The first-time run
-    // never changes, flag or not (welcome-alt-shell.js mountShell).
+    // OFF: the card filling in. One run for both: the first time and a
+    // returning user's Create a Playbook (welcome-alt-shell.js mountShell).
     default: false,
     hides:
-      "When ON, a returning user's Create a Playbook shows, on each step, an " +
+      "When ON, building a Playbook (the first time, or Create a Playbook) shows, on each step, an " +
       "animated scene instead of the Playbook card filling in: what you give me " +
       "as a real object (your site, a brand book, your posts), what I do with " +
       "it, and the part of the Playbook each piece lands in; on Ready, the four " +
-      "parts compose one post. The first-time run and the reviews are unchanged.",
+      "parts compose one post. The reviews are unchanged.",
   },
 ]);

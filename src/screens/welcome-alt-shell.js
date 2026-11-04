@@ -9,11 +9,10 @@
 // the session id the recap already uses (`welcomeAltSessionId`), and persisted
 // on every change so a reload lands on the same step with the same answers.
 
-import "../archie-pixels.js?v=2681";
-import { html, raw, escapeHtml } from "../utils.js?v=2681";
-import { getPath, navigate } from "../router.js?v=2681";
-import { parseHashParams } from "../url-state.js?v=2681";
-import { isFlagOn } from "../feature-flags.js?v=2681";
+import { html, raw, escapeHtml } from "../utils.js?v=2682";
+import { getPath, navigate } from "../router.js?v=2682";
+import { parseHashParams } from "../url-state.js?v=2682";
+import { isFlagOn } from "../feature-flags.js?v=2682";
 import {
   altSteps,
   createAltDraft,
@@ -21,9 +20,9 @@ import {
   isAnalysisReady,
   restoreDraft,
   subscribeDraft,
-} from "../context-builder.js?v=2681";
-import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2681";
-import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2681";
+} from "../context-builder.js?v=2682";
+import { getConnectedProfiles, networkIcon, networkLabel } from "../social-profiles.js?v=2682";
+import { playbookNetworks, networkVoiceOn } from "../voice-parts.js?v=2682";
 import {
   readSessionId,
   isIntegrated,
@@ -33,10 +32,10 @@ import {
   LOADING_STAGES,
   FILE_LOADING_STAGES,
   INTERVIEW_LOADING_STAGES,
-} from "./welcome-alt-recap.js?v=2681";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2681";
-import { paintExplainer } from "./welcome-alt-explainer.js?v=2681";
-import { setTopbarActions } from "../components/topbar.js?v=2681";
+} from "./welcome-alt-recap.js?v=2682";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2682";
+import { paintExplainer } from "./welcome-alt-explainer.js?v=2682";
+import { setTopbarActions } from "../components/topbar.js?v=2682";
 
 const PREFILLED_URL = "https://nicesoap.com";
 const SESSION_KEY = "welcomeAltSessionId";
@@ -432,16 +431,18 @@ function renderProgress(step, { all = false } = {}) {
 // the part's blocks, dealt as a stack, floating on the pixels.
 // `build`: /welcome-alt/ready's stages ({ at, done }), which gate the card.
 // Returns { paint, sheet, cleanup }.
-// A returning user's « Create a Playbook » (`isIntegrated()`): a plain stage,
-// no pixels — they know me already; the first-time run keeps its show. Under
-// `playbookAnimations`, no card filling in either: each step plays a scene that
-// teaches the Playbook's parts (welcome-alt-explainer.js). The reviews
-// (`sheet`) are the same for both.
+// One run for a first-time user and a returning user's « Create a Playbook »
+// (2026-11-04, asked: « il n'y a pas de raison d'en avoir 2 différents »): a
+// plain stage, no pixels; under `playbookAnimations`, each step plays a scene
+// that teaches the Playbook's parts (welcome-alt-explainer.js) instead of the
+// card filling in. Only the frame differs: the first time is full-bleed with
+// the stepper in the column, a returning user's run (`isIntegrated()`) sits in
+// the app's chrome with the stepper in the topbar.
 export function mountShell(target, { step, sid, left, sheet = false, build }) {
   const integrated = isIntegrated();
-  const scenes = integrated && isFlagOn("playbookAnimations");
+  const scenes = isFlagOn("playbookAnimations");
   target.innerHTML = html`
-    <div class="welcome-intro welcome-flow ${sheet ? "is-review" : ""} ${integrated ? "is-integrated" : ""}">
+    <div class="welcome-intro welcome-flow ${sheet ? "is-review" : ""}">
       <section class="welcome-intro__lede" aria-labelledby="welcomeFlowTitle">
         <img class="welcome-intro__wordmark" src="assets/logos/archie-wordmark.svg" alt="Archie" />
         <div class="welcome-intro__copy welcome-flow__copy">
@@ -453,7 +454,6 @@ export function mountShell(target, { step, sid, left, sheet = false, build }) {
         </div>
       </section>
       <div class="welcome-intro__stage">
-        ${integrated ? "" : raw(`<archie-pixels data-quiet aria-hidden="true"></archie-pixels>`)}
         ${sheet
           ? raw(`<div class="welcome-flow__sheet" data-flow-sheet>
               <div class="welcome-flow__sheet-body" data-flow-sheet-body></div>

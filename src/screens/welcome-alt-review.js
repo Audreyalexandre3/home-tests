@@ -33,12 +33,12 @@
 // is re-applied after every paint (a MutationObserver on the host) — the card
 // index lives here, not in the DOM.
 
-import { html, raw } from "../utils.js?v=2681";
-import { navigate } from "../router.js?v=2681";
-import { getDraft, patchDraft } from "../context-builder.js?v=2681";
-import { mount } from "../playbook-view.js?v=2681";
-import { parseHashParams } from "../url-state.js?v=2681";
-import { mountShell, tint } from "./welcome-alt-shell.js?v=2681";
+import { html, raw } from "../utils.js?v=2682";
+import { navigate } from "../router.js?v=2682";
+import { getDraft, patchDraft } from "../context-builder.js?v=2682";
+import { mount } from "../playbook-view.js?v=2682";
+import { parseHashParams } from "../url-state.js?v=2682";
+import { mountShell, tint } from "./welcome-alt-shell.js?v=2682";
 
 // Each part's tint (`tint`, welcome-alt-shell.js — the card's rows share it):
 // its cards' header band, its cover and its tile in the list, so the colour
@@ -46,7 +46,8 @@ import { mountShell, tint } from "./welcome-alt-shell.js?v=2681";
 const OUT_MS = 240; // the part's column leaves
 const GLIDE_MS = 720; // a card glides to the middle
 
-// `review.calm` (a returning user's Create a Playbook, 2026-11-03, asked: « trop
+// `review.calm` (every run's Voice review since 2026-11-04; first asked for a
+// returning user's Create a Playbook, 2026-11-03: « trop
 // animé et compliqué … une expérience + simple »): the same column, still — no
 // tinted band, no dimming, no glide, no ↑ / ↓ capsule, no cascade.
 //
@@ -510,14 +511,12 @@ export function renderReview(target, sid, config, review) {
   };
 }
 
-// A returning user's Create a Playbook (isIntegrated()), the Playbook's review
-// as ONE page (2026-11-03, asked: « voir facilement ce que Archie a trouvé, et
+// The Playbook's review as ONE page — every run since 2026-11-04 (2026-11-03, asked: « voir facilement ce que Archie a trouvé, et
 // éditer ce qui manque sans cliquer dans tous les sens »): every part one
 // under the other, already in edit (playbook-view's `stack`), chip fields
 // showing only what's kept. The list on the left is a table of contents — a
 // click scrolls to its part, a part with its essentials missing says
-// « To fill in ». One button at the bottom goes on. The first-time run keeps
-// renderReview.
+// « To fill in ». One button at the bottom goes on.
 const missing = {
   goals: (d) => !d.businessSummary || !(d.audience || []).length,
   brand: (d) => !d.brandLogo,

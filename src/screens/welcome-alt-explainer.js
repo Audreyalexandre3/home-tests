@@ -1,7 +1,7 @@
-// A returning user's « Create a Playbook » (`isIntegrated()`): instead of the
-// card filling with bars, each step of the run plays a scene that teaches what
-// the Playbook is made of, how its parts connect, and what each one lets me do.
-// The first-time run keeps its card (welcome-alt-shell.js renderCard).
+// Building a Playbook — the first time or « Create a Playbook », one run (flag
+// playbookAnimations): instead of the card filling with bars, each step of the
+// run plays a scene that teaches what the Playbook is made of, how its parts
+// connect, and what each one lets me do (welcome-alt-shell.js mountShell).
 //
 // Every scene reads top to bottom, like the HOME-5 stage: what you give me (a
 // real-looking object: your site, a brand book, your posts), my stitch (an olive
@@ -17,15 +17,15 @@
 // The ready screen paints once and moves by attributes (`is-lit`, `is-done`)
 // so its stages light the parts one by one without replaying the scene.
 
-import { escapeHtml } from "../utils.js?v=2681";
-import { isFlagOn } from "../feature-flags.js?v=2681";
-import { networkIcon, networkLabel } from "../social-profiles.js?v=2681";
-import { playbookNetworks } from "../voice-parts.js?v=2681";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2681";
-import { tint, domainOf } from "./welcome-alt-shell.js?v=2681";
-import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2681";
-import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2681";
-import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2681";
+import { escapeHtml } from "../utils.js?v=2682";
+import { isFlagOn } from "../feature-flags.js?v=2682";
+import { networkIcon, networkLabel } from "../social-profiles.js?v=2682";
+import { playbookNetworks } from "../voice-parts.js?v=2682";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2682";
+import { tint, domainOf } from "./welcome-alt-shell.js?v=2682";
+import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2682";
+import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2682";
+import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2682";
 
 const W = 560;
 const H = 540;
