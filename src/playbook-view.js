@@ -14,9 +14,9 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=2676";
-import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2676";
-import { conceptHint } from "./concepts.js?v=2676";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=2677";
+import { brandCoverStyle, voiceSentence } from "./brand-cover.js?v=2677";
+import { conceptHint } from "./concepts.js?v=2677";
 import {
   renderColorRole,
   colorRoleCaption,
@@ -31,13 +31,13 @@ import {
   kitSnapshot,
   renderImagesTab,
   setInlineChoices,
-} from "./playbook-brand-kit.js?v=2676";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2676";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2676";
-import { isFlagOn } from "./feature-flags.js?v=2676";
-import { clipLookOf } from "./videos-store.js?v=2676";
-import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2676";
-import { parseHashParams } from "./url-state.js?v=2676";
+} from "./playbook-brand-kit.js?v=2677";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=2677";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=2677";
+import { isFlagOn } from "./feature-flags.js?v=2677";
+import { clipLookOf } from "./videos-store.js?v=2677";
+import { dsSelect, SUBTITLE_IDS, presetLabel } from "./screens/clips/shared.js?v=2677";
+import { parseHashParams } from "./url-state.js?v=2677";
 import {
   isListPart,
   voiceParts,
@@ -57,14 +57,13 @@ import {
   ADAPTED_FROM,
   voiceHasRules,
   partQuestion,
-} from "./voice-parts.js?v=2676";
-import { showToast } from "./components/toast.js?v=2676";
-import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2676";
-import { NETWORK_VOICE_TRAITS } from "./mocks.js?v=2676";
-import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2676";
-import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2676";
-import { consumeHandoff } from "./handoff.js?v=2676";
-import { open as openConfirmModal } from "./components/confirm-modal.js?v=2676";
+} from "./voice-parts.js?v=2677";
+import { showToast } from "./components/toast.js?v=2677";
+import { introSeen, voiceAskHtml, learnedVoiceHtml } from "./components/voice-intro-modal.js?v=2677";
+import { voiceChoices, saveNetworkVoice, useDefaultVoice } from "./network-voice-flow.js?v=2677";
+import { openVoiceProposal } from "./components/voice-proposal-modal.js?v=2677";
+import { consumeHandoff } from "./handoff.js?v=2677";
+import { open as openConfirmModal } from "./components/confirm-modal.js?v=2677";
 import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
@@ -73,7 +72,7 @@ import {
   getConnectedProfiles,
   normalizeNetwork,
   renderProfileTag,
-} from "./social-profiles.js?v=2676";
+} from "./social-profiles.js?v=2677";
 
 // Brief — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -2894,83 +2893,6 @@ function voiceWaysCard(net = null, { title = "Rewrite it from", hint = "", class
   );
 }
 
-// « Your voice, every network » (networkPickerCards): what a voice is, drawn
-// (2026-11-04, asked: « la voice, c'est la façon que l'Archie reproduit comment
-// un utilisateur s'exprime. Et par network, il peut vouloir tweaker et
-// optimiser ça. Y'a pas d'histoire de trucs copiés » — a story of one post
-// copied to every network, the same day, got the concept wrong). Your voice —
-// how you write, in its own words — runs to every network; a checked network
-// keeps it and adds its tweaks (NETWORK_VOICE_TRAITS), on butter. One SVG that
-// scales with its card, the explainer's vocabulary (butter, olive threads).
-// Rows in the networks' order, so checking one never moves the others.
-const FAN = { pitch: 48, card: { w: 200 }, trunk: 20, row: { x: 44 }, chars: 6.2 };
-
-function voiceFanHtml(data, nets, picked) {
-  const head = (data?.voiceProfile?.headline || "").split(/\s*·\s*/).filter(Boolean);
-  const traits = (head.length ? head : data?.tones || []).slice(0, 3);
-  const mine = traits.length ? traits : ["Your words", "Your tone", "Your rhythm"];
-  const { pitch, card, trunk, row, chars } = FAN;
-  // The voice on top, the networks under it, each on a branch of one trunk —
-  // it reads down the review's narrow column at full size.
-  const cardH = 44 + mine.length * 20;
-  const top = cardH + 8;
-  const mid = (i) => top + i * pitch + pitch / 2;
-  const H = top + nets.length * pitch;
-  const tagW = (t) => Math.round((t.length + 2) * chars + 26);
-  const nameX = row.x + 24;
-  const width = Math.max(
-    card.w,
-    ...nets.map((n) => nameX + (NETWORK_VOICE_TRAITS[n] || []).reduce((w, t) => w + tagW(t) + 6, 0)),
-  );
-
-  const parts = [
-    `<g class="vf-pop" style="--d:0s">
-      <rect x="0" y="0" width="${card.w}" height="${cardH}" rx="12" class="vf-voice"/>
-      <text x="16" y="26" class="vf-title">Your voice</text>
-      ${mine
-        .map(
-          (t, k) =>
-            `<g class="vf-fade" style="--d:${0.25 + k * 0.15}s"><circle cx="20" cy="${46 + k * 20}" r="2.5" class="vf-dot"/><text x="30" y="${50 + k * 20}" class="vf-text">${esc(t)}</text></g>`,
-        )
-        .join("")}
-    </g>`,
-  ];
-  nets.forEach((n, i) => {
-    const d = 0.8 + i * 0.1;
-    const tuned = picked.includes(n);
-    const y = mid(i) - 9; // the name's line
-    parts.push(
-      `<path class="vf-thread${tuned ? " vf-thread--tuned" : ""}" d="M${trunk} ${cardH} V${y - 10} Q${trunk} ${y}, ${trunk + 10} ${y} H${row.x - 6}" pathLength="1" style="--d:${d}s"/>`,
-    );
-    let x = nameX;
-    const line2 = tuned
-      ? (NETWORK_VOICE_TRAITS[n] || [])
-          .map((t, k) => {
-            const w = tagW(t);
-            const tag = `<g class="vf-pop" style="--d:${d + 0.7 + k * 0.15}s"><rect x="${x}" y="${y + 8}" width="${w}" height="20" rx="10" class="vf-tag"/><text x="${x + 10}" y="${y + 22}" class="vf-text"><tspan class="vf-plus">+</tspan> ${esc(t)}</text></g>`;
-            x += w + 6;
-            return tag;
-          })
-          .join("")
-      : `<text x="${x}" y="${y + 22}" class="vf-caption vf-fade" style="--d:${d + 0.5}s">Your voice, as it is</text>`;
-    parts.push(`<g class="vf-pop" style="--d:${d + 0.4}s">
-      <foreignObject x="${row.x}" y="${y - 8}" width="16" height="16"><i class="${networkIcon(n)} vf-net" aria-hidden="true"></i></foreignObject>
-      <text x="${nameX}" y="${y + 5}" class="vf-name">${esc(networkLabel(n))}</text>
-    </g>${line2}`);
-  });
-
-  const said = nets
-    .map((n) =>
-      picked.includes(n)
-        ? `${networkLabel(n)}: your voice, plus ${(NETWORK_VOICE_TRAITS[n] || []).join(", ").toLowerCase()}`
-        : `${networkLabel(n)}: your voice, as it is`,
-    )
-    .join(". ");
-  return `<svg class="pb2-fan" viewBox="0 0 ${width + 4} ${H}" width="${width + 4}" role="img" aria-label="${esc(
-    `Your voice (${mine.join(", ")}) on every network. ${said}.`,
-  )}">${parts.join("")}</svg>`;
-}
-
 // The run's Voice review (cfg.networkPicker — 2026-10-29,
 // asked: « que l'on puisse ou non ajouter des voices pour des networks
 // spécifiques »; the main-network card was removed the same day, asked):
@@ -3017,16 +2939,6 @@ function networkPickerCards(data, nets, first) {
       </span>
     </label>`;
   };
-  // What a voice is, drawn (voiceFanHtml): your voice on every network, tuned
-  // on the checked ones. Live: checking a network redraws it. After the
-  // checkboxes, so the part's confirm is never reached before them; picked
-  // with the networks part (`.pb2-voice-networks`).
-  const exampleBlock = pb2Block("Your voice, every network", voiceFanHtml(data, all, picked), {
-    wide: true,
-    hint: "I write like you everywhere. Where you write a bit differently, I tune your voice for that network.",
-    index: first + 1,
-    className: "pb2-voice-networks pb2-voice-compare",
-  });
   const pickBlock = pb2Block(
     "Which networks get their own voice?",
     `<div class="pb2-netpick">${all.map(row).join("")}</div>`,
@@ -3047,7 +2959,7 @@ function networkPickerCards(data, nets, first) {
         className: `pb2-voice-net pb2-voice-net--${net}`,
       }),
     );
-  return [pickBlock, exampleBlock, ...cards];
+  return [pickBlock, ...cards];
 }
 
 // A network's own voice with something in it — empty, it still has to be filled.

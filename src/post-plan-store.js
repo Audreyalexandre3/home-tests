@@ -15,7 +15,7 @@
 //   updatePlan(sid, id, partial) · setActivePlan(sid, id)
 //   subscribe(sid, fn) · clearSession(sid)
 
-import { createSessionNotifier } from "./store-utils.js?v=2676";
+import { createSessionNotifier } from "./store-utils.js?v=2677";
 
 const plansBySession = new Map(); // sid → { plans: [], activeId }
 const notifier = createSessionNotifier("post-plan-store");
