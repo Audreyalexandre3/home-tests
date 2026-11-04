@@ -1486,6 +1486,21 @@ body:not(.onboarding) .welcome-intro__wordmark {
   padding-block: 0;
 }
 
+/* A part shorter than the stage sits in its middle, between the top and the
+   confirm bar (2026-11-04, asked: « centrer verticalement le bloc d'actions »,
+   first run and Create a Playbook alike); a taller one starts at the top and
+   scrolls. Auto margins, not justify-content: they fall to 0 when the part
+   overflows, so its top is never cut off. */
+.welcome-flow__sheet.is-calm .welcome-flow__sheet-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-flow__sheet.is-calm .welcome-flow__sheet-body > * {
+  flex-shrink: 0;
+  margin-block: auto;
+}
+
 .welcome-flow__sheet.is-scroll.is-calm .welcome-review__card {
   opacity: 1;
   transform: none;
