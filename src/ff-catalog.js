@@ -365,6 +365,17 @@ export const FLAGS = Object.freeze([
       "When ON, a new chat shows the wordmark, one line and the composer with a grey drawer tucked under its card: five flows as tabs (video clips, top posts, from a source, Topics, write a post), the chosen one's four example requests below, and a lip to hide or show it. Pointing at a request writes it in the box as a ghost; a click sends it and runs that flow, except « Write a post », whose requests only fill the box. Replaces the workflow rows and the Topics row.",
   },
   {
+    id: "homeComposer",
+    group: "Chat & drafts",
+    tip: "One box that takes anything; once I know what you gave me, I ask what to make with it. Ideas for this week under it.",
+    label: "HOME-9: one box, then I ask",
+    // The ninth new-chat home (2026-11-04, screens/session/home-directions.js).
+    // The first ON in the order 1 to 9 wins; all OFF = the hero above.
+    default: false,
+    hides:
+      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and four chips of what you bring (a file, a video, a link, some text). A chip only adds the source: the choice of what to make (ideas, clips for a video, a post, a summary) comes after, in the chat. Below, for a returning user, « Ideas for this week »: two fresh Topics and your best post (three best posts when the feed is empty), each opening its own object; for a new user (Admin › user mode), « What I can make »: clips, drafts per network, brand images. No voice nudge on the home.",
+  },
+  {
     id: "chatPreviewTool",
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",

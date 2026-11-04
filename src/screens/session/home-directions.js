@@ -11,6 +11,7 @@
 //   homePrompts    6 · words only: flow chips, each opening its example requests (Copilot)
 //   homePromptList 7 · words only: one example request per flow, in a list (Sana)
 //   homeDrawer     8 · the requests of 6 in a drawer tucked under the box (Notion)
+//   homeComposer   9 · one box, then I ask what to make; ideas below (Audrey, 2026-11-04)
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -36,6 +37,7 @@ import { getContextById } from "../../contexts-store.js?v=2689";
 import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2689";
 import { networkLabel, networkIcon } from "../../social-profiles.js?v=2689";
 import { isWorkspaceMode } from "../../active-playbook.js?v=2689";
+import { isNewUser } from "../../user-mode.js?v=2689";
 import { escapeHtml } from "../../utils.js?v=2689";
 import "../../archie-pixels.js?v=2689";
 
@@ -48,6 +50,7 @@ const DIRECTIONS = [
   ["homePrompts", prompts],
   ["homePromptList", promptList],
   ["homeDrawer", drawer],
+  ["homeComposer", composerFirst],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -585,6 +588,137 @@ function picks({ composer, session }) {
     <p class="nch__sub">From your videos, your best posts and this week's Topics. Pick one, or start your own.</p>
     <div class="nch-picks" role="group" aria-label="Ready to write">${cards}</div>
     ${lead(composer)}`,
+  );
+}
+
+// ── 9 · One box, then I ask ─────────────────────────────────────────────────
+// (2026-11-04, Audrey's proposal, from the feedback that choosing one route or
+// the other is not what we want up front.) The box takes anything and I answer
+// with what I can do with it: the source-use question (askSourceUse) already
+// offers ideas / clips / a post / a summary, a video adding Cut it into clips.
+// So no starting point here picks a flow: the chips only hand me a source, and
+// the question comes after, once I know what it is.
+//
+// Under the box, what you bring and what I bring are kept apart. The chips are
+// what YOU bring (a file, a video, a link, text). The block below is what I
+// already have for you, and it changes with who is looking (Admin › user mode):
+//   returning → « Ideas for this week »: fresh Topics + your best post, each
+//               opening ITS object (Use in chat / Write from this post)
+//   new user  → « What I can make »: the outcomes, shown working, since
+//               there is nothing of yours to propose yet
+// No voice nudge on the home: config interrupts someone who came to create.
+const BRING = [
+  {
+    kind: "pdf",
+    icon: "ap-icon-file--pdf",
+    tone: "src",
+    name: "A file",
+    hint: "Drop a PDF, a deck or notes. I'll tell you what I can make from it.",
+  },
+  {
+    kind: "video",
+    icon: "ap-icon-video",
+    tone: "clip",
+    name: "A video",
+    hint: "Drop a video. I'll offer clips, or posts from what it says.",
+  },
+  {
+    kind: "url",
+    icon: "ap-icon-link",
+    tone: "src",
+    name: "A link",
+    hint: "Paste a link. I'll read it and tell you what I can make from it.",
+  },
+  {
+    kind: "text",
+    icon: "ap-icon-file--text",
+    tone: "free",
+    name: "Some text",
+    hint: "Paste notes or a draft. I'll tell you what I can make from it.",
+  },
+];
+
+function composerFirst({ composer, session }) {
+  const chip = (b) => `
+    <button type="button" class="nch-chip" data-add-source="${b.kind}" data-nch-hint="${esc(b.hint)}">
+      <span class="nch-tile nch-tone--${b.tone} nch-tile--sm" aria-hidden="true"><i class="${b.icon}"></i></span><span>${esc(b.name)}</span>
+    </button>`;
+  const card = (k, from, vis, title, d) =>
+    doorEl(
+      "nch-pick",
+      d,
+      `<span class="nch-pick__from">${tile(k, "sm")}<span>${from}</span></span>
+       <span class="nch-pick__vis">${vis}</span>
+       <span class="nch-pick__title">${title}</span>`,
+    );
+
+  let below;
+  if (isNewUser()) {
+    const { video, clips } = footage(session);
+    const ctx = ctxOf(session);
+    below = `
+      <section class="nch-can nch-ask__below" aria-labelledby="nchAskBelow">
+        <h2 class="nch__h" id="nchAskBelow">What I can make</h2>
+        <div class="nch-picks nch-picks--3">
+          ${card(
+            "video",
+            "From a video",
+            `<span class="nch-pick__well">${clips
+              .slice(0, 2)
+              .map((c, i) => clipMedia(video, c, i))
+              .join("")}</span>`,
+            "Vertical clips with subtitles",
+            DOORS.video(video),
+          )}
+          ${card("source", "From a doc or a link", fileToDrafts(), "A draft for each network", DOORS.source())}
+          ${card("source", "From your brand", brandImages, "Images in your colours", DOORS.images(ctx))}
+        </div>
+      </section>`;
+  } else {
+    const { topics, total, href } = freshTopics(session, 2);
+    const posts = bestPosts(topics.length ? 1 : 3);
+    const ideas = [
+      ...topics.map((t) =>
+        card(
+          "topic",
+          t.isTrending ? "Trending this week" : "New this week",
+          topicMini(t),
+          "Your take on it",
+          DOORS.topic(t),
+        ),
+      ),
+      ...posts.map((p) =>
+        card(
+          "top",
+          "Your best post",
+          topPostMini(p, { withImage: false }),
+          "A follow-up on the same pattern",
+          DOORS.post(p),
+        ),
+      ),
+    ].join("");
+    const more = topics.length
+      ? `<a class="nch-ask__more" href="${href}">See all ${total} in Topic Feed<i class="ap-icon-arrow-right" aria-hidden="true"></i></a>`
+      : "";
+    below = `
+      <section class="nch-can nch-ask__below" aria-labelledby="nchAskBelow">
+        <header class="nch-ask__head">
+          <h2 class="nch__h" id="nchAskBelow">Ideas for this week</h2>
+          ${more}
+        </header>
+        <div class="nch-picks nch-picks--3">${ideas}</div>
+      </section>`;
+  }
+
+  return shell(
+    "ask",
+    `
+    ${WORDMARK}
+    <h1 class="nch__title">What are we posting today?</h1>
+    <p class="nch__sub">Drop anything. I'll tell you what I can make with it.</p>
+    ${lead(composer)}
+    <div class="nch-chips" role="group" aria-label="Add a source">${BRING.map(chip).join("")}</div>
+    ${below}`,
   );
 }
 

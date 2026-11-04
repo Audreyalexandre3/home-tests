@@ -728,6 +728,44 @@
   max-width: 240px;
 }
 
+/* ── 9 · One box, then I ask ──────────────────────────────────────────────── */
+.nch-ask__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
+.nch-ask__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  text-decoration: none;
+}
+
+.nch-ask__more:hover {
+  text-decoration: underline;
+}
+
+.nch-ask__below .nch-picks--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .nch-ask__below .nch-picks--3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .nch-ask__below .nch-picks--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── 4 · Posts I can write today ──────────────────────────────────────────── */
 .nch-picks {
   display: grid;
