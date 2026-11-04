@@ -17,15 +17,15 @@
 // The ready screen paints once and moves by attributes (`is-lit`, `is-done`)
 // so its stages light the parts one by one without replaying the scene.
 
-import { escapeHtml } from "../utils.js?v=2684";
-import { isFlagOn } from "../feature-flags.js?v=2684";
-import { networkIcon, networkLabel } from "../social-profiles.js?v=2684";
-import { playbookNetworks } from "../voice-parts.js?v=2684";
-import { RECAP_SECTIONS } from "../playbook-view.js?v=2684";
-import { tint, domainOf } from "./welcome-alt-shell.js?v=2684";
-import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2684";
-import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2684";
-import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2684";
+import { escapeHtml } from "../utils.js?v=2685";
+import { isFlagOn } from "../feature-flags.js?v=2685";
+import { networkIcon, networkLabel } from "../social-profiles.js?v=2685";
+import { playbookNetworks } from "../voice-parts.js?v=2685";
+import { RECAP_SECTIONS } from "../playbook-view.js?v=2685";
+import { tint, domainOf } from "./welcome-alt-shell.js?v=2685";
+import { styleArtSvg } from "../modules/image-studio/render/style-art.js?v=2685";
+import { resolvePalette } from "../modules/image-studio/render/palette.js?v=2685";
+import { svgToDataUrl } from "../modules/image-studio/render/visual.js?v=2685";
 
 const W = 560;
 const H = 540;
@@ -160,7 +160,6 @@ const rowsOf = (breaks, gap) => {
 
 // `h`: the scene's own height before any air, so a short one isn't framed by empty space.
 const stage = (caption, body, svg, { attrs = "", h = H, Y }) => `
-  <div class="wx-bg" aria-hidden="true"><i></i><i></i></div>
   <div class="wx-caption">
     <h3 class="wx-caption__title">${e(caption.title)}</h3>
     <p class="wx-caption__text">${e(caption.text)}</p>

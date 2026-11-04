@@ -27,38 +27,6 @@
   color: var(--ref-color-grey-100);
 }
 
-/* Two flat shapes behind the scene so the stage isn't one grey field: a large
-   disc behind the main object and a smaller one in the bottom-left corner, in
-   ONE colour, Archie's butter at half strength (full butter shouted). Flat (no
-   blur, no gradient), clipped by the stage; they settle in once per step. */
-.wx-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.wx-bg i {
-  position: absolute;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--app-butter) 50%, transparent);
-  animation: wx-bg-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.wx-bg i:first-child {
-  top: 12%;
-  right: -14%;
-  width: 72%;
-}
-
-.wx-bg i:last-child {
-  bottom: -20%;
-  left: -14%;
-  width: 34%;
-  animation-delay: 0.15s;
-}
-
 .wx-caption,
 .wx-fit {
   z-index: 1;
@@ -1017,13 +985,6 @@
   from {
     opacity: 0;
     transform: translateY(28px) rotate(0deg);
-  }
-}
-
-@keyframes wx-bg-in {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
   }
 }
 
