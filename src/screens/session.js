@@ -3450,13 +3450,16 @@ function bindSession(root, session) {
           setHashQuery(`/session/${session.id}`, { contextId: session.contextId });
           return;
         }
-        // The hero's "Fresh topics" list is scoped to the chat's Playbook, so
-        // swapping the Playbook has to swap the list with it — otherwise the
-        // reader is looking at another brand's Topics under a control that now
-        // names this one. Only when the hero is actually mounted: a started
-        // conversation must not re-render its whole aside for a Playbook pick.
-        if (root.querySelector("[data-empty-chat] .empty-chat__topics")) {
-          refreshAssistantAside();
+        // The hero's "Fresh topics" list (and HOME-11's ideas, flag homeClips:
+        // the Playbook's feed, videos, posts, competitors, website) is scoped to
+        // the chat's Playbook, so swapping the Playbook has to swap them with
+        // it. Through the URL, like the branch above: refreshAssistantAside
+        // lives in renderSession, out of reach here (it threw a ReferenceError).
+        if (
+          root.querySelector("[data-empty-chat] .empty-chat__topics") ||
+          root.querySelector("archie-home .nch-ask__below [data-nch-brand]")
+        ) {
+          setHashQuery(`/session/${session.id}`, { contextId: session.contextId });
           return;
         }
         const container = root.querySelector("[data-composer-playbook]");

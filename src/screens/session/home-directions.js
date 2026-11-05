@@ -688,6 +688,11 @@ function clipsBeforeAfter(video, clips) {
 function ideasByData(session, card) {
   const d = homeData();
   const ctx = ctxOf(session);
+  // Everything here is the chosen Playbook's: its feed, its videos, its posts,
+  // its competitors and website. Picking another Playbook in the box re-renders
+  // the home (session.js), so the cards follow the brand.
+  const brand = (ctx?.brandName || ctx?.name || "").split(" · ")[0] || "your brand";
+  const feed = ctx ? getFeedForPlaybook(ctx.id) : null;
   const { topics, total, href } = d.topics ? freshTopics(session, 1) : { topics: [], total: 0, href: "#/topics" };
   let real = 0;
   const cards = [];
@@ -703,6 +708,17 @@ function ideasByData(session, card) {
         topicMini(t),
         "Your take on it",
         DOORS.topic(t),
+      ),
+    );
+  } else if (d.topics && feed) {
+    // Listening is on, nothing new this week: say so, don't ask to set it up.
+    cards.push(
+      card(
+        "topic",
+        "Your Topic Feed",
+        `<span class="nch-quiet"><i class="ap-icon-megaphone" aria-hidden="true"></i><span>Nothing new this week</span></span>`,
+        "Quiet week. I'll bring back what moves",
+        { href, verb: "Open Topic Feed" },
       ),
     );
   } else {
@@ -730,7 +746,8 @@ function ideasByData(session, card) {
   }
 
   // Video: the latest video's clips, or the before / after.
-  const { video, clips } = footage(session);
+  const video = ctx ? getVideos(ctx.id)[0] : null;
+  const clips = video?.clips || [];
   if (d.video && clips.length) {
     real += 1;
     cards.push(
@@ -767,7 +784,10 @@ function ideasByData(session, card) {
   }
 
   // Post: the best one, the latest one, or the website (known since onboarding).
-  if (d.posts === "rich") {
+  // The mocked post history is Acme's: another brand has none of it.
+  const ownsPosts = /acme/i.test(`${ctx?.name || ""} ${ctx?.websiteUrl || ""}`);
+  const posts = ownsPosts ? d.posts : "none";
+  if (posts === "rich") {
     const p = bestPosts(1)[0];
     if (p) {
       real += 1;
@@ -781,7 +801,7 @@ function ideasByData(session, card) {
         ),
       );
     }
-  } else if (d.posts === "few") {
+  } else if (posts === "few") {
     const p = getTopPosts()[0];
     if (p) {
       real += 1;
@@ -795,8 +815,21 @@ function ideasByData(session, card) {
         ),
       );
     }
+  } else if (!ctx?.websiteUrl) {
+    cards.push(
+      card(
+        "source",
+        "From one sentence",
+        draftStack(["linkedin"], [FIRST_ASK]),
+        "Tell me what to post",
+        DOORS.fill(FIRST_ASK),
+      ),
+    );
   } else {
-    const domain = (ctx?.websiteUrl || "acme.example.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const domain = ctx.websiteUrl
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .replace(/\/$/, "");
     cards.push(
       card(
         "source",
@@ -814,10 +847,10 @@ function ideasByData(session, card) {
   return `
     <section class="nch-can nch-ask__below" aria-labelledby="nchAskBelow">
       <header class="nch-ask__head">
-        <h2 class="nch__h" id="nchAskBelow">${real >= 2 ? "Ideas for this week" : "Ideas to get you going"}</h2>
+        <h2 class="nch__h" id="nchAskBelow">${real >= 2 ? `Ideas for ${esc(brand)} this week` : `Ideas to get ${esc(brand)} going`}</h2>
         ${more}
       </header>
-      <div class="nch-picks nch-picks--3">${cards.join("")}</div>
+      <div class="nch-picks nch-picks--3" data-nch-brand="${esc(ctx?.id || "")}">${cards.join("")}</div>
     </section>`;
 }
 

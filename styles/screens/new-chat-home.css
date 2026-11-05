@@ -1244,6 +1244,24 @@
   width: 55%;
 }
 
+.nch-quiet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.nch-quiet i {
+  font-size: 20px;
+}
+
+/* A Playbook pick re-renders the home: the ideas fade in for the new brand. */
+.nch-ask__below .nch-picks[data-nch-brand] {
+  animation: app-modal-fade-in var(--ref-animation-normal) ease;
+}
+
 /* The same three clips at the top of the « Add a video » dialog. */
 .home-start__preview {
   display: flex;
