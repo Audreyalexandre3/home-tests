@@ -13,6 +13,7 @@
 //   homeDrawer     8 · the requests of 6 in a drawer tucked under the box (Notion)
 //   homeComposer   9 · one box, then I ask what to make; ideas below (Audrey, 2026-11-04)
 //   homeStart     10 · 9, but each chip opens a small dialog: the source, then what to make (Audrey, 2026-11-05)
+//   homeClips     11 · 10, with the clips shown before the click: a before / after for a new user, a preview in the video dialog
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -56,6 +57,7 @@ const DIRECTIONS = [
   ["homeDrawer", drawer],
   ["homeComposer", composerFirst],
   ["homeStart", (args) => composerFirst(args, { start: true })],
+  ["homeClips", (args) => composerFirst(args, { start: true, clipsDemo: true })],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -650,9 +652,36 @@ const BRING = [
 const LONG_PASTE = 500;
 const PASTED = { kind: "text", icon: "ap-icon-file--text", tone: "free", name: "Pasted text" };
 
+// HOME-11: three clips cut from one video, each with its subtitle line, the
+// way the Clips space frames them (one speaker per clip).
+function clipStrip({ video, clips }) {
+  return `<span class="nch-demo__clips">${clips
+    .slice(0, 3)
+    .map((c, i) => {
+      const t = `#t=${(c.startMs / 1000).toFixed(1)},${(c.endMs / 1000).toFixed(1)}`;
+      return `
+      <span class="nch-demo__clip" style="--i:${i}">
+        <video class="nch-demo__media" src="${esc(video.url)}${t}" muted playsinline preload="metadata" style="object-position:${SPEAKER[i % 2]} 50%" aria-hidden="true"></video>
+        <span class="nch-demo__cap">${esc(c.title || "")}</span>
+      </span>`;
+    })
+    .join("")}</span>`;
+}
+
+// HOME-11: the before / after. The source video first, a cut sweeping across
+// it, then it gives way to its clips. Plays once on arrival and stops on the
+// clips; pointing at the card plays it again (<archie-home>).
+function clipsBeforeAfter(video, clips) {
+  return `
+    <span class="nch-demo is-playing" data-nch-demo aria-label="One video becomes three vertical clips" role="img">
+      <span class="nch-demo__src">${videoMedia(video)}<span class="nch-demo__scan" aria-hidden="true"></span></span>
+      ${clipStrip({ video, clips })}
+    </span>`;
+}
+
 const FIRST_ASK = "A LinkedIn post announcing our new feature";
 
-function composerFirst({ composer, session }, { start = false } = {}) {
+function composerFirst({ composer, session }, { start = false, clipsDemo = false } = {}) {
   // HOME-10 (`start`): a chip opens the start modal instead of staging in the box.
   const chipAttr = start ? "data-nch-start" : "data-nch-attach";
   const chip = (b) => `
@@ -676,16 +705,25 @@ function composerFirst({ composer, session }, { start = false } = {}) {
       <section class="nch-can nch-ask__below" aria-labelledby="nchAskBelow">
         <h2 class="nch__h" id="nchAskBelow">What I can make</h2>
         <div class="nch-picks nch-picks--3">
-          ${card(
-            "video",
-            "From a video",
-            `<span class="nch-pick__well">${clips
-              .slice(0, 2)
-              .map((c, i) => clipMedia(video, c, i))
-              .join("")}</span>`,
-            "Vertical clips with subtitles",
-            DOORS.video(video),
-          )}
+          ${
+            clipsDemo
+              ? // HOME-11: the outcome shown before any click: one video, cut
+                // into three subtitled clips, played once on arrival.
+                card("video", "From one video", clipsBeforeAfter(video, clips), "Vertical clips with subtitles", {
+                  attrs: `data-nch-start="video"`,
+                  verb: "Cut the clips",
+                })
+              : card(
+                  "video",
+                  "From a video",
+                  `<span class="nch-pick__well">${clips
+                    .slice(0, 2)
+                    .map((c, i) => clipMedia(video, c, i))
+                    .join("")}</span>`,
+                  "Vertical clips with subtitles",
+                  DOORS.video(video),
+                )
+          }
           ${card("source", "From a doc or a link", fileToDrafts(), "A draft for each network", DOORS.source())}
           ${
             // No Playbook yet → no image settings to open (the door would be
@@ -769,7 +807,8 @@ function composerFirst({ composer, session }, { start = false } = {}) {
     <p class="nch__sub">A video, a file, a link, or just an idea.</p>
     ${lead(composer)}
     <div class="nch-chips" role="group" aria-label="Add a source">${BRING.map(chip).join("")}</div>
-    ${below}`,
+    ${below}
+    ${clipsDemo ? `<template data-nch-clip-preview>${clipStrip(footage(session))}</template>` : ""}`,
   );
 }
 
@@ -1093,6 +1132,7 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("click", this.onStagedSend, true);
     this.addEventListener("keydown", this.onStagedSend, true);
     this.addEventListener("input", () => this.syncStagedSend());
+    this.querySelectorAll("[data-nch-demo]").forEach((d) => (d.dataset.playedAt = String(Date.now())));
     // HOME-9 / HOME-10: a long paste in the box becomes an attachment.
     if (this.matches(".nch--ask"))
       this.addEventListener("paste", (e) => {
@@ -1351,7 +1391,13 @@ class ArchieHome extends HTMLElement {
       }
       if (t.closest("[data-nch-unstage]")) return this.unstage();
       const start = t.closest("[data-nch-start]");
-      if (start) return openHomeStart(start.dataset.nchStart, { filename: start.dataset.nchFile || null });
+      if (start) {
+        const tpl = start.dataset.nchStart === "video" && this.querySelector("template[data-nch-clip-preview]");
+        return openHomeStart(start.dataset.nchStart, {
+          filename: start.dataset.nchFile || null,
+          previewHtml: tpl ? tpl.innerHTML : null,
+        });
+      }
       const mode = t.closest("[data-nch-mode]");
       if (mode) return this.setMode(mode.dataset.nchMode, false);
       const to = t.closest("[data-nch-slide-to]");
@@ -1408,6 +1454,17 @@ class ArchieHome extends HTMLElement {
     const hinted = t.closest(":is(.nch-chip, .nch-ask, .nch-flow-chip, .nch-drawer__tab)[data-nch-hint]");
     if (e.type === "pointerover" || e.type === "focusin") {
       if (hinted) this.hint(hinted.dataset.nchHint);
+      // HOME-11: pointing at the before / after plays it again (once done).
+      const demo = t.closest(".nch-pick")?.querySelector("[data-nch-demo]");
+      if (demo && !demo.contains(e.relatedTarget) && !t.closest(".nch-pick").contains(e.relatedTarget)) {
+        const last = +(demo.dataset.playedAt || 0);
+        if (Date.now() - last > 2600 && !reduced()) {
+          demo.classList.remove("is-playing");
+          void demo.offsetWidth;
+          demo.classList.add("is-playing");
+          demo.dataset.playedAt = String(Date.now());
+        }
+      }
       const media = t.closest("[data-nch-play]")?.querySelector("video");
       if (media && !media.dataset.nchAutoplay) media.play().catch(() => {});
     } else {

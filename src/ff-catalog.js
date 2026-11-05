@@ -387,6 +387,17 @@ export const FLAGS = Object.freeze([
       "When ON, a new chat looks like HOME-9 (the composer, three chips, Ideas for this week), but a chip opens a small dialog for its kind: a video (drop zone, YouTube link), a file (drop zone), or a link (field, service recognised), each with « Use an example ». No text chip: the composer is the text field, and a long paste there becomes an attachment. Once the source is in, the dialog shows what I can make from it, the first pre-chosen (Get clips for a video, a YouTube link included); the button says it. Confirm: the source lands in the chat with the answer already given, so the flow starts without asking again. The composer still takes a direct drop and asks. The latest-video card opens the same dialog with that video in.",
   },
   {
+    id: "homeClips",
+    group: "Chat & drafts",
+    tip: "HOME-10, with the clips shown before any click: a before / after on a new user's clips card, and the clips a video becomes at the top of the Add a video dialog.",
+    label: "HOME-11: clips shown before the click",
+    // The eleventh new-chat home (2026-11-05, screens/session/home-directions.js +
+    // components/home-start-modal.js). Exclusive with the other homes (Admin).
+    default: false,
+    hides:
+      "When ON, a new chat is HOME-10, plus two things that show what a video becomes before anyone clicks. For a new user (Admin › user mode), the first card of « What I can make » plays a before / after once on arrival: the source video, a cut sweeping across it, then three vertical clips with their subtitles; it stops on the clips and plays again when pointed at (reduced motion: the clips, still). And the « Add a video » dialog opens with those three clips and « One video, up to 10 clips. Vertical, subtitled, ready to post. » above the drop zone.",
+  },
+  {
     id: "chatPreviewTool",
     group: "Chat & drafts",
     tip: "Shows « Admin: preview in chat » under the composer: every chat element and trigger, played in the current chat.",

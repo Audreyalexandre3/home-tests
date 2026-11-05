@@ -227,7 +227,11 @@ function render() {
     const example = k.example
       ? `<button type="button" class="ap-button ghost blue home-start__example" data-hs-example>No file at hand? Use an example</button>`
       : "";
-    take = `${k.hint ? `<p class="home-start__hint">${esc(k.hint)}</p>` : ""}${drop}${link}${example}`;
+    // HOME-11: what a video becomes, shown before it is given.
+    const preview = state.previewHtml
+      ? `<div class="home-start__preview">${state.previewHtml}<p class="home-start__preview-say"><strong>One video, up to 10 clips.</strong> Vertical, subtitled, ready to post.</p></div>`
+      : "";
+    take = `${preview}${k.hint ? `<p class="home-start__hint">${esc(k.hint)}</p>` : ""}${drop}${link}${example}`;
   }
 
   const outcomes = src
@@ -275,10 +279,10 @@ function go() {
   setTimeout(() => completeScriptedSource(sourceId, { signal: "Medium relevance", signalColor: "tagOrange" }), 2500);
 }
 
-export function openHomeStart(kind, { filename = null } = {}) {
+export function openHomeStart(kind, { filename = null, previewHtml = null } = {}) {
   if (!KINDS[kind]) return;
   mount();
-  state = { kind, source: null, outcome: null, error: "", linkDraft: "" };
+  state = { kind, source: null, outcome: null, error: "", linkDraft: "", previewHtml };
   // A card that names the material (the latest video) opens with it in.
   if (filename) state.source = { filename, meta: "From your library", source: kind === "video" ? "Video" : "PDF" };
   if (state.source) state.outcome = outcomesFor(state.source)[0].value;
