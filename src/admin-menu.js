@@ -133,6 +133,15 @@ export function renderAdminMenu() {
       </label>`,
   ).join("");
 
+  // Right under the HOME-11 switch, while it is on (returning user only).
+  const homeDataBlock =
+    flags.homeClips && mode === "returning"
+      ? `<div class="admin-menu__sub">
+          <span class="admin-menu__section-title">HOME-11 · brand data</span>
+          <div class="admin-menu__cards" role="radiogroup" aria-label="HOME-11 brand data">${homeDataRows}</div>
+        </div>`
+      : "";
+
   // One section per group; the row's tooltip says what the flag does.
   const flagRow = (flag) => `
       <label class="admin-menu__row admin-menu__flag" data-admin-flag="${escapeHtml(flag.id)}" data-tooltip="${escapeHtml(flag.tip)}">
@@ -148,7 +157,7 @@ export function renderAdminMenu() {
       <div class="admin-menu__section">
         <span class="admin-menu__section-title">${escapeHtml(group)}</span>
         <div class="admin-menu__flags">${FLAGS.filter((f) => f.group === group)
-          .map(flagRow)
+          .map((f) => flagRow(f) + (f.id === "homeClips" ? homeDataBlock : ""))
           .join("")}</div>
       </div>
     `,
@@ -179,14 +188,6 @@ export function renderAdminMenu() {
           ? `<div class="admin-menu__section">
               <span class="admin-menu__section-title">Your role at ${escapeHtml(ORG.name)}</span>
               <div class="admin-menu__cards" role="radiogroup" aria-label="Your role">${roleRows}</div>
-            </div>`
-          : "",
-      )}
-      ${raw(
-        isFlagOn("homeClips") && mode === "returning"
-          ? `<div class="admin-menu__section">
-              <span class="admin-menu__section-title">HOME-11 · brand data</span>
-              <div class="admin-menu__cards" role="radiogroup" aria-label="HOME-11 brand data">${homeDataRows}</div>
             </div>`
           : "",
       )}
