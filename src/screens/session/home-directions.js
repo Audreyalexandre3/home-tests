@@ -765,8 +765,8 @@ function composerFirst({ composer, session }, { start = false } = {}) {
     start ? "ask nch--start" : "ask",
     `
     ${WORDMARK}
-    <h1 class="nch__title">What are we posting today?</h1>
-    <p class="nch__sub">${start ? "Drop anything, or start from one of these." : "Drop anything. I'll tell you what I can make with it."}</p>
+    <h1 class="nch__title">Give me anything. I'll turn it into posts.</h1>
+    <p class="nch__sub">A video, a file, a link, or just an idea.</p>
     ${lead(composer)}
     <div class="nch-chips" role="group" aria-label="Add a source">${BRING.map(chip).join("")}</div>
     ${below}`,

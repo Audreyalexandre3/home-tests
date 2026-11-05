@@ -373,7 +373,7 @@ export const FLAGS = Object.freeze([
     // The first ON in the order 1 to 9 wins; all OFF = the hero above.
     default: false,
     hides:
-      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and three chips of what you bring (a video, a file, a link). A chip drops its file INTO the box (uploading, then ready, removable); a paste over 500 characters becomes an attachment the same way. Nothing reaches the chat until Send, with an optional note. Then I ask what to make (askSourceUse), Cut it into clips first for a video. Below, for a returning user, « Ideas for this week »: a fresh Topic, clips from your latest video (dropped in the box too, or opened in the Clips space when that flag is on) and your best post; for a new user (Admin › user mode), « What I can make ». No voice nudge on the home.",
+      "When ON, a new chat shows the wordmark, « Give me anything. I'll turn it into posts. », « A video, a file, a link, or just an idea. », the composer and three chips of what you bring (a video, a file, a link). A chip drops its file INTO the box (uploading, then ready, removable); a paste over 500 characters becomes an attachment the same way. Nothing reaches the chat until Send, with an optional note. Then I ask what to make (askSourceUse), Cut it into clips first for a video. Below, for a returning user, « Ideas for this week »: a fresh Topic, clips from your latest video (dropped in the box too, or opened in the Clips space when that flag is on) and your best post; for a new user (Admin › user mode), « What I can make ». No voice nudge on the home.",
   },
   {
     id: "homeStart",
