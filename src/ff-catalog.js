@@ -373,7 +373,7 @@ export const FLAGS = Object.freeze([
     // The first ON in the order 1 to 9 wins; all OFF = the hero above.
     default: false,
     hides:
-      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and four chips of what you bring (a video, a file, a link, some text). A chip drops its file INTO the box (uploading, then ready, removable); nothing reaches the chat until Send, with an optional note. Then I ask what to make (askSourceUse), Cut it into clips first for a video. Below, for a returning user, « Ideas for this week »: a fresh Topic, clips from your latest video (dropped in the box too, or opened in the Clips space when that flag is on) and your best post; for a new user (Admin › user mode), « What I can make ». No voice nudge on the home.",
+      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and three chips of what you bring (a video, a file, a link). A chip drops its file INTO the box (uploading, then ready, removable); a paste over 500 characters becomes an attachment the same way. Nothing reaches the chat until Send, with an optional note. Then I ask what to make (askSourceUse), Cut it into clips first for a video. Below, for a returning user, « Ideas for this week »: a fresh Topic, clips from your latest video (dropped in the box too, or opened in the Clips space when that flag is on) and your best post; for a new user (Admin › user mode), « What I can make ». No voice nudge on the home.",
   },
   {
     id: "homeStart",
@@ -384,7 +384,7 @@ export const FLAGS = Object.freeze([
     // components/home-start-modal.js). Exclusive with the other homes (Admin).
     default: false,
     hides:
-      "When ON, a new chat looks like HOME-9 (the composer, four chips, Ideas for this week), but a chip opens a small dialog for its kind: a video (drop zone, YouTube link), a file (drop zone), a link (field, service recognised) or text (textarea), each with « Use an example ». Once the source is in, the dialog shows what I can make from it, the first pre-chosen (Get clips for a video, a YouTube link included); the button says it. Confirm: the source lands in the chat with the answer already given, so the flow starts without asking again. The composer still takes a direct drop and asks. The latest-video card opens the same dialog with that video in.",
+      "When ON, a new chat looks like HOME-9 (the composer, three chips, Ideas for this week), but a chip opens a small dialog for its kind: a video (drop zone, YouTube link), a file (drop zone), or a link (field, service recognised), each with « Use an example ». No text chip: the composer is the text field, and a long paste there becomes an attachment. Once the source is in, the dialog shows what I can make from it, the first pre-chosen (Get clips for a video, a YouTube link included); the button says it. Confirm: the source lands in the chat with the answer already given, so the flow starts without asking again. The composer still takes a direct drop and asks. The latest-video card opens the same dialog with that video in.",
   },
   {
     id: "chatPreviewTool",

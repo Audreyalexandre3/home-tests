@@ -641,15 +641,14 @@ const BRING = [
     hint: "Paste a link. I'll read it and tell you what I can make from it.",
     file: { filename: "blog.example.com/post", kind: "URL", meta: "Link" },
   },
-  {
-    kind: "text",
-    icon: "ap-icon-file--text",
-    tone: "free",
-    name: "Some text",
-    hint: "Paste notes or a draft. I'll tell you what I can make from it.",
-    file: { filename: "Pasted notes", kind: "Text", meta: "1,240 characters" },
-  },
 ];
+
+// No « Some text » chip: the composer IS the text field. A long paste is the
+// one case it misreads (a pasted article is material, not an instruction), so
+// past LONG_PASTE characters the paste becomes an attachment in the box, the
+// way Claude and ChatGPT do it, and I ask what to make with it on Send.
+const LONG_PASTE = 500;
+const PASTED = { kind: "text", icon: "ap-icon-file--text", tone: "free", name: "Pasted text" };
 
 const FIRST_ASK = "A LinkedIn post announcing our new feature";
 
@@ -1094,6 +1093,20 @@ class ArchieHome extends HTMLElement {
     this.addEventListener("click", this.onStagedSend, true);
     this.addEventListener("keydown", this.onStagedSend, true);
     this.addEventListener("input", () => this.syncStagedSend());
+    // HOME-9 / HOME-10: a long paste in the box becomes an attachment.
+    if (this.matches(".nch--ask"))
+      this.addEventListener("paste", (e) => {
+        if (!e.target.matches?.("#assistantInput")) return;
+        const text = (e.clipboardData?.getData("text") || "").trim();
+        if (text.length < LONG_PASTE) return;
+        e.preventDefault();
+        const n = text.length.toLocaleString("en");
+        this.stage({
+          ...PASTED,
+          instant: true,
+          file: { filename: "Pasted text", kind: "Text", meta: `${n} characters` },
+        });
+      });
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
     if (this.querySelector("[data-nch-flow]")) {
       this.setFlow(memory.flow);
@@ -1130,7 +1143,8 @@ class ArchieHome extends HTMLElement {
   // Send; then the source lands, the note (if any) follows, and the intake
   // asks what to make with it (askSourceUse), clips first for a video.
   stage(kind, filename = null) {
-    const found = BRING.find((x) => x.kind === kind);
+    // `kind` is a chip's kind, or a ready-made entry (a long paste).
+    const found = typeof kind === "object" ? kind : BRING.find((x) => x.kind === kind);
     const b = found && filename ? { ...found, file: { ...found.file, filename } } : found;
     const card = this.querySelector(".session__composer-card");
     if (!b || !card) return;
@@ -1154,11 +1168,14 @@ class ArchieHome extends HTMLElement {
           <i class="ap-icon-close" aria-hidden="true"></i>
         </button>
       </span>`;
-    this.uploadTimer = setTimeout(() => {
-      tray.querySelector(".nch-staged__item")?.classList.remove("is-loading");
-      const meta = tray.querySelector("[data-nch-staged-meta]");
-      if (meta) meta.textContent = `${b.file.kind} · ${b.file.meta}`;
-    }, 1400);
+    this.uploadTimer = setTimeout(
+      () => {
+        tray.querySelector(".nch-staged__item")?.classList.remove("is-loading");
+        const meta = tray.querySelector("[data-nch-staged-meta]");
+        if (meta) meta.textContent = `${b.file.kind} · ${b.file.meta}`;
+      },
+      b.instant ? 0 : 1400,
+    );
     this.classList.add("is-staged");
     if (!this.preStageBase) this.preStageBase = this.base;
     this.setBase("Add a note, or just send. I'll tell you what I can make with it.");

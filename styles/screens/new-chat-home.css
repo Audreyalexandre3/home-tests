@@ -872,15 +872,9 @@
   color: var(--ref-color-grey-80);
 }
 
-.home-start__link-row,
-.home-start__text-row {
+.home-start__link-row {
   display: flex;
   gap: var(--ref-spacing-xxs);
-}
-
-.home-start__text-row {
-  justify-content: flex-end;
-  margin-top: var(--ref-spacing-xxs);
 }
 
 .home-start__link-row .ap-input-group {
@@ -896,11 +890,6 @@
 
 .home-start__svc:empty {
   display: none;
-}
-
-.home-start__text {
-  width: 100%;
-  resize: vertical;
 }
 
 .home-start__example {

@@ -86,11 +86,6 @@ const KINDS = {
     hint: "An article, a LinkedIn post, a YouTube video, a Google Doc…",
     example: { filename: "blog.example.com/post", meta: "Link", source: "URL", url: "https://blog.example.com/post" },
   },
-  text: {
-    title: "Paste text",
-    text: true,
-    hint: "Notes, a draft, a transcript. I'll work from what it says.",
-  },
 };
 
 let backdrop, dialog, body, footer;
@@ -130,7 +125,6 @@ function mount() {
     if (t.closest("[data-hs-example]")) return setSource({ ...KINDS[state.kind].example });
     if (t.closest("[data-hs-remove]")) return setSource(null);
     if (t.closest("[data-hs-take-link]")) return takeLink(dialog.querySelector("[data-hs-link]")?.value);
-    if (t.closest("[data-hs-take-text]")) return takeText(dialog.querySelector("[data-hs-text]")?.value);
     const pick = t.closest("[data-hs-outcome]");
     if (pick) {
       state.outcome = pick.dataset.hsOutcome;
@@ -145,7 +139,6 @@ function mount() {
       const say = dialog.querySelector("[data-hs-svc]");
       if (say) say.textContent = svc ? `I recognised a ${svc.name} link.` : "";
     }
-    if (e.target.matches("[data-hs-text]")) state.textDraft = e.target.value;
   });
   bindDropzone(dialog, {
     onFiles: (files) => {
@@ -184,15 +177,6 @@ function takeLink(value) {
   });
 }
 
-function takeText(value) {
-  const v = (value || "").trim();
-  if (!v) {
-    state.error = "Paste some text first.";
-    return render();
-  }
-  setSource({ filename: "Pasted text", meta: `Text · ${v.length.toLocaleString("en")} characters`, source: "Text" });
-}
-
 // The source decides what I offer; the first outcome is pre-chosen.
 function setSource(src) {
   state.source = src;
@@ -204,13 +188,7 @@ function setSource(src) {
 const outcomesFor = (src) => (src?.source === "Video" ? OUTCOMES.video : OUTCOMES.doc);
 
 const iconFor = (src) =>
-  src.source === "Video"
-    ? "ap-icon-video"
-    : src.source === "URL"
-      ? "ap-icon-link"
-      : src.source === "Text"
-        ? "ap-icon-file--text"
-        : "ap-icon-file--pdf";
+  src.source === "Video" ? "ap-icon-video" : src.source === "URL" ? "ap-icon-link" : "ap-icon-file--pdf";
 
 function render() {
   const k = KINDS[state.kind];
@@ -246,20 +224,10 @@ function render() {
           <span class="home-start__svc" data-hs-svc aria-live="polite"></span>
         </div>`
       : "";
-    const text = k.text
-      ? `
-        <div>
-          <div class="ap-textarea-field resizable">
-            <label for="homeStartText">Your text</label>
-            <textarea class="home-start__text" id="homeStartText" data-hs-text rows="6" placeholder="Paste here" autofocus>${esc(state.textDraft || "")}</textarea>
-          </div>
-          <div class="home-start__text-row"><button type="button" class="ap-button stroked grey" data-hs-take-text>Use this text</button></div>
-        </div>`
-      : "";
     const example = k.example
       ? `<button type="button" class="ap-button ghost blue home-start__example" data-hs-example>No file at hand? Use an example</button>`
       : "";
-    take = `${k.hint ? `<p class="home-start__hint">${esc(k.hint)}</p>` : ""}${drop}${link}${text}${example}`;
+    take = `${k.hint ? `<p class="home-start__hint">${esc(k.hint)}</p>` : ""}${drop}${link}${example}`;
   }
 
   const outcomes = src
@@ -310,7 +278,7 @@ function go() {
 export function openHomeStart(kind, { filename = null } = {}) {
   if (!KINDS[kind]) return;
   mount();
-  state = { kind, source: null, outcome: null, error: "", linkDraft: "", textDraft: "" };
+  state = { kind, source: null, outcome: null, error: "", linkDraft: "" };
   // A card that names the material (the latest video) opens with it in.
   if (filename) state.source = { filename, meta: "From your library", source: kind === "video" ? "Video" : "PDF" };
   if (state.source) state.outcome = outcomesFor(state.source)[0].value;
