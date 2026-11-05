@@ -833,6 +833,183 @@
   color: #fff;
 }
 
+/* ── 10 · The start dialog a chip opens (components/home-start-modal.js) ── */
+.home-start__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--app-z-modal) - 1);
+  background: rgba(10, 27, 51, 0.32);
+}
+
+.home-start {
+  position: fixed;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  z-index: var(--app-z-modal);
+  display: flex;
+  flex-direction: column;
+  width: min(calc(100% - 32px), 520px);
+  max-height: calc(100vh - 48px);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-popover-lg);
+  animation: app-modal-fade-in var(--ref-animation-normal) ease;
+}
+
+.home-start[hidden] {
+  display: none;
+}
+
+.home-start__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  overflow-y: auto;
+}
+
+.home-start__hint {
+  margin: 0;
+  color: var(--ref-color-grey-80);
+}
+
+.home-start__link-row,
+.home-start__text-row {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+}
+
+.home-start__text-row {
+  justify-content: flex-end;
+  margin-top: var(--ref-spacing-xxs);
+}
+
+.home-start__link-row .ap-input-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-start__svc {
+  min-height: 1em;
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.home-start__svc:empty {
+  display: none;
+}
+
+.home-start__text {
+  width: 100%;
+  resize: vertical;
+}
+
+.home-start__example {
+  align-self: flex-start;
+}
+
+.home-start__source {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--nch-radius-inner, 8px);
+  background: var(--ref-color-grey-05);
+}
+
+.home-start__source-icon,
+.home-start__outcome-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ref-color-grey-100);
+}
+
+.home-start__source-say,
+.home-start__outcome-say {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.home-start__source-name,
+.home-start__outcome-name {
+  overflow: hidden;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.home-start__source-meta,
+.home-start__outcome-line {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.home-start__outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.home-start__legend {
+  margin-bottom: var(--ref-spacing-xxs);
+  padding: 0;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.home-start__outcome {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--nch-radius-inner, 8px);
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.home-start__outcome:hover {
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.home-start__outcome.is-on {
+  border-color: var(--ref-color-orange-100);
+  box-shadow: 0 0 0 1px var(--ref-color-orange-100);
+}
+
+.home-start__outcome.is-on .home-start__outcome-icon {
+  background: var(--ref-color-orange-100);
+  color: #fff;
+}
+
+.home-start__outcome-check {
+  visibility: hidden;
+  color: var(--ref-color-orange-100);
+}
+
+.home-start__outcome.is-on .home-start__outcome-check {
+  visibility: visible;
+}
+
+.home-start__outcome:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
+}
+
 /* ── 4 · Posts I can write today ──────────────────────────────────────────── */
 .nch-picks {
   display: grid;

@@ -12,6 +12,7 @@
 //   homePromptList 7 · words only: one example request per flow, in a list (Sana)
 //   homeDrawer     8 · the requests of 6 in a drawer tucked under the box (Notion)
 //   homeComposer   9 · one box, then I ask what to make; ideas below (Audrey, 2026-11-04)
+//   homeStart     10 · 9, but each chip opens a small dialog: the source, then what to make (Audrey, 2026-11-05)
 //
 // The first flag ON in that order wins; all OFF = the hero as before.
 //
@@ -40,6 +41,7 @@ import { isWorkspaceMode } from "../../active-playbook.js?v=2689";
 import { isNewUser } from "../../user-mode.js?v=2689";
 import { pushScriptedSource, completeScriptedSource } from "../../sources-stream.js?v=2689";
 import { postUserTurn } from "../../assistant.js?v=2689";
+import { openHomeStart } from "../../components/home-start-modal.js?v=2689";
 import { escapeHtml } from "../../utils.js?v=2689";
 import "../../archie-pixels.js?v=2689";
 
@@ -53,6 +55,7 @@ const DIRECTIONS = [
   ["homePromptList", promptList],
   ["homeDrawer", drawer],
   ["homeComposer", composerFirst],
+  ["homeStart", (args) => composerFirst(args, { start: true })],
 ];
 
 /** The render function of the direction whose flag is ON, or null. */
@@ -650,9 +653,11 @@ const BRING = [
 
 const FIRST_ASK = "A LinkedIn post announcing our new feature";
 
-function composerFirst({ composer, session }) {
+function composerFirst({ composer, session }, { start = false } = {}) {
+  // HOME-10 (`start`): a chip opens the start modal instead of staging in the box.
+  const chipAttr = start ? "data-nch-start" : "data-nch-attach";
   const chip = (b) => `
-    <button type="button" class="nch-chip" data-nch-attach="${b.kind}" data-nch-hint="${esc(b.hint)}">
+    <button type="button" class="nch-chip" ${chipAttr}="${b.kind}" data-nch-hint="${esc(b.hint)}">
       <span class="nch-tile nch-tone--${b.tone} nch-tile--sm" aria-hidden="true"><i class="${b.icon}"></i></span><span>${esc(b.name)}</span>
     </button>`;
   const card = (k, from, vis, title, d) =>
@@ -718,7 +723,7 @@ function composerFirst({ composer, session }) {
         clipsOn() && inLibrary(video)
           ? DOORS.video(video)
           : {
-              attrs: `data-nch-attach="video" data-nch-file="${esc(video.name || "Latest video.mp4")}"`,
+              attrs: `${chipAttr}="video" data-nch-file="${esc(video.name || "Latest video.mp4")}"`,
               verb: "Cut the clips",
             },
       );
@@ -758,11 +763,11 @@ function composerFirst({ composer, session }) {
   }
 
   return shell(
-    "ask",
+    start ? "ask nch--start" : "ask",
     `
     ${WORDMARK}
     <h1 class="nch__title">What are we posting today?</h1>
-    <p class="nch__sub">Drop anything. I'll tell you what I can make with it.</p>
+    <p class="nch__sub">${start ? "Drop anything, or start from one of these." : "Drop anything. I'll tell you what I can make with it."}</p>
     ${lead(composer)}
     <div class="nch-chips" role="group" aria-label="Add a source">${BRING.map(chip).join("")}</div>
     ${below}`,
@@ -1328,6 +1333,8 @@ class ArchieHome extends HTMLElement {
         return;
       }
       if (t.closest("[data-nch-unstage]")) return this.unstage();
+      const start = t.closest("[data-nch-start]");
+      if (start) return openHomeStart(start.dataset.nchStart, { filename: start.dataset.nchFile || null });
       const mode = t.closest("[data-nch-mode]");
       if (mode) return this.setMode(mode.dataset.nchMode, false);
       const to = t.closest("[data-nch-slide-to]");

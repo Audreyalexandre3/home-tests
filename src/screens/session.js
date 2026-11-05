@@ -191,6 +191,13 @@ const batchArrivals = new Map();
 // ("ideas" | "clips"), so "What should I do with it?" isn't asked a second time.
 const starterUse = new Map();
 
+// HOME-10 (flag homeStart): the start modal already asked what to make, so the
+// next source to land in this chat comes with its answer ("clips" | "ideas" |
+// "post" | "summary"), the same way a workflow starter does.
+export function presetSourceUse(sessionId, use) {
+  if (sessionId && use) starterUse.set(sessionId, use);
+}
+
 export const COMPOSER_DEFAULT_PLACEHOLDER = "Ask a follow-up, or refine a draft…";
 
 // Session screen — persistent assistant panel on the left, workspace with
@@ -467,9 +474,11 @@ function renderAssistantPanel(session, attachedContext) {
         aria-live="polite"
         aria-atomic="false"
       >
-        ${isEmptyConversation
-          ? raw(renderEmptyHero(session.id, composerMarkup, session))
-          : raw(renderThread(thread, session.id))}
+        ${
+          isEmptyConversation
+            ? raw(renderEmptyHero(session.id, composerMarkup, session))
+            : raw(renderThread(thread, session.id))
+        }
       </div>
       ${isEmptyConversation ? "" : raw(composerMarkup)}
     </aside>
