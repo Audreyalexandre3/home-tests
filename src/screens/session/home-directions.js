@@ -38,6 +38,8 @@ import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2689";
 import { networkLabel, networkIcon } from "../../social-profiles.js?v=2689";
 import { isWorkspaceMode } from "../../active-playbook.js?v=2689";
 import { isNewUser } from "../../user-mode.js?v=2689";
+import { pushScriptedSource, completeScriptedSource } from "../../sources-stream.js?v=2689";
+import { postUserTurn } from "../../assistant.js?v=2689";
 import { escapeHtml } from "../../utils.js?v=2689";
 import "../../archie-pixels.js?v=2689";
 
@@ -607,20 +609,26 @@ function picks({ composer, session }) {
 //   new user  → « What I can make »: the outcomes, shown working, since
 //               there is nothing of yours to propose yet
 // No voice nudge on the home: config interrupts someone who came to create.
+// What each chip hands me, staged in the box like a real attachment: the file
+// sits in the composer (uploading, then ready) until Send, so you see the drop,
+// can add a note, and only then does the chat start and I ask what to make.
+// The video comes first: clips are the outcome a newcomer would not guess.
 const BRING = [
+  {
+    kind: "video",
+    icon: "ap-icon-video",
+    tone: "clip",
+    name: "A video",
+    hint: "Drop a video. I'll cut it into clips, or write posts from what it says.",
+    file: { filename: "Demo replay.mp4", kind: "Video", meta: "2:14" },
+  },
   {
     kind: "pdf",
     icon: "ap-icon-file--pdf",
     tone: "src",
     name: "A file",
     hint: "Drop a PDF, a deck or notes. I'll tell you what I can make from it.",
-  },
-  {
-    kind: "video",
-    icon: "ap-icon-video",
-    tone: "clip",
-    name: "A video",
-    hint: "Drop a video. I'll offer clips, or posts from what it says.",
+    file: { filename: "Roadmap Q3.pdf", kind: "PDF", meta: "12 pages" },
   },
   {
     kind: "url",
@@ -628,6 +636,7 @@ const BRING = [
     tone: "src",
     name: "A link",
     hint: "Paste a link. I'll read it and tell you what I can make from it.",
+    file: { filename: "blog.example.com/post", kind: "URL", meta: "Link" },
   },
   {
     kind: "text",
@@ -635,6 +644,7 @@ const BRING = [
     tone: "free",
     name: "Some text",
     hint: "Paste notes or a draft. I'll tell you what I can make from it.",
+    file: { filename: "Pasted notes", kind: "Text", meta: "1,240 characters" },
   },
 ];
 
@@ -642,7 +652,7 @@ const FIRST_ASK = "A LinkedIn post announcing our new feature";
 
 function composerFirst({ composer, session }) {
   const chip = (b) => `
-    <button type="button" class="nch-chip" data-add-source="${b.kind}" data-nch-hint="${esc(b.hint)}">
+    <button type="button" class="nch-chip" data-nch-attach="${b.kind}" data-nch-hint="${esc(b.hint)}">
       <span class="nch-tile nch-tone--${b.tone} nch-tile--sm" aria-hidden="true"><i class="${b.icon}"></i></span><span>${esc(b.name)}</span>
     </button>`;
   const card = (k, from, vis, title, d) =>
@@ -689,8 +699,30 @@ function composerFirst({ composer, session }) {
         </div>
       </section>`;
   } else {
-    const { topics, total, href } = freshTopics(session, 2);
-    const posts = bestPosts(topics.length ? 1 : 3);
+    const { topics, total, href } = freshTopics(session, 1);
+    const { video, clips } = footage(session);
+    // Clips get a seat in the ideas: the latest video is material I already
+    // have, and a clip is the outcome people don't think to ask for.
+    const clipCard =
+      clips.length &&
+      card(
+        "video",
+        inLibrary(video) ? "From your latest video" : "From a video",
+        `<span class="nch-pick__well">${clips
+          .slice(0, 2)
+          .map((c, i) => clipMedia(video, c, i))
+          .join("")}</span>`,
+        "Clips from your latest video",
+        // With the Clips space, open its project. Without it, the video goes
+        // into the box like any drop, and I ask: Cut it into clips comes first.
+        clipsOn() && inLibrary(video)
+          ? DOORS.video(video)
+          : {
+              attrs: `data-nch-attach="video" data-nch-file="${esc(video.name || "Latest video.mp4")}"`,
+              verb: "Cut the clips",
+            },
+      );
+    const posts = bestPosts(3 - topics.length - (clipCard ? 1 : 0));
     const ideas = [
       ...topics.map((t) =>
         card(
@@ -701,6 +733,7 @@ function composerFirst({ composer, session }) {
           DOORS.topic(t),
         ),
       ),
+      clipCard || "",
       ...posts.map((p) =>
         card(
           "top",
@@ -1050,6 +1083,12 @@ class ArchieHome extends HTMLElement {
     const playing = (e) => e.target.closest?.("[data-nch-play]")?.toggleAttribute("data-playing", e.type === "play");
     this.addEventListener("play", playing, true);
     this.addEventListener("pause", playing, true);
+    // HOME-9: a staged file is sent by the box's own Send / Enter. Capture
+    // phase, so the session's submit (bubble, on #app) never sees that send.
+    this.onStagedSend = (e) => this.sendStaged(e);
+    this.addEventListener("click", this.onStagedSend, true);
+    this.addEventListener("keydown", this.onStagedSend, true);
+    this.addEventListener("input", () => this.syncStagedSend());
     if (this.querySelector("[data-nch-mode]")) this.setMode(memory.mode, false);
     if (this.querySelector("[data-nch-flow]")) {
       this.setFlow(memory.flow);
@@ -1080,7 +1119,91 @@ class ArchieHome extends HTMLElement {
     }, 4200);
   }
 
+  // ── HOME-9: a source staged in the box ─────────────────────────────────────
+  // The chip drops its file INTO the composer, like a real drop: a row above
+  // the field, uploading then ready, removable. Nothing reaches the chat until
+  // Send; then the source lands, the note (if any) follows, and the intake
+  // asks what to make with it (askSourceUse), clips first for a video.
+  stage(kind, filename = null) {
+    const found = BRING.find((x) => x.kind === kind);
+    const b = found && filename ? { ...found, file: { ...found.file, filename } } : found;
+    const card = this.querySelector(".session__composer-card");
+    if (!b || !card) return;
+    clearTimeout(this.uploadTimer);
+    this.staged = b;
+    let tray = card.querySelector("[data-nch-staged]");
+    if (!tray) {
+      tray = document.createElement("div");
+      tray.className = "nch-staged";
+      tray.setAttribute("data-nch-staged", "");
+      card.insertBefore(tray, card.querySelector(".session__composer-input-row"));
+    }
+    tray.innerHTML = `
+      <span class="nch-staged__item is-loading">
+        <span class="nch-tile nch-tone--${b.tone} nch-tile--sm" aria-hidden="true"><i class="${b.icon}"></i></span>
+        <span class="nch-staged__say">
+          <span class="nch-staged__name">${esc(b.file.filename)}</span>
+          <span class="nch-staged__meta" data-nch-staged-meta>Uploading…</span>
+        </span>
+        <button type="button" class="nch-staged__remove" data-nch-unstage aria-label="Remove ${esc(b.file.filename)}">
+          <i class="ap-icon-close" aria-hidden="true"></i>
+        </button>
+      </span>`;
+    this.uploadTimer = setTimeout(() => {
+      tray.querySelector(".nch-staged__item")?.classList.remove("is-loading");
+      const meta = tray.querySelector("[data-nch-staged-meta]");
+      if (meta) meta.textContent = `${b.file.kind} · ${b.file.meta}`;
+    }, 1400);
+    this.classList.add("is-staged");
+    if (!this.preStageBase) this.preStageBase = this.base;
+    this.setBase("Add a note, or just send. I'll tell you what I can make with it.");
+    this.syncStagedSend();
+    this.input()?.focus();
+  }
+
+  unstage() {
+    clearTimeout(this.uploadTimer);
+    this.staged = null;
+    this.querySelector("[data-nch-staged]")?.remove();
+    this.classList.remove("is-staged");
+    if (this.preStageBase) this.setBase(this.preStageBase);
+    this.preStageBase = null;
+    this.syncStagedSend();
+  }
+
+  // The session paints Send from the text alone; a staged file is enough to
+  // send. Re-applied after the session's own input handler runs.
+  syncStagedSend() {
+    queueMicrotask(() => {
+      const send = this.querySelector("[data-assistant-send]");
+      const input = this.input();
+      if (send && input) send.setAttribute("aria-disabled", String(!this.staged && !input.value.trim()));
+    });
+  }
+
+  sendStaged(e) {
+    if (!this.staged) return;
+    const isSend =
+      e.type === "click"
+        ? e.target.closest?.("[data-assistant-send]")
+        : e.key === "Enter" && !e.shiftKey && e.target.matches?.("#assistantInput");
+    if (!isSend) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const sessionId = decodeURIComponent((location.hash.match(/#\/session\/([^?]+)/) || [])[1] || "");
+    if (!sessionId) return;
+    const { filename, kind } = this.staged.file;
+    const note = this.input()?.value.trim();
+    this.staged = null;
+    clearTimeout(this.uploadTimer);
+    // The upload already happened in the box: the reading is what's left.
+    const sourceId = pushScriptedSource({ filename, kind, sessionId });
+    if (note) postUserTurn(sessionId, note);
+    setTimeout(() => completeScriptedSource(sourceId, { signal: "Medium relevance", signalColor: "tagOrange" }), 2500);
+  }
+
   disconnectedCallback() {
+    clearTimeout(this.uploadTimer);
     clearInterval(this.timer);
     this.resized?.disconnect();
   }
@@ -1197,6 +1320,14 @@ class ArchieHome extends HTMLElement {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
     if (e.type === "click") {
+      const attach = t.closest("[data-nch-attach]");
+      if (attach) {
+        this.stage(attach.dataset.nchAttach, attach.dataset.nchFile || null);
+        // A card far down the page drops into the box: bring the box into view.
+        this.querySelector(".nch__lead")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        return;
+      }
+      if (t.closest("[data-nch-unstage]")) return this.unstage();
       const mode = t.closest("[data-nch-mode]");
       if (mode) return this.setMode(mode.dataset.nchMode, false);
       const to = t.closest("[data-nch-slide-to]");

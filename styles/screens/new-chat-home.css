@@ -766,6 +766,73 @@
   }
 }
 
+/* HOME-9: the file a chip drops, staged in the box above the field. */
+.nch-staged {
+  display: flex;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-xs) 0;
+}
+
+.nch-staged__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  max-width: 100%;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--nch-radius-inner);
+  background: var(--ref-color-grey-05);
+}
+
+.nch-staged__say {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.nch-staged__name {
+  overflow: hidden;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nch-staged__meta {
+  color: var(--ref-color-grey-80);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.nch-staged__item.is-loading .nch-staged__meta {
+  color: var(--ref-color-grey-60);
+}
+
+.nch-staged__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: var(--ref-spacing-xxs);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ref-color-grey-80);
+  cursor: pointer;
+}
+
+.nch-staged__remove:hover {
+  background: var(--ref-color-grey-10);
+}
+
+/* A staged file is enough to send: Send keeps its orange even with no text. */
+.nch.is-staged
+  .session__composer-card:has(.session__composer-input-field:placeholder-shown)
+  .ap-button.session__composer-send {
+  background: var(--ref-color-orange-100);
+  color: #fff;
+}
+
 /* ── 4 · Posts I can write today ──────────────────────────────────────────── */
 .nch-picks {
   display: grid;

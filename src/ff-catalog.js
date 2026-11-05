@@ -373,7 +373,7 @@ export const FLAGS = Object.freeze([
     // The first ON in the order 1 to 9 wins; all OFF = the hero above.
     default: false,
     hides:
-      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and four chips of what you bring (a file, a video, a link, some text). A chip only adds the source: the choice of what to make (ideas, clips for a video, a post, a summary) comes after, in the chat. Below, for a returning user, « Ideas for this week »: two fresh Topics and your best post (three best posts when the feed is empty), each opening its own object; for a new user (Admin › user mode), « What I can make »: clips, drafts per network, brand images. No voice nudge on the home.",
+      "When ON, a new chat shows the wordmark, « What are we posting today? », « Drop anything. I'll tell you what I can make with it. », the composer and four chips of what you bring (a video, a file, a link, some text). A chip drops its file INTO the box (uploading, then ready, removable); nothing reaches the chat until Send, with an optional note. Then I ask what to make (askSourceUse), Cut it into clips first for a video. Below, for a returning user, « Ideas for this week »: a fresh Topic, clips from your latest video (dropped in the box too, or opened in the Clips space when that flag is on) and your best post; for a new user (Admin › user mode), « What I can make ». No voice nudge on the home.",
   },
   {
     id: "chatPreviewTool",

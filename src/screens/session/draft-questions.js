@@ -399,7 +399,11 @@ export function askSourceUse(sessionId, sourceIds, { onAsk = null, answer = null
           caption: "Question it before deciding.",
           icon: "ap-icon-single-chat-bubble",
         },
-      ].filter(Boolean)
+      ]
+        .filter(Boolean)
+        // HOME-9 (flag homeComposer): a video's first offer is its clips, the
+        // outcome people don't think to ask for. Other homes keep the order.
+        .sort((a, b) => (isVideo && isFlagOn("homeComposer") ? (b.value === "clips") - (a.value === "clips") : 0))
     : [
         {
           value: "ideas",
