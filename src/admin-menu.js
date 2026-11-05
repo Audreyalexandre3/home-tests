@@ -63,8 +63,15 @@ export function toggleNetwork(network) {
 }
 
 // Flip a feature flag, then reload so every store / surface re-reads it.
+// The new-chat homes (HOME-1 … HOME-n) are alternatives, not layers: only the
+// first ON one shows, so turning one on turns the others off, a radio in
+// practice. Comparing them is one click instead of two.
+const HOME_FLAGS = FLAGS.filter((f) => /^HOME-\d+/.test(f.label || "")).map((f) => f.id);
+
 export function toggleFlag(id) {
-  setFlag(id, !getFlags()[id]);
+  const on = !getFlags()[id];
+  if (on && HOME_FLAGS.includes(id)) HOME_FLAGS.forEach((other) => other !== id && setFlag(other, false));
+  setFlag(id, on);
   window.location.reload();
 }
 
