@@ -13,6 +13,7 @@ import { getUserMode, setUserMode } from "./user-mode.js?v=2689";
 import { getRole, setRole, ORG } from "./org.js?v=2689";
 import { NETWORKS, isNetworkConnected, setNetworkConnected } from "./social-profiles.js?v=2689";
 import { resetIntro } from "./components/voice-intro-modal.js?v=2689";
+import { HOME_DATA_PROFILES, getHomeDataProfile, setHomeDataProfile } from "./home-data-profile.js?v=2689";
 
 // Which hat I'm wearing inside my organisation. Only meaningful once Playbooks
 // have owners, so the section only exists behind that flag.
@@ -52,6 +53,13 @@ export function applyUserMode(target) {
 export function applyOrgRole(target) {
   if (target === getRole()) return;
   setRole(target);
+  window.location.reload();
+}
+
+// HOME-11's data profile (what the brand pretends to have), then reload.
+export function applyHomeData(target) {
+  if (target === getHomeDataProfile()) return;
+  setHomeDataProfile(target);
   window.location.reload();
 }
 
@@ -112,6 +120,19 @@ export function renderAdminMenu() {
     `;
   }).join("");
 
+  // HOME-11 only: how much data the brand has, to show the fallback cards.
+  const homeData = getHomeDataProfile();
+  const homeDataRows = HOME_DATA_PROFILES.map(
+    (opt) => `
+      <label class="ap-radio-card card admin-menu__mode" data-admin-home-data="${escapeHtml(opt.value)}">
+        <input type="radio" name="sidebar-admin-home-data" value="${escapeHtml(opt.value)}" ${opt.value === homeData ? "checked" : ""} />
+        <span class="admin-menu__opt-text">
+          <span class="admin-menu__opt-label">${escapeHtml(opt.label)}</span>
+          <span class="admin-menu__opt-hint">${escapeHtml(opt.hint)}</span>
+        </span>
+      </label>`,
+  ).join("");
+
   // One section per group; the row's tooltip says what the flag does.
   const flagRow = (flag) => `
       <label class="admin-menu__row admin-menu__flag" data-admin-flag="${escapeHtml(flag.id)}" data-tooltip="${escapeHtml(flag.tip)}">
@@ -158,6 +179,14 @@ export function renderAdminMenu() {
           ? `<div class="admin-menu__section">
               <span class="admin-menu__section-title">Your role at ${escapeHtml(ORG.name)}</span>
               <div class="admin-menu__cards" role="radiogroup" aria-label="Your role">${roleRows}</div>
+            </div>`
+          : "",
+      )}
+      ${raw(
+        isFlagOn("homeClips") && mode === "returning"
+          ? `<div class="admin-menu__section">
+              <span class="admin-menu__section-title">HOME-11 · brand data</span>
+              <div class="admin-menu__cards" role="radiogroup" aria-label="HOME-11 brand data">${homeDataRows}</div>
             </div>`
           : "",
       )}

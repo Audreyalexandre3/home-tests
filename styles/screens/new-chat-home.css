@@ -1140,6 +1140,110 @@
   background: #000;
 }
 
+/* HOME-11 fallbacks: the competitors not followed yet, and the website. */
+.nch-watch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.nch-watch__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.nch-watch__av {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+  font-size: 11px;
+  font-weight: var(--ref-font-weight-bold);
+}
+
+.nch-watch__av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nch-watch__name {
+  flex: 1;
+  min-width: 0;
+  color: var(--ref-color-grey-100);
+  font-weight: var(--ref-font-weight-bold);
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.nch-watch__state {
+  color: var(--ref-color-grey-60);
+  font-size: 11px;
+}
+
+.nch-site {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 86%;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.nch-site__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--ref-color-grey-10);
+  color: var(--ref-color-grey-80);
+  font-size: 11px;
+}
+
+.nch-site__bar i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ref-color-grey-20);
+}
+
+.nch-site__bar span {
+  margin-left: 4px;
+}
+
+.nch-site__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 14px;
+}
+
+.nch-site__lines span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ref-color-grey-10);
+}
+
+.nch-site__lines span:first-child {
+  width: 70%;
+  height: 10px;
+  background: var(--ref-color-grey-20);
+}
+
+.nch-site__lines span:last-child {
+  width: 55%;
+}
+
 /* The same three clips at the top of the « Add a video » dialog. */
 .home-start__preview {
   display: flex;

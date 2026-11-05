@@ -7,6 +7,7 @@ import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=2689";
 import {
   renderAdminMenu,
   applyUserMode,
+  applyHomeData,
   applyOrgRole,
   toggleFlag,
   toggleNetwork,
@@ -361,6 +362,8 @@ export function initSidebar() {
     }
     const role = event.target.closest('[name="sidebar-admin-org-role"]');
     if (role) applyOrgRole(role.value);
+    const homeData = event.target.closest('[name="sidebar-admin-home-data"]');
+    if (homeData) applyHomeData(homeData.value);
   });
 
   // A <details> doesn't close itself on an outside click, and this one is the

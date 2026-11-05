@@ -284,7 +284,11 @@ export function openHomeStart(kind, { filename = null, previewHtml = null } = {}
   mount();
   state = { kind, source: null, outcome: null, error: "", linkDraft: "", previewHtml };
   // A card that names the material (the latest video) opens with it in.
-  if (filename) state.source = { filename, meta: "From your library", source: kind === "video" ? "Video" : "PDF" };
+  if (filename)
+    state.source =
+      kind === "url"
+        ? { filename, meta: "Your website", source: "URL", url: `https://${filename}` }
+        : { filename, meta: "From your library", source: kind === "video" ? "Video" : "PDF" };
   if (state.source) state.outcome = outcomesFor(state.source)[0].value;
   requestOpen(MODAL_ID, close);
   render();

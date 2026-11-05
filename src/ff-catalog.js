@@ -395,7 +395,7 @@ export const FLAGS = Object.freeze([
     // components/home-start-modal.js). Exclusive with the other homes (Admin).
     default: false,
     hides:
-      "When ON, a new chat is HOME-10, plus two things that show what a video becomes before anyone clicks. For a new user (Admin › user mode), the first card of « What I can make » plays a before / after once on arrival: the source video, a cut sweeping across it, then three vertical clips with their subtitles; it stops on the clips and plays again when pointed at (reduced motion: the clips, still). And the « Add a video » dialog opens with those three clips and « One video, up to 10 clips. Vertical, subtitled, ready to post. » above the drop zone.",
+      "When ON, a new chat is HOME-10, plus two things that show what a video becomes before anyone clicks. For a new user (Admin › user mode), the first card of « What I can make » plays a before / after once on arrival: the source video, a cut sweeping across it, then three vertical clips with their subtitles; it stops on the clips and plays again when pointed at (reduced motion: the clips, still). And the « Add a video » dialog opens with those three clips and « One video, up to 10 clips. Vertical, subtitled, ready to post. » above the drop zone. For a returning user, « Ideas for this week » keeps three cards whatever the brand has (Admin › HOME-11 · brand data): this week's Topic or « Follow your market » (the Playbook's competitors, Start listening); the latest video's clips or the before / after (« Got a webinar or a podcast? »); the best post, the latest post, or « A post from » the brand's website. The heading becomes « Ideas to get you going » when fewer than two cards are real.",
   },
   {
     id: "chatPreviewTool",

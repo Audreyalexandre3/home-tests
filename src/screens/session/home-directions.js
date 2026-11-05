@@ -40,6 +40,7 @@ import { voicesToFinish, networkVoiceOn } from "../../voice-parts.js?v=2689";
 import { networkLabel, networkIcon } from "../../social-profiles.js?v=2689";
 import { isWorkspaceMode } from "../../active-playbook.js?v=2689";
 import { isNewUser } from "../../user-mode.js?v=2689";
+import { homeData } from "../../home-data-profile.js?v=2689";
 import { pushScriptedSource, completeScriptedSource } from "../../sources-stream.js?v=2689";
 import { postUserTurn } from "../../assistant.js?v=2689";
 import { openHomeStart } from "../../components/home-start-modal.js?v=2689";
@@ -220,13 +221,13 @@ function videoMedia(video, { len = false } = {}) {
     </span>`;
 }
 
-function topPostMini(p, { withImage = true } = {}) {
+function topPostMini(p, { withImage = true, score = true } = {}) {
   return `
     <span class="nch-post">
       <span class="nch-post__head"><i class="${networkIcon(p.network)}" aria-hidden="true"></i><span>${esc(networkLabel(p.network))}, ${esc(p.publishedAt || "")}</span></span>
       <span class="nch-post__text">${esc(p.excerpt)}</span>
       ${withImage && p.image ? `<img class="nch-post__img" src="${esc(p.image)}" alt="" loading="lazy" />` : ""}
-      <span class="nch-score">${p.vsAvg}× your average engagement</span>
+      ${score ? `<span class="nch-score">${p.vsAvg}× your average engagement</span>` : ""}
     </span>`;
 }
 
@@ -679,6 +680,147 @@ function clipsBeforeAfter(video, clips) {
     </span>`;
 }
 
+// HOME-11, returning user: « Ideas for this week », three cards always filled.
+// Each card shows real data when the brand has it (Admin › HOME-11 brand data
+// pretends it has less); otherwise what the Playbook already knows (its
+// competitors, its website); a setup ask only for listening, so at most one.
+// The heading says which: real ideas, or ideas to get going.
+function ideasByData(session, card) {
+  const d = homeData();
+  const ctx = ctxOf(session);
+  const { topics, total, href } = d.topics ? freshTopics(session, 1) : { topics: [], total: 0, href: "#/topics" };
+  let real = 0;
+  const cards = [];
+
+  // Topic: this week's, or follow the market (the competitors are known).
+  if (topics[0]) {
+    real += 1;
+    const t = topics[0];
+    cards.push(
+      card(
+        "topic",
+        t.isTrending ? "Trending this week" : "New this week",
+        topicMini(t),
+        "Your take on it",
+        DOORS.topic(t),
+      ),
+    );
+  } else {
+    const comps = (ctx?.competitors || []).filter((c) => c.name).slice(0, 3);
+    const names = comps.map((c) => c.name);
+    const who = names.length
+      ? `${names.slice(0, -1).join(", ")}${names.length > 1 ? " and " : ""}${names.slice(-1)}`
+      : "your market";
+    cards.push(
+      card(
+        "topic",
+        "Your market",
+        `<span class="nch-watch">${comps
+          .map(
+            (c) =>
+              `<span class="nch-watch__row"><span class="nch-watch__av" aria-hidden="true">${
+                c.logo ? `<img src="${esc(c.logo)}" alt="" />` : esc(c.name.charAt(0))
+              }</span><span class="nch-watch__name">${esc(c.name)}</span><span class="nch-watch__state">Not followed yet</span></span>`,
+          )
+          .join("")}</span>`,
+        `I'll follow ${esc(who)} and bring back what they post`,
+        { href: "#/topics/settings", verb: "Start listening" },
+      ),
+    );
+  }
+
+  // Video: the latest video's clips, or the before / after.
+  const { video, clips } = footage(session);
+  if (d.video && clips.length) {
+    real += 1;
+    cards.push(
+      card(
+        "video",
+        inLibrary(video) ? "From your latest video" : "From a video",
+        `<span class="nch-pick__well">${clips
+          .slice(0, 2)
+          .map((c, i) => clipMedia(video, c, i))
+          .join("")}</span>`,
+        "Clips from your latest video",
+        clipsOn() && inLibrary(video)
+          ? DOORS.video(video)
+          : {
+              attrs: `data-nch-start="video" data-nch-file="${esc(video.name || "Latest video.mp4")}"`,
+              verb: "Cut the clips",
+            },
+      ),
+    );
+  } else {
+    const ex = exampleVideo();
+    cards.push(
+      card(
+        "video",
+        "Got a webinar or a podcast?",
+        clipsBeforeAfter(ex, ex.clips || clips),
+        "Turn it into vertical clips",
+        {
+          attrs: `data-nch-start="video"`,
+          verb: "Add a video",
+        },
+      ),
+    );
+  }
+
+  // Post: the best one, the latest one, or the website (known since onboarding).
+  if (d.posts === "rich") {
+    const p = bestPosts(1)[0];
+    if (p) {
+      real += 1;
+      cards.push(
+        card(
+          "top",
+          "Your best post",
+          topPostMini(p, { withImage: false }),
+          "A follow-up on the same pattern",
+          DOORS.post(p),
+        ),
+      );
+    }
+  } else if (d.posts === "few") {
+    const p = getTopPosts()[0];
+    if (p) {
+      real += 1;
+      cards.push(
+        card(
+          "top",
+          "Your latest post",
+          topPostMini(p, { withImage: false, score: false }),
+          "A follow-up to keep it going",
+          DOORS.post(p),
+        ),
+      );
+    }
+  } else {
+    const domain = (ctx?.websiteUrl || "acme.example.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
+    cards.push(
+      card(
+        "source",
+        "From your website",
+        `<span class="nch-site" aria-hidden="true"><span class="nch-site__bar"><i></i><i></i><i></i><span>${esc(domain)}</span></span><span class="nch-site__lines"><span></span><span></span><span></span></span></span>`,
+        `A post from ${esc(domain)}`,
+        { attrs: `data-nch-start="url" data-nch-file="${esc(domain)}"`, verb: "Write from it" },
+      ),
+    );
+  }
+
+  const more = topics.length
+    ? `<a class="nch-ask__more" href="${href}">See all ${total} in Topic Feed<i class="ap-icon-arrow-right" aria-hidden="true"></i></a>`
+    : "";
+  return `
+    <section class="nch-can nch-ask__below" aria-labelledby="nchAskBelow">
+      <header class="nch-ask__head">
+        <h2 class="nch__h" id="nchAskBelow">${real >= 2 ? "Ideas for this week" : "Ideas to get you going"}</h2>
+        ${more}
+      </header>
+      <div class="nch-picks nch-picks--3">${cards.join("")}</div>
+    </section>`;
+}
+
 const FIRST_ASK = "A LinkedIn post announcing our new feature";
 
 function composerFirst({ composer, session }, { start = false, clipsDemo = false } = {}) {
@@ -740,6 +882,8 @@ function composerFirst({ composer, session }, { start = false, clipsDemo = false
           }
         </div>
       </section>`;
+  } else if (clipsDemo) {
+    below = ideasByData(session, card);
   } else {
     const { topics, total, href } = freshTopics(session, 1);
     const { video, clips } = footage(session);
